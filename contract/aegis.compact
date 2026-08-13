@@ -1,0 +1,113 @@
+pragma language_version >= 0.20;
+import CompactStandardLibrary;
+
+export enum Subcategory {
+  // Electronics
+  mobile, tablet, computer, camera, audio, gaming,
+  // Fashion
+  shoes, tops, bottoms, accessories, outerwear,
+  // Food
+  groceries, restaurant, drinks, snacks,
+  // Sports
+  equipment, clothing, footwear, supplements,
+  // Home
+  furniture, appliances, decor, tools,
+  // Other
+  other
+}
+
+// Main category counters
+export ledger signalsElectronics: Counter;
+export ledger signalsFashion: Counter;
+export ledger signalsFood: Counter;
+export ledger signalsSports: Counter;
+export ledger signalsHome: Counter;
+export ledger signalsOther: Counter;
+
+// Electronics subcategory counters
+export ledger signalsMobile: Counter;
+export ledger signalsTablet: Counter;
+export ledger signalsComputer: Counter;
+export ledger signalsCamera: Counter;
+export ledger signalsAudio: Counter;
+export ledger signalsGaming: Counter;
+
+// Fashion subcategory counters
+export ledger signalsShoes: Counter;
+export ledger signalsTops: Counter;
+export ledger signalsBottoms: Counter;
+export ledger signalsAccessories: Counter;
+export ledger signalsOuterwear: Counter;
+
+// Food subcategory counters
+export ledger signalsGroceries: Counter;
+export ledger signalsRestaurant: Counter;
+export ledger signalsDrinks: Counter;
+export ledger signalsSnacks: Counter;
+
+// Sports subcategory counters
+export ledger signalsEquipment: Counter;
+export ledger signalsClothing: Counter;
+export ledger signalsFootwear: Counter;
+export ledger signalsSupplements: Counter;
+
+// Home subcategory counters
+export ledger signalsFurniture: Counter;
+export ledger signalsAppliances: Counter;
+export ledger signalsDecor: Counter;
+export ledger signalsTools: Counter;
+
+export ledger totalSignals: Counter;
+
+export circuit submitPurchase(subcat: Subcategory): [] {
+  if (disclose(subcat == Subcategory.mobile)) {
+    signalsElectronics.increment(1); signalsMobile.increment(1);
+  } else if (disclose(subcat == Subcategory.tablet)) {
+    signalsElectronics.increment(1); signalsTablet.increment(1);
+  } else if (disclose(subcat == Subcategory.computer)) {
+    signalsElectronics.increment(1); signalsComputer.increment(1);
+  } else if (disclose(subcat == Subcategory.camera)) {
+    signalsElectronics.increment(1); signalsCamera.increment(1);
+  } else if (disclose(subcat == Subcategory.audio)) {
+    signalsElectronics.increment(1); signalsAudio.increment(1);
+  } else if (disclose(subcat == Subcategory.gaming)) {
+    signalsElectronics.increment(1); signalsGaming.increment(1);
+  } else if (disclose(subcat == Subcategory.shoes)) {
+    signalsFashion.increment(1); signalsShoes.increment(1);
+  } else if (disclose(subcat == Subcategory.tops)) {
+    signalsFashion.increment(1); signalsTops.increment(1);
+  } else if (disclose(subcat == Subcategory.bottoms)) {
+    signalsFashion.increment(1); signalsBottoms.increment(1);
+  } else if (disclose(subcat == Subcategory.accessories)) {
+    signalsFashion.increment(1); signalsAccessories.increment(1);
+  } else if (disclose(subcat == Subcategory.outerwear)) {
+    signalsFashion.increment(1); signalsOuterwear.increment(1);
+  } else if (disclose(subcat == Subcategory.groceries)) {
+    signalsFood.increment(1); signalsGroceries.increment(1);
+  } else if (disclose(subcat == Subcategory.restaurant)) {
+    signalsFood.increment(1); signalsRestaurant.increment(1);
+  } else if (disclose(subcat == Subcategory.drinks)) {
+    signalsFood.increment(1); signalsDrinks.increment(1);
+  } else if (disclose(subcat == Subcategory.snacks)) {
+    signalsFood.increment(1); signalsSnacks.increment(1);
+  } else if (disclose(subcat == Subcategory.equipment)) {
+    signalsSports.increment(1); signalsEquipment.increment(1);
+  } else if (disclose(subcat == Subcategory.clothing)) {
+    signalsSports.increment(1); signalsClothing.increment(1);
+  } else if (disclose(subcat == Subcategory.footwear)) {
+    signalsSports.increment(1); signalsFootwear.increment(1);
+  } else if (disclose(subcat == Subcategory.supplements)) {
+    signalsSports.increment(1); signalsSupplements.increment(1);
+  } else if (disclose(subcat == Subcategory.furniture)) {
+    signalsHome.increment(1); signalsFurniture.increment(1);
+  } else if (disclose(subcat == Subcategory.appliances)) {
+    signalsHome.increment(1); signalsAppliances.increment(1);
+  } else if (disclose(subcat == Subcategory.decor)) {
+    signalsHome.increment(1); signalsDecor.increment(1);
+  } else if (disclose(subcat == Subcategory.tools)) {
+    signalsHome.increment(1); signalsTools.increment(1);
+  } else {
+    signalsOther.increment(1);
+  }
+  totalSignals.increment(1);
+}

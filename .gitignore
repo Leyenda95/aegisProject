@@ -1,0 +1,7 @@
+node_modules/
+contract/managed/
+dist/
+logs/
+midnight-level-db/
+.env
+.claude/settings.local.json
