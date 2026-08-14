@@ -1,24 +1,20 @@
 import { useState } from 'react';
 import StoreView from './components/StoreView.tsx';
-import UserView from './components/UserView.tsx';
-
-type Tab = 'store' | 'user';
+import LandingScreen from './components/LandingScreen.tsx';
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('user');
+  const [landed, setLanded] = useState(false);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {!landed && <LandingScreen onEnter={() => setLanded(true)} />}
+
       <header style={{ display: 'flex', alignItems: 'center', gap: 24, padding: '16px 24px', borderBottom: '1px solid #ddd' }}>
         <strong style={{ fontSize: 18 }}>Aegis</strong>
-        <nav style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setTab('user')} disabled={tab === 'user'}>Usuario</button>
-          <button onClick={() => setTab('store')} disabled={tab === 'store'}>Tienda</button>
-        </nav>
       </header>
 
       <main style={{ flex: 1, padding: 24 }}>
-        {tab === 'user' ? <UserView /> : <StoreView />}
+        <StoreView />
       </main>
     </div>
   );
