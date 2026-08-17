@@ -1,0 +1,88 @@
+.header {
+  padding: 16px 40px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  background: #0A0A0A;
+  border-bottom: 1px solid #1A1A1A;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.brandTagline {
+  font-size: 12px;
+  color: #AAAAAA;
+  margin-top: 3px;
+}
+
+.nav {
+  display: flex;
+  gap: 6px;
+}
+
+.main {
+  flex: 1;
+  padding: 40px;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ─ Tablet (680px – 1080px) ─────────── */
+@media (max-width: 1080px) {
+  .header {
+    padding: 12px 24px;
+    gap: 20px;
+  }
+  .main {
+    padding: 28px;
+  }
+}
+
+/* ─ Mobile (< 680px) ────────────────── */
+@media (max-width: 680px) {
+  .header {
+    padding: 10px 16px;
+    gap: 10px;
+    row-gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  /* Solo el logo, sin texto AEGIS ni tagline */
+  .brand {
+    flex: 0;
+    gap: 0;
+  }
+
+  .brand h1,
+  .brandTagline {
+    display: none;
+  }
+
+  /* Tabs en segunda fila, ancho completo */
+  .nav {
+    order: 3;
+    width: 100%;
+    gap: 6px;
+  }
+
+  .nav button {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .main {
+    padding: 16px;
+    box-sizing: border-box;
+  }
+}
