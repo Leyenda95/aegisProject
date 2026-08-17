@@ -4,6 +4,7 @@ import UserView from './components/UserView.tsx';
 import LandingScreen from './components/LandingScreen.tsx';
 import TourGuide from './components/TourGuide.tsx';
 import type { Campaign, MatchResult, Lang } from './api.ts';
+import { type ConnectedAPI, type WalletInfo, listWallets, connectWallet } from './lace.ts';
 import { T } from './i18n.ts';
 import styles from './App.module.css';
 
@@ -19,8 +20,16 @@ export default function App() {
   const [matches, setMatches] = useState<Record<string, MatchResult>>({});
 
   const [landed, setLanded] = useState(false);
+  const [lace, setLace] = useState<ConnectedAPI | null>(null);
+  const [contractAddress, setContractAddress] = useState<string | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>('en');
+  const [laceLoading, setLaceLoading] = useState(false);
+  const [laceError, setLaceError] = useState<string | null>(null);
+  const [laceSlow, setLaceSlow] = useState(false);
   const [tourActive, setTourActive] = useState(false);
+  const [networkId, setNetworkId] = useState('preprod');
+  const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
 
   useEffect(() => {
     if (landed) {
@@ -30,6 +39,49 @@ export default function App() {
   }, [landed]);
 
   const t = T[lang];
+
+  useEffect(() => {
+    fetch('/api/contract-address')
+      .then(r => r.json())
+      .then(({ address }) => { if (address) setContractAddress(address); })
+      .catch(() => {});
+    fetch('/api/network')
+      .then(r => r.json())
+      .then(({ networkId }) => { if (networkId) setNetworkId(networkId); })
+      .catch(() => {});
+  }, []);
+
+  async function handleConnectWallet(walletKey?: string) {
+    setLaceError(null);
+    if (!walletKey) {
+      const wallets = listWallets();
+      if (wallets.length === 0) { setLaceError('No se encontró ninguna wallet de Midnight instalada (Lace o 1AM).'); return; }
+      if (wallets.length > 1) { setAvailableWallets(wallets); return; }
+      walletKey = wallets[0].key;
+    }
+    setAvailableWallets([]);
+    setLaceLoading(true); setLaceSlow(false);
+    const slowTimer = setTimeout(() => setLaceSlow(true), 4000);
+    try {
+      const connected = await connectWallet(walletKey, networkId);
+      setLace(connected);
+      const { unshieldedAddress } = await connected.getUnshieldedAddress();
+      setWalletAddress(unshieldedAddress);
+    }
+    catch (e: any) {
+      const msg: string = e.message ?? '';
+      if (msg.includes('shutdown') || msg.includes('can no longer be used')) {
+        setLaceError('Conexión con la wallet perdida. Recarga la página e inténtalo de nuevo.');
+      } else {
+        setLaceError(msg || 'Connection failed');
+      }
+    }
+    finally {
+      clearTimeout(slowTimer);
+      setLaceLoading(false);
+      setLaceSlow(false);
+    }
+  }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -75,13 +127,51 @@ export default function App() {
               </button>
             ))}
           </div>
+
+          {laceError && (
+            <span style={{ fontSize: 13, color: '#f87171', maxWidth: 220 }}>{laceError}</span>
+          )}
+
+          {!lace && availableWallets.length > 1 ? (
+            <div style={{ display: 'flex', gap: 6 }}>
+              {availableWallets.map(w => (
+                <button key={w.key} onClick={() => handleConnectWallet(w.key)} disabled={laceLoading} style={{
+                  ...btnBase,
+                  background: '#926A45', color: '#FFFFFF',
+                  padding: '10px 18px', fontSize: 13,
+                  textTransform: 'capitalize',
+                }}>
+                  {w.name}
+                </button>
+              ))}
+            </div>
+          ) : !lace ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+              <button onClick={() => handleConnectWallet()} disabled={laceLoading} style={{
+                ...btnBase,
+                background: '#926A45', color: '#FFFFFF',
+                padding: '10px 24px', fontSize: 14,
+              }}>
+                {laceLoading ? t.connecting : t.connectLace}
+              </button>
+              {laceSlow && (
+                <span style={{ fontSize: 11, color: '#888', maxWidth: 200, textAlign: 'right', lineHeight: 1.4 }}>
+                  La wallet está iniciando — el popup de autorización aparecerá en breve
+                </span>
+              )}
+            </div>
+          ) : walletAddress ? (
+            <span style={{ fontSize: 12, color: '#666666', fontFamily: 'monospace', background: '#111111', border: '1px solid #222222', borderRadius: 6, padding: '4px 10px' }}>
+              …{walletAddress.slice(-14)}
+            </span>
+          ) : null}
         </div>
       </header>
 
       <main className={styles.main}>
         {tab === 'store'
           ? <StoreView lang={lang} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} />
-          : <UserView lang={lang} />}
+          : <UserView lang={lang} lace={lace} contractAddress={contractAddress} />}
       </main>
 
     </div>

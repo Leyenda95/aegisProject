@@ -89,6 +89,10 @@ const STEPS: Step[] = [
       es: 'En esta demo compartes categoría y subcategoría, pero el mismo sistema funciona con la edad, patrones de gasto, intereses personales o cualquier señal que elijas. Todo verificado en Midnight sin revelar tu identidad.',
     },
     tab: 'user', side: 'top', noScroll: true,
+    note: {
+      en: '🔗 Connect your Lace wallet using the button in the top right to submit a real transaction and participate in the testnet.',
+      es: '🔗 Conecta tu billetera Lace con el botón de arriba a la derecha para enviar una transacción real y participar en el testnet.',
+    },
   },
 ];
 

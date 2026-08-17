@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import {
   CATEGORIES, SUBCATEGORIES, CATEGORY_LABELS,
-  SUBCATEGORY_LABELS, postSignal,
+  SUBCATEGORY_LABELS,
   type Category, type Lang,
 } from '../api.ts';
+import { submitSignalViaLace, type ConnectedAPI } from '../lace.ts';
 import { T } from '../i18n.ts';
 import { useBreakpoint } from '../hooks/useBreakpoint.ts';
 import ProfileSection from './ProfileSection.tsx';
 
 type Props = {
   lang: Lang;
+  lace: ConnectedAPI | null;
+  contractAddress: string | null;
 };
 
-export default function UserView({ lang }: Props) {
+export default function UserView({ lang, lace, contractAddress }: Props) {
   const t = T[lang];
   const catLabel = CATEGORY_LABELS[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
@@ -32,13 +35,15 @@ export default function UserView({ lang }: Props) {
   }
 
   const canSubmit = !!selectedSubcat && !loading;
+  const needsLace = !lace;
+  const needsDeploy = lace && !contractAddress;
 
   async function handleContribute() {
     if (!selectedSubcat) return;
     setLoading(true);
     setError(null);
     try {
-      await postSignal(selectedSubcat);
+      await submitSignalViaLace(lace!, selectedSubcat);
       setSent(true);
       setTimeout(() => { setSent(false); setSelectedCat(null); setSelectedSubcat(null); }, 600_000);
     } catch (e: any) {
@@ -94,6 +99,16 @@ export default function UserView({ lang }: Props) {
         {activeTab === 'profile' && <ProfileSection lang={lang} />}
 
         {activeTab === 'contribute' && <div data-tour="contribute-section">
+        {needsLace && (
+          <div style={{ background: '#111111', border: '1px solid #222222', borderRadius: 8, padding: isMobile ? 12 : 14, marginBottom: 16, fontSize: isMobile ? 12 : 13, color: '#BBBBBB' }}>
+            {t.userNeedsLace}
+          </div>
+        )}
+        {needsDeploy && (
+          <div style={{ background: '#111111', border: '1px solid #92400e', borderRadius: 8, padding: isMobile ? 12 : 14, marginBottom: 16, fontSize: isMobile ? 12 : 13, color: '#fbbf24' }}>
+            {t.userNeedsDeploy}
+          </div>
+        )}
 
         <div style={{ marginBottom: isMobile ? 14 : 20 }}>
           <div style={{ fontSize: 12, color: '#999999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
@@ -143,10 +158,10 @@ export default function UserView({ lang }: Props) {
           </div>
         )}
 
-        <button onClick={handleContribute} disabled={!canSubmit} style={{
+        <button onClick={handleContribute} disabled={!canSubmit || !!needsDeploy || !!needsLace} style={{
           width: '100%', background: '#926A45', color: '#FFFFFF',
           padding: isMobile ? '13px' : '14px', fontSize: isMobile ? 15 : 16, borderRadius: 10,
-          opacity: !canSubmit ? 0.3 : 1,
+          opacity: (!canSubmit || needsDeploy || needsLace) ? 0.3 : 1,
           cursor: canSubmit ? 'pointer' : 'not-allowed',
         }}>
           {loading ? t.userSubmitting : t.userSubmit}
