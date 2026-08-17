@@ -121,7 +121,7 @@ export default function StoreView({ lang, campaigns, setCampaigns, matches, setM
       </div>
 
       {/* Señales agregadas */}
-      <div style={card}>
+      <div style={card} data-tour="aggregated-signals">
         <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 4 : 0, marginBottom: isMobile ? 12 : 20 }}>
           <h2 style={sectionTitle}>{t.signalsTitle}</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: isMobile ? 0 : 12 }}>
@@ -136,7 +136,7 @@ export default function StoreView({ lang, campaigns, setCampaigns, matches, setM
             </button>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : bp === 'tablet' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 10 }}>
+        <div data-tour="categories-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : bp === 'tablet' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 10 }}>
           {CATEGORIES.map(cat => {
             const catVal = Number(state?.[CAT_KEY[cat]] ?? 0);
             const catPct = total > 0 ? (catVal / total) * 100 : 0;
@@ -197,7 +197,7 @@ export default function StoreView({ lang, campaigns, setCampaigns, matches, setM
       </div>
 
       {/* Insights */}
-      <div style={card}>
+      <div style={card} data-tour="insights-section">
         <h2 style={{ ...sectionTitle, marginBottom: 14 }}>{t.insightsTitle}</h2>
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 10, marginBottom: 16 }}>
           <input
@@ -242,7 +242,7 @@ export default function StoreView({ lang, campaigns, setCampaigns, matches, setM
       </div>
 
       {/* Crear campaña — desplegable */}
-      <div style={card}>
+      <div style={card} data-tour="campaign-section">
         <button
           onClick={() => setCampaignOpen(o => !o)}
           style={{

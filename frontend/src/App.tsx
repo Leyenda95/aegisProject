@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import StoreView from './components/StoreView.tsx';
 import LandingScreen from './components/LandingScreen.tsx';
+import TourGuide from './components/TourGuide.tsx';
 import type { Campaign, MatchResult, Lang } from './api.ts';
 import { T } from './i18n.ts';
 import styles from './App.module.css';
@@ -11,12 +12,23 @@ export default function App() {
 
   const [landed, setLanded] = useState(false);
   const lang: Lang = 'en';
+  const [tourActive, setTourActive] = useState(false);
+
+  useEffect(() => {
+    if (landed) {
+      const t = setTimeout(() => setTourActive(true), 800);
+      return () => clearTimeout(t);
+    }
+  }, [landed]);
 
   const t = T[lang];
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {!landed && <LandingScreen onEnter={() => setLanded(true)} />}
+      {landed && tourActive && (
+        <TourGuide lang={lang} onClose={() => setTourActive(false)} />
+      )}
 
       <header className={styles.header}>
         {/* Logo + nombre */}
