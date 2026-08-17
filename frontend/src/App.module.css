@@ -28,6 +28,14 @@
   gap: 6px;
 }
 
+.controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
 .main {
   flex: 1;
   padding: 40px;
@@ -67,6 +75,13 @@
   .brand h1,
   .brandTagline {
     display: none;
+  }
+
+  /* Controls justo al lado del logo */
+  .controls {
+    order: 2;
+    margin-left: 0;
+    gap: 8px;
   }
 
   /* Tabs en segunda fila, ancho completo */

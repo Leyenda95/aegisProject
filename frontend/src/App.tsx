@@ -11,7 +11,7 @@ export default function App() {
   const [matches, setMatches] = useState<Record<string, MatchResult>>({});
 
   const [landed, setLanded] = useState(false);
-  const lang: Lang = 'en';
+  const [lang, setLang] = useState<Lang>('en');
   const [tourActive, setTourActive] = useState(false);
 
   useEffect(() => {
@@ -37,6 +37,21 @@ export default function App() {
           <div>
             <h1 style={{ fontSize: 19, fontWeight: 600, color: '#FFFFFF', letterSpacing: 2.6, lineHeight: 1.1 }}>AEGIS</h1>
             <p className={styles.brandTagline} style={{ fontSize: 12, color: '#AAAAAA', marginTop: 3 }}>{t.tagline}</p>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className={styles.controls}>
+          <div style={{ display: 'flex', background: '#111111', borderRadius: 8, padding: 3, border: '1px solid #2A2A2A' }}>
+            {(['es', 'en'] as Lang[]).map(l => (
+              <button key={l} onClick={() => setLang(l)} style={{
+                background: lang === l ? '#926A45' : 'transparent',
+                color: lang === l ? '#FFFFFF' : '#888888',
+                border: 'none', padding: '5px 14px', fontSize: 12, fontWeight: 700, borderRadius: 6,
+              }}>
+                {l.toUpperCase()}
+              </button>
+            ))}
           </div>
         </div>
       </header>
