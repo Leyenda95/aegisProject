@@ -1,0 +1,114 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ─ Summary ─────────────────────────── */
+.summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid #141414;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.summaryCell {
+  padding: 20px 22px;
+}
+
+.summaryCell + .summaryCell {
+  border-left: 1px solid #141414;
+}
+
+.summaryValue {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -1px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.summaryLabel {
+  font-size: 11px;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* ─ Section label ───────────────────── */
+.sectionLabel {
+  font-size: 10px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #141414;
+}
+
+/* ─ Category list ───────────────────── */
+.catRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid #0d0d0d;
+}
+
+.catRow:last-child {
+  border-bottom: none;
+}
+
+.catName {
+  font-size: 14px;
+  color: #bbb;
+}
+
+.catAmount {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ddd;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─ Receipt list ────────────────────── */
+.receiptRow {
+  display: grid;
+  grid-template-columns: 20px 1fr auto auto;
+  align-items: center;
+  column-gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #0d0d0d;
+}
+
+.receiptRow:last-child {
+  border-bottom: none;
+}
+
+.receiptIcon {
+  font-size: 14px;
+  text-align: center;
+}
+
+.receiptStore {
+  font-size: 13px;
+  color: #999;
+  /* font-weight: 500; */
+}
+
+.receiptDate {
+  font-size: 11px;
+  color: #424242;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.receiptAmount {
+  font-size: 13px;
+  color: #999;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}

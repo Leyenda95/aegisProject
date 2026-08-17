@@ -131,6 +131,19 @@ export async function getState(): Promise<AegisState> {
   return { ...mockState };
 }
 
+export async function postSignal(subcategory: string): Promise<void> {
+  await delay(150);
+  const key = subcatKey(subcategory);
+  mockState[key] = String(Number(mockState[key] ?? 0) + 1);
+  for (const cat of CATEGORIES) {
+    if ((SUBCATEGORIES[cat] as readonly string[]).includes(subcategory)) {
+      mockState[CAT_KEY[cat]] = String(Number(mockState[CAT_KEY[cat]] ?? 0) + 1);
+      break;
+    }
+  }
+  mockState.totalSignals = String(Number(mockState.totalSignals ?? 0) + 1);
+}
+
 export async function getInsights(storeProfile?: string, lang: Lang = 'en'): Promise<Insights> {
   await delay(500);
   const ranked = CATEGORIES

@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react';
 import StoreView from './components/StoreView.tsx';
+import UserView from './components/UserView.tsx';
 import LandingScreen from './components/LandingScreen.tsx';
 import TourGuide from './components/TourGuide.tsx';
 import type { Campaign, MatchResult, Lang } from './api.ts';
 import { T } from './i18n.ts';
 import styles from './App.module.css';
 
+type Tab = 'store' | 'user';
+
+const btnBase: React.CSSProperties = {
+  padding: '10px 22px', fontSize: 14, fontWeight: 600, borderRadius: 8, cursor: 'pointer', border: 'none',
+};
+
 export default function App() {
+  const [tab, setTab] = useState<Tab>('store');
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [matches, setMatches] = useState<Record<string, MatchResult>>({});
 
@@ -27,7 +35,7 @@ export default function App() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {!landed && <LandingScreen onEnter={() => setLanded(true)} />}
       {landed && tourActive && (
-        <TourGuide lang={lang} onClose={() => setTourActive(false)} />
+        <TourGuide lang={lang} onClose={() => setTourActive(false)} onSetTab={setTab} />
       )}
 
       <header className={styles.header}>
@@ -39,6 +47,20 @@ export default function App() {
             <p className={styles.brandTagline} style={{ fontSize: 12, color: '#AAAAAA', marginTop: 3 }}>{t.tagline}</p>
           </div>
         </div>
+
+        {/* Tabs */}
+        <nav className={styles.nav}>
+          {(['store', 'user'] as Tab[]).map(id => (
+            <button key={id} data-tour={id === 'user' ? 'tab-user' : undefined} onClick={() => setTab(id)} style={{
+              ...btnBase,
+              background: tab === id ? '#926A45' : 'transparent',
+              color: tab === id ? '#FFFFFF' : '#AAAAAA',
+              border: `1px solid ${tab === id ? '#926A45' : '#333333'}`,
+            }}>
+              {id === 'store' ? t.tabStore : t.tabUser}
+            </button>
+          ))}
+        </nav>
 
         {/* Controls */}
         <div className={styles.controls}>
@@ -57,7 +79,9 @@ export default function App() {
       </header>
 
       <main className={styles.main}>
-        <StoreView lang={lang} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} />
+        {tab === 'store'
+          ? <StoreView lang={lang} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} />
+          : <UserView lang={lang} />}
       </main>
 
     </div>
