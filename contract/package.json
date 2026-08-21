@@ -1,0 +1,29 @@
+{
+  "name": "@aegis/contract",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "compact": "compact compile aegis.compact managed/aegis",
+    "compact:fast": "compact compile --skip-zk aegis.compact managed/aegis",
+    "format": "compact format aegis.compact",
+    "build": "npm run compact && tsc",
+    "typecheck": "tsc --noEmit",
+    "demo": "tsx demo.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-runtime": "0.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

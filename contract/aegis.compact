@@ -58,6 +58,8 @@ export ledger signalsDecor: Counter;
 export ledger signalsTools: Counter;
 
 export ledger totalSignals: Counter;
+export ledger campaignCount: Counter;
+export ledger isSeeded: Counter;
 
 export circuit submitPurchase(subcat: Subcategory): [] {
   if (disclose(subcat == Subcategory.mobile)) {
@@ -110,4 +112,65 @@ export circuit submitPurchase(subcat: Subcategory): [] {
     signalsOther.increment(1);
   }
   totalSignals.increment(1);
+}
+
+export circuit seed(
+  initMobile: Uint<16>, initTablet: Uint<16>, initComputer: Uint<16>,
+  initCamera: Uint<16>, initAudio: Uint<16>, initGaming: Uint<16>,
+  initShoes: Uint<16>, initTops: Uint<16>, initBottoms: Uint<16>,
+  initAccessories: Uint<16>, initOuterwear: Uint<16>,
+  initGroceries: Uint<16>, initRestaurant: Uint<16>, initDrinks: Uint<16>, initSnacks: Uint<16>,
+  initEquipment: Uint<16>, initClothing: Uint<16>, initFootwear: Uint<16>, initSupplements: Uint<16>,
+  initFurniture: Uint<16>, initAppliances: Uint<16>, initDecor: Uint<16>, initTools: Uint<16>,
+  initOther: Uint<16>,
+  totalElectronics: Uint<16>, totalFashion: Uint<16>, totalFood: Uint<16>,
+  totalSports: Uint<16>, totalHome: Uint<16>,
+  grandTotal: Uint<16>
+): [] {
+  assert(disclose(isSeeded.read() == 0), "Already seeded");
+
+  signalsMobile.increment(disclose(initMobile));
+  signalsTablet.increment(disclose(initTablet));
+  signalsComputer.increment(disclose(initComputer));
+  signalsCamera.increment(disclose(initCamera));
+  signalsAudio.increment(disclose(initAudio));
+  signalsGaming.increment(disclose(initGaming));
+
+  signalsShoes.increment(disclose(initShoes));
+  signalsTops.increment(disclose(initTops));
+  signalsBottoms.increment(disclose(initBottoms));
+  signalsAccessories.increment(disclose(initAccessories));
+  signalsOuterwear.increment(disclose(initOuterwear));
+
+  signalsGroceries.increment(disclose(initGroceries));
+  signalsRestaurant.increment(disclose(initRestaurant));
+  signalsDrinks.increment(disclose(initDrinks));
+  signalsSnacks.increment(disclose(initSnacks));
+
+  signalsEquipment.increment(disclose(initEquipment));
+  signalsClothing.increment(disclose(initClothing));
+  signalsFootwear.increment(disclose(initFootwear));
+  signalsSupplements.increment(disclose(initSupplements));
+
+  signalsFurniture.increment(disclose(initFurniture));
+  signalsAppliances.increment(disclose(initAppliances));
+  signalsDecor.increment(disclose(initDecor));
+  signalsTools.increment(disclose(initTools));
+
+  signalsElectronics.increment(disclose(totalElectronics));
+  signalsFashion.increment(disclose(totalFashion));
+  signalsFood.increment(disclose(totalFood));
+  signalsSports.increment(disclose(totalSports));
+  signalsHome.increment(disclose(totalHome));
+  signalsOther.increment(disclose(initOther));
+
+  totalSignals.increment(disclose(grandTotal));
+
+  isSeeded.increment(1);
+}
+
+export circuit registerCampaign(): Uint<64> {
+  const id = campaignCount.read();
+  campaignCount.increment(1);
+  return id;
 }
