@@ -81,113 +81,32 @@ export const SUBCATEGORY_ICONS: Record<string, string> = {
   other: '📦',
 };
 
-const CAT_KEY: Record<Category, keyof AegisState> = {
-  electronics: 'signalsElectronics', fashion: 'signalsFashion', food: 'signalsFood',
-  sports: 'signalsSports', home: 'signalsHome', other: 'signalsOther',
-};
-
-function subcatKey(sub: string): keyof AegisState {
-  return ('signals' + sub[0].toUpperCase() + sub.slice(1)) as keyof AegisState;
-}
-
-// Sin backend todavía: el estado agregado vive en memoria del propio cliente,
-// sembrado con datos de ejemplo para que la interfaz se vea representativa.
-const SEED_SUBCATEGORIES: Record<string, number> = {
-  mobile: 312, tablet: 187, computer: 245, camera: 98, audio: 201, gaming: 278,
-  shoes: 334, tops: 289, bottoms: 198, accessories: 145, outerwear: 112,
-  groceries: 421, restaurant: 356, drinks: 267, snacks: 189,
-  equipment: 134, clothing: 176, footwear: 155, supplements: 93,
-  furniture: 88, appliances: 121, decor: 167, tools: 74,
-  other: 63,
-};
-
-function buildInitialState(): AegisState {
-  const state = {} as AegisState;
-  for (const [sub, value] of Object.entries(SEED_SUBCATEGORIES)) {
-    state[subcatKey(sub)] = String(value);
+async function handleJson<T>(r: Response): Promise<T> {
+  if (!r.ok) {
+    const body = await r.text().catch(() => r.statusText);
+    throw new Error(body || `Request failed (${r.status})`);
   }
-  let total = 0;
-  for (const cat of CATEGORIES) {
-    const subs = SUBCATEGORIES[cat] as readonly string[];
-    const catTotal = subs.reduce((sum, sub) => sum + (SEED_SUBCATEGORIES[sub] ?? 0), 0);
-    state[CAT_KEY[cat]] = String(catTotal);
-    total += catTotal;
-  }
-  state.totalSignals = String(total);
-  state.campaignCount = '0';
-  return state;
-}
-
-const mockState: AegisState = buildInitialState();
-const campaignsStore = new Map<string, Omit<Campaign, 'id'>>();
-let nextCampaignId = 1;
-
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return r.json() as Promise<T>;
 }
 
 export async function getState(): Promise<AegisState> {
-  await delay(150);
-  return { ...mockState };
-}
-
-export async function postSignal(subcategory: string): Promise<void> {
-  await delay(150);
-  const key = subcatKey(subcategory);
-  mockState[key] = String(Number(mockState[key] ?? 0) + 1);
-  for (const cat of CATEGORIES) {
-    if ((SUBCATEGORIES[cat] as readonly string[]).includes(subcategory)) {
-      mockState[CAT_KEY[cat]] = String(Number(mockState[CAT_KEY[cat]] ?? 0) + 1);
-      break;
-    }
-  }
-  mockState.totalSignals = String(Number(mockState.totalSignals ?? 0) + 1);
+  return handleJson<AegisState>(await fetch('/api/state'));
 }
 
 export async function getInsights(storeProfile?: string, lang: Lang = 'en'): Promise<Insights> {
-  await delay(500);
-  const ranked = CATEGORIES
-    .map(cat => [cat, Number(mockState[CAT_KEY[cat]] ?? 0)] as [Category, number])
-    .sort((a, b) => b[1] - a[1]);
-  const [topCat] = ranked[0];
-  const [risingCat] = ranked[ranked.length - 2] ?? ranked[ranked.length - 1];
-  const labels = CATEGORY_LABELS[lang];
-
-  const summary = lang === 'es'
-    ? `Con ${mockState.totalSignals} señales agregadas, ${labels[topCat]} concentra la mayor actividad del mercado${storeProfile ? ` para un perfil como "${storeProfile}"` : ''}.`
-    : `Across ${mockState.totalSignals} aggregated signals, ${labels[topCat]} concentrates the highest market activity${storeProfile ? ` for a profile like "${storeProfile}"` : ''}.`;
-
-  const trending = ranked.slice(0, 3).map(([cat]) => labels[cat]);
-
-  const recommendations = lang === 'es'
-    ? [
-        `Prioriza campañas dirigidas a ${labels[topCat]}, la categoría con más señales.`,
-        `Explora ${labels[risingCat]}: tiene margen de crecimiento respecto al resto.`,
-      ]
-    : [
-        `Prioritise campaigns targeting ${labels[topCat]}, the category with the most signals.`,
-        `Explore ${labels[risingCat]}: it has room to grow relative to the rest.`,
-      ];
-
-  return { summary, trending, recommendations };
+  const params = new URLSearchParams({ lang });
+  if (storeProfile) params.set('store', storeProfile);
+  return handleJson<Insights>(await fetch(`/api/insights?${params}`));
 }
 
 export async function postCampaign(data: Omit<Campaign, 'id'>): Promise<{ id: string }> {
-  await delay(150);
-  const id = String(nextCampaignId++);
-  campaignsStore.set(id, data);
-  mockState.campaignCount = String(campaignsStore.size);
-  return { id };
+  return handleJson<{ id: string }>(await fetch('/api/campaigns', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }));
 }
 
 export async function getMatch(id: string): Promise<MatchResult> {
-  await delay(150);
-  const campaign = campaignsStore.get(id);
-  if (!campaign) return { campaignId: id, matches: false, reason: 'Unknown campaign' };
-  const signals = Number(mockState[CAT_KEY[campaign.targetCategory as Category]] ?? 0);
-  const matches = signals >= campaign.minSignals;
-  const reason = matches
-    ? `${signals} signals recorded (≥ ${campaign.minSignals} required)`
-    : `${signals} signals recorded (< ${campaign.minSignals} required)`;
-  return { campaignId: id, matches, reason };
+  return handleJson<MatchResult>(await fetch(`/api/match/${id}`));
 }

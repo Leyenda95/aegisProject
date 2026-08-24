@@ -5,5 +5,14 @@
   "type": "module",
   "engines": {
     "node": ">=22.0.0"
+  },
+  "workspaces": [
+    "contract",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "env:up": "docker compose up -d --wait",
+    "env:down": "docker compose down"
   }
 }

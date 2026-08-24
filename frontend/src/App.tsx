@@ -4,7 +4,7 @@ import UserView from './components/UserView.tsx';
 import LandingScreen from './components/LandingScreen.tsx';
 import TourGuide from './components/TourGuide.tsx';
 import type { Campaign, MatchResult, Lang } from './api.ts';
-import { type ConnectedAPI, type WalletInfo, listWallets, connectWallet } from './lace.ts';
+import { type ConnectedAPI, type WalletInfo, listWallets, connectWallet, deployViaLace, seedViaLace } from './lace.ts';
 import { T } from './i18n.ts';
 import styles from './App.module.css';
 
@@ -30,6 +30,11 @@ export default function App() {
   const [tourActive, setTourActive] = useState(false);
   const [networkId, setNetworkId] = useState('preprod');
   const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
+  const [deploying, setDeploying] = useState(false);
+  const [deployError, setDeployError] = useState<string | null>(null);
+  const [seeded, setSeeded] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedError, setSeedError] = useState<string | null>(null);
 
   useEffect(() => {
     if (landed) {
@@ -80,6 +85,39 @@ export default function App() {
       clearTimeout(slowTimer);
       setLaceLoading(false);
       setLaceSlow(false);
+    }
+  }
+
+  async function handleDeploy() {
+    if (!lace) return;
+    setDeployError(null);
+    setDeploying(true);
+    try {
+      const address = await deployViaLace(lace);
+      setContractAddress(address);
+    } catch (e: any) {
+      setDeployError(e.message ?? 'Deploy failed');
+    } finally {
+      setDeploying(false);
+    }
+  }
+
+  async function handleSeed() {
+    if (!lace) return;
+    setSeedError(null);
+    setSeeding(true);
+    try {
+      await seedViaLace(lace);
+      setSeeded(true);
+    } catch (e: any) {
+      const msg: string = e.message ?? '';
+      if (msg.toLowerCase().includes('already seeded')) {
+        setSeeded(true);
+      } else {
+        setSeedError(msg || 'Seed failed');
+      }
+    } finally {
+      setSeeding(false);
     }
   }
 
@@ -160,11 +198,48 @@ export default function App() {
                 </span>
               )}
             </div>
-          ) : walletAddress ? (
-            <span style={{ fontSize: 12, color: '#666666', fontFamily: 'monospace', background: '#111111', border: '1px solid #222222', borderRadius: 6, padding: '4px 10px' }}>
-              …{walletAddress.slice(-14)}
-            </span>
-          ) : null}
+          ) : !contractAddress ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+              <button onClick={handleDeploy} disabled={deploying} style={{
+                ...btnBase,
+                background: '#926A45', color: '#FFFFFF',
+                padding: '10px 24px', fontSize: 14,
+              }}>
+                {deploying ? t.deploying : t.deployContract}
+              </button>
+              {deployError && (
+                <span style={{ fontSize: 11, color: '#f87171', maxWidth: 220, textAlign: 'right' }}>{deployError}</span>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {false && !seeded && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                  <button onClick={handleSeed} disabled={seeding} style={{
+                    ...btnBase,
+                    background: 'transparent', color: '#926A45',
+                    border: '1px solid #926A45',
+                    padding: '9px 18px', fontSize: 13,
+                  }}>
+                    {seeding ? t.seeding : t.seedData}
+                  </button>
+                  {seedError && (
+                    <span style={{ fontSize: 11, color: '#f87171', maxWidth: 220, textAlign: 'right' }}>{seedError}</span>
+                  )}
+                </div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                {walletAddress && (
+                  <span style={{ fontSize: 12, color: '#666666', fontFamily: 'monospace', background: '#111111', border: '1px solid #222222', borderRadius: 6, padding: '4px 10px' }}>
+                    …{walletAddress.slice(-14)}
+                  </span>
+                )}
+                <span style={{ fontSize: 11, color: '#666', fontFamily: 'monospace' }}>
+                  {t.contractPrefix} …{contractAddress.slice(-10)}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 

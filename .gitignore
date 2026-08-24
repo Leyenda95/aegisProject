@@ -4,4 +4,10 @@ dist/
 logs/
 midnight-level-db/
 .env
+.contract-address-*
 .claude/settings.local.json
+*.log
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
