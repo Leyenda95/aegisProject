@@ -1,7 +1,10 @@
 import http from 'node:http';
 import { writeFileSync } from 'node:fs';
 import type { ContractAddress } from '@midnight-ntwrk/compact-runtime';
-import { Subcategory, registerCampaign, readState, buildDeployTx, buildSignalTx, buildSeedTx, type SeedData } from './contract.js';
+import {
+  Subcategory, registerCampaign, readState, buildDeployTx, buildSignalTx, buildSeedTx, type SeedData,
+  buildRegisterStoreTx, buildAttestReceiptTx, makeReceipt, receiptFromJSON, receiptToJSON, type ReceiptJSON,
+} from './contract.js';
 import { generateInsights, matchCampaign, type Campaign } from './agent.js';
 import type { AegisProviders } from './providers.js';
 
@@ -94,12 +97,34 @@ async function handleRequest(
       return json(res, 200, { tx });
     }
 
-    if (method === 'POST' && url === '/build-tx/signal') {
+    // El admin da de alta la tienda de demo en el árbol de tiendas registradas.
+    // Solo hace falta llamarlo una vez por contrato desplegado.
+    if (method === 'GET' && url === '/build-tx/register-store') {
       if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
-      const { subcategory } = await parseBody(req);
+      const tx = await buildRegisterStoreTx(ctx.providers, ctx.contractAddress);
+      return json(res, 200, { tx });
+    }
+
+    // La tienda "vende" y sella el compromiso del recibo on-chain. Devuelve
+    // el recibo completo: quien llama es responsable de convertirlo en QR y
+    // de no guardarlo en ningún sitio más — ver el diseño de privacidad.
+    if (method === 'POST' && url === '/build-tx/attest-receipt') {
+      if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
+      const { subcategory, amount } = await parseBody(req);
       const subcat = Subcategory[subcategory as keyof typeof Subcategory];
       if (subcat === undefined) return json(res, 400, { error: 'Invalid subcategory' });
-      const tx = await buildSignalTx(ctx.providers, ctx.contractAddress, subcat);
+      if (typeof amount !== 'number' || amount < 0) return json(res, 400, { error: 'Invalid amount' });
+      const receipt = makeReceipt(subcat, BigInt(amount));
+      const tx = await buildAttestReceiptTx(ctx.providers, ctx.contractAddress, receipt);
+      return json(res, 200, { tx, receipt: receiptToJSON(receipt) });
+    }
+
+    // El usuario envía como señal un recibo ya sellado (escaneado de un QR).
+    if (method === 'POST' && url === '/build-tx/signal') {
+      if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
+      const { receipt } = await parseBody(req) as { receipt: ReceiptJSON };
+      if (!receipt) return json(res, 400, { error: 'Missing receipt' });
+      const tx = await buildSignalTx(ctx.providers, ctx.contractAddress, receiptFromJSON(receipt));
       return json(res, 200, { tx });
     }
 

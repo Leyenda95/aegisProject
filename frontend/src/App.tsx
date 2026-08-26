@@ -4,7 +4,7 @@ import UserView from './components/UserView.tsx';
 import LandingScreen from './components/LandingScreen.tsx';
 import TourGuide from './components/TourGuide.tsx';
 import { API_BASE, type Campaign, type MatchResult, type Lang } from './api.ts';
-import { type ConnectedAPI, type WalletInfo, listWallets, connectWallet, deployViaLace, seedViaLace } from './lace.ts';
+import { type ConnectedAPI, type WalletInfo, listWallets, connectWallet, deployViaLace, seedViaLace, registerStoreViaLace } from './lace.ts';
 import { T } from './i18n.ts';
 import styles from './App.module.css';
 
@@ -35,6 +35,9 @@ export default function App() {
   const [seeded, setSeeded] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [seedError, setSeedError] = useState<string | null>(null);
+  const [storeRegistered, setStoreRegistered] = useState(false);
+  const [registeringStore, setRegisteringStore] = useState(false);
+  const [registerStoreError, setRegisterStoreError] = useState<string | null>(null);
 
   useEffect(() => {
     if (landed) {
@@ -118,6 +121,20 @@ export default function App() {
       }
     } finally {
       setSeeding(false);
+    }
+  }
+
+  async function handleRegisterStore() {
+    if (!lace) return;
+    setRegisterStoreError(null);
+    setRegisteringStore(true);
+    try {
+      await registerStoreViaLace(lace);
+      setStoreRegistered(true);
+    } catch (e: any) {
+      setRegisterStoreError(e.message ?? 'Register store failed');
+    } finally {
+      setRegisteringStore(false);
     }
   }
 
@@ -213,6 +230,21 @@ export default function App() {
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {!storeRegistered && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                  <button onClick={handleRegisterStore} disabled={registeringStore} style={{
+                    ...btnBase,
+                    background: 'transparent', color: '#926A45',
+                    border: '1px solid #926A45',
+                    padding: '9px 18px', fontSize: 13,
+                  }}>
+                    {registeringStore ? 'Registrando tienda…' : 'Registrar tienda de demo'}
+                  </button>
+                  {registerStoreError && (
+                    <span style={{ fontSize: 11, color: '#f87171', maxWidth: 220, textAlign: 'right' }}>{registerStoreError}</span>
+                  )}
+                </div>
+              )}
               {false && !seeded && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                   <button onClick={handleSeed} disabled={seeding} style={{
@@ -245,7 +277,7 @@ export default function App() {
 
       <main className={styles.main}>
         {tab === 'store'
-          ? <StoreView lang={lang} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} />
+          ? <StoreView lang={lang} lace={lace} contractAddress={contractAddress} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} />
           : <UserView lang={lang} lace={lace} contractAddress={contractAddress} />}
       </main>
 

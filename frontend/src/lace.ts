@@ -1,5 +1,9 @@
 import { API_BASE } from './api.ts';
 
+// Igual que ReceiptJSON en backend/src/contract.ts — el recibo tal y como
+// viaja por la red y se codifica en el QR (bigint/Uint8Array no son JSON).
+export type ReceiptJSON = { subcategory: number; amount: string; timestamp: string; nonce: string };
+
 export type ConnectedAPI = {
   getUnshieldedAddress: () => Promise<{ unshieldedAddress: string }>;
   balanceUnsealedTransaction: (txHex: string) => Promise<{ tx: string }>;
@@ -89,14 +93,48 @@ export async function seedViaLace(lace: ConnectedAPI): Promise<void> {
   await laceBalanceAndSubmit(lace, tx);
 }
 
-export async function submitSignalViaLace(
+/** Alta única de la tienda de demo en el árbol de tiendas registradas — la hace el admin. */
+export async function registerStoreViaLace(lace: ConnectedAPI): Promise<void> {
+  const r = await fetch(`${API_BASE}/build-tx/register-store`);
+  if (!r.ok) {
+    const { error } = await r.json().catch(() => ({ error: r.statusText }));
+    throw new Error(error ?? 'Failed to build register-store tx');
+  }
+  const { tx } = await r.json();
+  await laceBalanceAndSubmit(lace, tx);
+}
+
+/** La tienda vende y sella el compromiso del recibo on-chain. Devuelve el
+ * recibo completo — quien llama es responsable de convertirlo en QR y no
+ * guardarlo en ningún otro sitio. */
+export async function attestReceiptViaLace(
   lace: ConnectedAPI,
   subcategory: string,
+  amount: number,
+): Promise<ReceiptJSON> {
+  const r = await fetch(`${API_BASE}/build-tx/attest-receipt`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ subcategory, amount }),
+  });
+  if (!r.ok) {
+    const { error } = await r.json().catch(() => ({ error: r.statusText }));
+    throw new Error(error ?? 'Failed to build attest-receipt tx');
+  }
+  const { tx, receipt } = await r.json();
+  await laceBalanceAndSubmit(lace, tx);
+  return receipt as ReceiptJSON;
+}
+
+/** El usuario envía como señal un recibo ya sellado por una tienda (escaneado de un QR). */
+export async function submitSignalViaLace(
+  lace: ConnectedAPI,
+  receipt: ReceiptJSON,
 ): Promise<void> {
   const r = await fetch(`${API_BASE}/build-tx/signal`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ subcategory }),
+    body: JSON.stringify({ receipt }),
   });
   if (!r.ok) {
     const { error } = await r.json().catch(() => ({ error: r.statusText }));

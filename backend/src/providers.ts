@@ -5,7 +5,7 @@ import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config
 import { sampleCoinPublicKey, sampleEncryptionPublicKey } from '@midnight-ntwrk/ledger-v8';
 import { type NetworkConfig } from './config.js';
 
-export type AegisCircuits = 'submitPurchase' | 'seed' | 'registerCampaign';
+export type AegisCircuits = 'submitPurchase' | 'seed' | 'registerCampaign' | 'registerStore' | 'attestReceipt';
 export type AegisProviders = MidnightProviders<any>;
 
 /**

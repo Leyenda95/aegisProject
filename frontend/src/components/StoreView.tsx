@@ -1,16 +1,20 @@
 import { useEffect, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
+import QRCode from 'qrcode';
 import {
   getState, getInsights, postCampaign, getMatch,
   CATEGORIES, CATEGORY_LABELS,
   SUBCATEGORIES, SUBCATEGORY_LABELS,
   type AegisState, type Insights, type Campaign, type MatchResult, type Category, type Lang,
 } from '../api.ts';
+import { attestReceiptViaLace, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
 import { T } from '../i18n.ts';
 import { useBreakpoint } from '../hooks/useBreakpoint.ts';
 
 type Props = {
   lang: Lang;
+  lace: ConnectedAPI | null;
+  contractAddress: string | null;
   campaigns: Campaign[];
   setCampaigns: Dispatch<SetStateAction<Campaign[]>>;
   matches: Record<string, MatchResult>;
@@ -26,7 +30,7 @@ function subcatKey(sub: string): keyof AegisState {
   return ('signals' + sub[0].toUpperCase() + sub.slice(1)) as keyof AegisState;
 }
 
-export default function StoreView({ lang, campaigns, setCampaigns, matches, setMatches }: Props) {
+export default function StoreView({ lang, lace, contractAddress, campaigns, setCampaigns, matches, setMatches }: Props) {
   const t = T[lang];
   const catLabel = CATEGORY_LABELS[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
@@ -54,6 +58,40 @@ export default function StoreView({ lang, campaigns, setCampaigns, matches, setM
   const [creating, setCreating] = useState(false);
   const [refreshing, setRefreshing] = useState<string | null>(null);
   const [campaignOpen, setCampaignOpen] = useState(false);
+
+  const [posOpen, setPosOpen] = useState(false);
+  const [posCat, setPosCat] = useState<Category | null>(null);
+  const [posSubcat, setPosSubcat] = useState<string | null>(null);
+  const [posAmount, setPosAmount] = useState('');
+  const [posSelling, setPosSelling] = useState(false);
+  const [posError, setPosError] = useState<string | null>(null);
+  const [posReceipt, setPosReceipt] = useState<ReceiptJSON | null>(null);
+  const [posQr, setPosQr] = useState<string | null>(null);
+
+  async function handleGenerateReceipt() {
+    if (!lace || !posSubcat) return;
+    setPosSelling(true);
+    setPosError(null);
+    try {
+      const amountCents = Math.round(Number(posAmount) * 100);
+      const receipt = await attestReceiptViaLace(lace, posSubcat, amountCents);
+      setPosReceipt(receipt);
+      setPosQr(await QRCode.toDataURL(JSON.stringify(receipt), { margin: 1, width: 260 }));
+    } catch (e: any) {
+      setPosError(e?.message ?? 'No se pudo sellar el recibo');
+    } finally {
+      setPosSelling(false);
+    }
+  }
+
+  function handleResetPos() {
+    setPosReceipt(null);
+    setPosQr(null);
+    setPosCat(null);
+    setPosSubcat(null);
+    setPosAmount('');
+    setPosError(null);
+  }
 
   async function handleManualRefresh() {
     setManualRefreshing(true);
@@ -239,6 +277,85 @@ export default function StoreView({ lang, campaigns, setCampaigns, matches, setM
         ) : (
           <p style={{ color: '#666666', fontSize: isMobile ? 13 : 14 }}>{t.insightsEmpty}</p>
         )}
+      </div>
+
+      {/* Punto de venta (demo) — genera un recibo sellado y su QR */}
+      <div style={card}>
+        <button
+          onClick={() => setPosOpen(o => !o)}
+          style={{
+            width: '100%', background: 'transparent', border: 'none', padding: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer',
+            marginBottom: posOpen ? (isMobile ? 14 : 20) : 0,
+          }}
+        >
+          <h2 style={sectionTitle}>Punto de venta (demo)</h2>
+          <span style={{ fontSize: 18, color: '#456D92', transition: 'transform 0.2s', display: 'inline-block', transform: posOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+        </button>
+
+        {posOpen && (!contractAddress ? (
+          <p style={{ color: '#888888', fontSize: 13 }}>Despliega el contrato primero.</p>
+        ) : !lace ? (
+          <p style={{ color: '#888888', fontSize: 13 }}>Conecta la wallet primero — la tienda necesita firmar el sello del recibo.</p>
+        ) : posQr && posReceipt ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <p style={{ color: '#AAAAAA', fontSize: 13, textAlign: 'center' }}>
+              Recibo sellado — que el cliente escanee este código con la app.
+            </p>
+            <img src={posQr} alt="QR del recibo" style={{ borderRadius: 8, background: '#fff', padding: 8 }} />
+            <button onClick={handleResetPos} style={{ background: '#111111', border: '1px solid #222222', color: '#AAAAAA', fontSize: 13, padding: '8px 16px' }}>
+              Nueva venta
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 8 }}>
+              {CATEGORIES.map(cat => (
+                <button key={cat} onClick={() => { setPosCat(cat); setPosSubcat(null); }} style={{
+                  background: posCat === cat ? '#926a4510' : '#111111',
+                  border: `2px solid ${posCat === cat ? '#926A45' : '#222222'}`,
+                  borderRadius: 10, padding: isMobile ? '10px 6px' : '12px 8px',
+                  color: posCat === cat ? '#FFFFFF' : '#888888',
+                  fontSize: isMobile ? 13 : 12, cursor: 'pointer',
+                }}>
+                  {catLabel[cat]}
+                </button>
+              ))}
+            </div>
+            {posCat && (
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 8 }}>
+                {SUBCATEGORIES[posCat].map((sub: string) => (
+                  <button key={sub} onClick={() => setPosSubcat(sub)} style={{
+                    background: posSubcat === sub ? '#926a4510' : '#111111',
+                    border: `2px solid ${posSubcat === sub ? '#926A45' : '#1A1A1A'}`,
+                    borderRadius: 10, padding: isMobile ? '10px 6px' : '12px 8px',
+                    color: posSubcat === sub ? '#ffffff' : '#555555',
+                    fontSize: isMobile ? 13 : 12, cursor: 'pointer',
+                  }}>
+                    {subLabel[sub]}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div>
+              <label style={{ fontSize: isMobile ? 13 : undefined }}>Importe (€)</label>
+              <input type="number" min={0} step="0.01" placeholder="0.00" value={posAmount}
+                onChange={e => setPosAmount(e.target.value)} />
+            </div>
+            {posError && <p style={{ color: '#f87171', fontSize: 13 }}>{posError}</p>}
+            <button
+              onClick={handleGenerateReceipt}
+              disabled={!posSubcat || !posAmount || posSelling}
+              style={{
+                background: '#926A45', color: '#fff', width: isMobile ? '100%' : undefined,
+                alignSelf: isMobile ? undefined : 'flex-start', fontSize: isMobile ? 14 : undefined,
+                opacity: (!posSubcat || !posAmount || posSelling) ? 0.4 : 1,
+              }}
+            >
+              {posSelling ? 'Sellando…' : 'Generar recibo y QR'}
+            </button>
+          </div>
+        ))}
       </div>
 
       {/* Crear campaña — desplegable */}

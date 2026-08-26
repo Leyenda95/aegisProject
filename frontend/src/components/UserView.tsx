@@ -1,10 +1,8 @@
-import { useState } from 'react';
-import {
-  CATEGORIES, SUBCATEGORIES, CATEGORY_LABELS,
-  SUBCATEGORY_LABELS,
-  type Category, type Lang,
-} from '../api.ts';
-import { submitSignalViaLace, type ConnectedAPI } from '../lace.ts';
+import { useEffect, useState } from 'react';
+import { SUBCATEGORY_INDEX, SUBCATEGORY_LABELS, type Lang } from '../api.ts';
+import { submitSignalViaLace, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
+import { listVault, addToVault, removeFromVault, type VaultEntry } from '../vault.ts';
+import QrScanner from './QrScanner.tsx';
 import { T } from '../i18n.ts';
 import { useBreakpoint } from '../hooks/useBreakpoint.ts';
 import ProfileSection from './ProfileSection.tsx';
@@ -15,59 +13,60 @@ type Props = {
   contractAddress: string | null;
 };
 
+function isReceiptJSON(v: any): v is ReceiptJSON {
+  return v && typeof v.subcategory === 'number' && typeof v.amount === 'string'
+    && typeof v.timestamp === 'string' && typeof v.nonce === 'string';
+}
+
 export default function UserView({ lang, lace, contractAddress }: Props) {
   const t = T[lang];
-  const catLabel = CATEGORY_LABELS[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
   const bp = useBreakpoint();
   const isMobile = bp === 'mobile';
   const [activeTab, setActiveTab] = useState<'contribute' | 'profile'>('profile');
 
-  const [selectedCat, setSelectedCat] = useState<Category | null>(null);
-  const [selectedSubcat, setSelectedSubcat] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [vault, setVault] = useState<VaultEntry[]>([]);
+  const [scanning, setScanning] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
+  const [submitErrors, setSubmitErrors] = useState<Record<string, string>>({});
+  const [justSentId, setJustSentId] = useState<string | null>(null);
 
-  function handleCatSelect(cat: Category) {
-    setSelectedCat(cat);
-    setSelectedSubcat(null);
-  }
+  useEffect(() => {
+    setVault(listVault());
+  }, []);
 
-  const canSubmit = !!selectedSubcat && !loading;
   const needsLace = !lace;
   const needsDeploy = lace && !contractAddress;
 
-  async function handleContribute() {
-    if (!selectedSubcat) return;
-    setLoading(true);
-    setError(null);
+  function handleScan(data: string) {
+    setScanning(false);
     try {
-      await submitSignalViaLace(lace!, selectedSubcat);
-      setSent(true);
-      setTimeout(() => { setSent(false); setSelectedCat(null); setSelectedSubcat(null); }, 600_000);
+      const parsed = JSON.parse(data);
+      if (!isReceiptJSON(parsed)) throw new Error('QR no reconocido como recibo de Aegis');
+      addToVault(parsed);
+      setVault(listVault());
+      setScanError(null);
     } catch (e: any) {
-      console.error('[Aegis] contribution error:', e);
-      setError(e.message || e.toString() || 'Unknown error');
-    } finally {
-      setLoading(false);
+      setScanError(e?.message ?? 'No se pudo leer el QR');
     }
   }
 
-  if (sent) {
-    return (
-      <div style={{ maxWidth: 520, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <img src="/images/aegis_hor_letras.svg" alt="Aegis" style={{ height: isMobile ? 90 : 180, objectFit: 'contain', marginBottom: isMobile ? 16 : 40 }} />
-          <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: '#64d1a9dc', marginBottom: 12 }}>{t.userSentTitle}</div>
-          <div style={{ maxWidth: 400, margin: '0 auto', fontSize: isMobile ? 13 : 14, color: '#E5F0FE', marginBottom: 24 }}>{t.userSentDetail}</div>
-        </div>
-        <div style={{ marginTop: isMobile ? 24 : 48, padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 25, width: '100%' }}>
-          <span style={{ fontSize: 11, color: '#8f8f8f', letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
-          <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" style={{ height: 28, opacity: 0.85 }} />
-        </div>
-      </div>
-    );
+  async function handleSubmit(entry: VaultEntry) {
+    if (!lace) return;
+    setSubmittingId(entry.id);
+    setSubmitErrors(prev => { const { [entry.id]: _, ...rest } = prev; return rest; });
+    try {
+      await submitSignalViaLace(lace, entry.receipt);
+      removeFromVault(entry.id);
+      setVault(listVault());
+      setJustSentId(entry.id);
+      setTimeout(() => setJustSentId(null), 4000);
+    } catch (e: any) {
+      setSubmitErrors(prev => ({ ...prev, [entry.id]: e?.message ?? 'Error enviando la señal' }));
+    } finally {
+      setSubmittingId(null);
+    }
   }
 
   return (
@@ -112,60 +111,74 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
 
         <div style={{ marginBottom: isMobile ? 14 : 20 }}>
           <div style={{ fontSize: 12, color: '#999999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
-            {t.userStep1}
+            Recibo de una compra real
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 8 }}>
-            {CATEGORIES.map(cat => (
-              <button key={cat} onClick={() => handleCatSelect(cat)} style={{
-                background: selectedCat === cat ? '#926a4510' : '#111111',
-                border: `2px solid ${selectedCat === cat ? '#926A45' : '#222222'}`,
-                borderRadius: 10, padding: isMobile ? '10px 6px' : '12px 8px',
-                color: selectedCat === cat ? '#FFFFFF' : '#888888',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                fontSize: isMobile ? 13 : 12, fontWeight: selectedCat === cat ? 600 : 400, cursor: 'pointer',
-              }}>
-                {catLabel[cat]}
-              </button>
-            ))}
-          </div>
+          <p style={{ color: '#999999', fontSize: isMobile ? 12 : 13, lineHeight: 1.6, marginBottom: 12 }}>
+            La tienda te enseña un código QR al pagar. Escanéalo para añadir el recibo a tu bóveda — decides tú, y cuándo, convertirlo en una señal.
+          </p>
+          <button
+            onClick={() => { setScanError(null); setScanning(true); }}
+            disabled={!!needsLace || !!needsDeploy}
+            style={{
+              width: '100%', background: 'transparent', border: '2px solid #926A45', color: '#926A45',
+              padding: isMobile ? '12px' : '13px', fontSize: isMobile ? 14 : 15, borderRadius: 10,
+              opacity: (needsLace || needsDeploy) ? 0.3 : 1, cursor: (needsLace || needsDeploy) ? 'not-allowed' : 'pointer',
+            }}
+          >
+            📷 Escanear recibo
+          </button>
+          {scanError && (
+            <p style={{ color: '#f87171', fontSize: 13, marginTop: 8 }}>{scanError}</p>
+          )}
         </div>
 
-        {selectedCat && (
-          <div style={{ marginBottom: isMobile ? 16 : 24 }}>
-            <div style={{ fontSize: 12, color: '#999999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
-              {t.userStep2}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 8 }}>
-              {SUBCATEGORIES[selectedCat].map((sub: string) => (
-                <button key={sub} onClick={() => setSelectedSubcat(sub)} style={{
-                  background: selectedSubcat === sub ? '#926a4510' : '#111111',
-                  border: `2px solid ${selectedSubcat === sub ? '#926A45' : '#1A1A1A'}`,
-                  borderRadius: 10, padding: isMobile ? '10px 6px' : '12px 8px',
-                  color: selectedSubcat === sub ? '#ffffff' : '#555555',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                  fontSize: isMobile ? 13 : 12, fontWeight: selectedSubcat === sub ? 600 : 400, cursor: 'pointer',
-                }}>
-                  {subLabel[sub]}
-                </button>
-              ))}
-            </div>
+        <div>
+          <div style={{ fontSize: 12, color: '#999999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
+            Tu bóveda ({vault.length})
           </div>
-        )}
-
-        {error && (
-          <div style={{ background: '#111111', border: '1px solid #7f1d1d', borderRadius: 8, padding: 12, marginBottom: 14, fontSize: isMobile ? 12 : 13, color: '#f87171' }}>
-            {error}
-          </div>
-        )}
-
-        <button onClick={handleContribute} disabled={!canSubmit || !!needsDeploy || !!needsLace} style={{
-          width: '100%', background: '#926A45', color: '#FFFFFF',
-          padding: isMobile ? '13px' : '14px', fontSize: isMobile ? 15 : 16, borderRadius: 10,
-          opacity: (!canSubmit || needsDeploy || needsLace) ? 0.3 : 1,
-          cursor: canSubmit ? 'pointer' : 'not-allowed',
-        }}>
-          {loading ? t.userSubmitting : t.userSubmit}
-        </button>
+          {vault.length === 0 ? (
+            <p style={{ color: '#666666', fontSize: isMobile ? 13 : 14 }}>Todavía no has escaneado ningún recibo.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {vault.map(entry => {
+                const subKey = SUBCATEGORY_INDEX[entry.receipt.subcategory];
+                const amount = (Number(entry.receipt.amount) / 100).toFixed(2);
+                const sending = submittingId === entry.id;
+                return (
+                  <div key={entry.id} style={{
+                    background: '#111111', border: '1px solid #1A1A1A', borderRadius: 10,
+                    padding: isMobile ? 12 : 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+                  }}>
+                    <div>
+                      <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, color: '#FFFFFF' }}>
+                        {subLabel[subKey] ?? subKey}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#AAAAAA' }}>{amount} €</div>
+                      {submitErrors[entry.id] && (
+                        <div style={{ fontSize: 12, color: '#f87171', marginTop: 4 }}>{submitErrors[entry.id]}</div>
+                      )}
+                    </div>
+                    {justSentId === entry.id ? (
+                      <span style={{ fontSize: 13, color: '#64d1a9dc', fontWeight: 600 }}>{t.userSentTitle} ✓</span>
+                    ) : (
+                      <button
+                        onClick={() => handleSubmit(entry)}
+                        disabled={sending || !!needsLace || !!needsDeploy}
+                        style={{
+                          background: '#926A45', color: '#FFFFFF', fontSize: 13, padding: '8px 16px',
+                          borderRadius: 8, border: 'none', cursor: 'pointer', flexShrink: 0,
+                          opacity: sending ? 0.5 : 1,
+                        }}
+                      >
+                        {sending ? '…' : 'Enviar señal'}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         <div style={{ marginTop: 14, marginBottom: 16, background: '#0D0D0D', border: '1px solid #2A2A2A', borderRadius: 8, padding: isMobile ? 12 : 16 }}>
           <div style={{ fontSize: isMobile ? 12 : 12, color: '#BBBBBB', lineHeight: 1.7 }}>
@@ -175,6 +188,8 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
       </div>}
 
       </div>{/* end profile-section tour frame */}
+
+      {scanning && <QrScanner onScan={handleScan} onClose={() => setScanning(false)} />}
 
       {/* Midnight branding */}
       <div style={{ textAlign: 'center', marginTop: isMobile ? 40 : 80, padding: '24px 0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 25 }}>

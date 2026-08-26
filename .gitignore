@@ -5,6 +5,8 @@ logs/
 midnight-level-db/
 .env
 .contract-address-*
+.admin-key-*
+.store-key-*
 .claude/settings.local.json
 *.log
 .vscode/
