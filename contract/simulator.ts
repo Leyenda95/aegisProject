@@ -10,7 +10,14 @@ import {
   createConstructorContext,
   sampleContractAddress,
 } from '@midnight-ntwrk/compact-runtime';
-import { Contract, type Ledger, ledger, type Subcategory } from './managed/aegis/contract/index.js';
+import {
+  Contract,
+  type Ledger,
+  ledger,
+  pureCircuits,
+  type Receipt,
+  type Subcategory,
+} from './managed/aegis/contract/index.js';
 import { type AegisPrivateState, emptyPrivateState, witnesses } from './witnesses.js';
 
 export class AegisSimulator {
@@ -18,13 +25,13 @@ export class AegisSimulator {
   readonly contractAddress: string;
   private circuitContext: CircuitContext<AegisPrivateState>;
 
-  constructor(contractAddress: string = sampleContractAddress()) {
+  constructor(adminSecretKey: Uint8Array = new Uint8Array(32).fill(1), contractAddress: string = sampleContractAddress()) {
     this.contract = new Contract<AegisPrivateState>(witnesses);
     this.contractAddress = contractAddress;
 
     const coinPublicKey = '0'.repeat(64);
     const initial = this.contract.initialState(
-      createConstructorContext(emptyPrivateState, coinPublicKey),
+      createConstructorContext({ ...emptyPrivateState, secretKey: adminSecretKey }, coinPublicKey),
     );
     this.circuitContext = createCircuitContext(
       contractAddress,
@@ -39,8 +46,44 @@ export class AegisSimulator {
     return ledger(this.circuitContext.currentQueryContext.state);
   }
 
-  submitPurchase(subcat: Subcategory): void {
-    const result = this.contract.impureCircuits.submitPurchase(this.circuitContext, subcat);
+  /** Hash público de una clave secreta de tienda/admin — cálculo local, sin transacción. */
+  static storePublicKey(secretKey: Uint8Array): Uint8Array {
+    return pureCircuits.storePublicKey(secretKey);
+  }
+
+  /** Compromiso de un recibo — cálculo local, sin transacción. */
+  static receiptCommitment(receipt: Receipt): Uint8Array {
+    return pureCircuits.receiptCommitment(receipt);
+  }
+
+  /** Cambia qué clave secreta usan los siguientes circuitos que la requieran (admin o tienda). */
+  actingAs(secretKey: Uint8Array): void {
+    this.circuitContext.currentPrivateState = {
+      ...this.circuitContext.currentPrivateState,
+      secretKey,
+    };
+  }
+
+  /** Deja preparado el recibo que leerá el siguiente submitPurchase(). */
+  holdingReceipt(receipt: Receipt | null): void {
+    this.circuitContext.currentPrivateState = {
+      ...this.circuitContext.currentPrivateState,
+      receipt,
+    };
+  }
+
+  registerStore(storePk: Uint8Array): void {
+    const result = this.contract.impureCircuits.registerStore(this.circuitContext, storePk);
+    this.circuitContext = result.context;
+  }
+
+  attestReceipt(commitment: Uint8Array): void {
+    const result = this.contract.impureCircuits.attestReceipt(this.circuitContext, commitment);
+    this.circuitContext = result.context;
+  }
+
+  submitPurchase(): void {
+    const result = this.contract.impureCircuits.submitPurchase(this.circuitContext);
     this.circuitContext = result.context;
   }
 
@@ -80,4 +123,14 @@ export class AegisSimulator {
     this.circuitContext = result.context;
     return result.result;
   }
+}
+
+/** Construye un Receipt con un nonce por defecto — útil en tests. */
+export function makeReceipt(subcategory: Subcategory, amount: bigint, timestamp: bigint, nonce?: Uint8Array): Receipt {
+  return {
+    subcategory,
+    amount,
+    timestamp,
+    nonce: nonce ?? crypto.getRandomValues(new Uint8Array(32)),
+  };
 }

@@ -16,6 +16,16 @@ export enum Subcategory {
   other
 }
 
+// Recibo de compra: dato privado, nunca se guarda tal cual on-chain.
+// nonce aporta la aleatoriedad del compromiso (persistentCommit) y hace
+// que dos recibos con los mismos valores no produzcan el mismo hash.
+export struct Receipt {
+  subcategory: Subcategory,
+  amount: Uint<64>,
+  timestamp: Uint<64>,
+  nonce: Bytes<32>,
+}
+
 // Main category counters
 export ledger signalsElectronics: Counter;
 export ledger signalsFashion: Counter;
@@ -61,7 +71,69 @@ export ledger totalSignals: Counter;
 export ledger campaignCount: Counter;
 export ledger isSeeded: Counter;
 
-export circuit submitPurchase(subcat: Subcategory): [] {
+// --- Registro de tiendas y atestación de recibos ---
+//
+// Una tienda registrada puede sellar el hash (compromiso) de un recibo sin
+// revelar cuál de las tiendas registradas es (prueba de pertenencia al
+// árbol Merkle). submitPurchase exige que el recibo del usuario coincida
+// con un sello ya publicado antes de revelar categoría/subcategoría.
+export sealed ledger admin: Bytes<32>;
+export ledger registeredStores: HistoricMerkleTree<10, Bytes<32>>;
+export ledger sealedReceipts: Set<Bytes<32>>;
+export ledger usedReceipts: Set<Bytes<32>>;
+
+witness local_secret_key(): Bytes<32>;
+witness getStorePath(pk: Bytes<32>): MerkleTreePath<10, Bytes<32>>;
+witness getReceipt(): Receipt;
+
+export circuit storePublicKey(sk: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([
+    pad(32, "aegis:store:pk:"), sk
+  ]);
+}
+
+// El compromiso protege sus entradas: no hace falta disclose() sobre los
+// campos del recibo ni sobre el resultado.
+export circuit receiptCommitment(r: Receipt): Bytes<32> {
+  const subcatBytes = (r.subcategory as Field) as Bytes<32>;
+  const amountBytes = r.amount as Bytes<32>;
+  const timestampBytes = r.timestamp as Bytes<32>;
+  return persistentCommit<Vector<3, Bytes<32>>>(
+    [subcatBytes, amountBytes, timestampBytes],
+    r.nonce,
+  );
+}
+
+constructor() {
+  admin = disclose(storePublicKey(local_secret_key()));
+}
+
+// Solo el admin da de alta tiendas verificadas en el árbol.
+export circuit registerStore(storePk: Bytes<32>): [] {
+  const sk = local_secret_key();
+  assert(disclose(storePublicKey(sk) == admin), "Not admin");
+  registeredStores.insert(disclose(storePk));
+}
+
+// Una tienda registrada sella el hash de un recibo, demostrando que
+// pertenece al árbol sin revelar cuál de las tiendas es.
+export circuit attestReceipt(commitment: Bytes<32>): [] {
+  const sk = local_secret_key();
+  const pk = storePublicKey(sk);
+  const path = getStorePath(pk);
+  const digest = merkleTreePathRoot<10, Bytes<32>>(path);
+  assert(registeredStores.checkRoot(disclose(digest)), "Not a registered store");
+  sealedReceipts.insert(disclose(commitment));
+}
+
+export circuit submitPurchase(): [] {
+  const receipt = getReceipt();
+  const commitment = disclose(receiptCommitment(receipt));
+  assert(sealedReceipts.member(commitment), "Receipt not attested by a registered store");
+  assert(!usedReceipts.member(commitment), "Receipt already used");
+  usedReceipts.insert(commitment);
+
+  const subcat = receipt.subcategory;
   if (disclose(subcat == Subcategory.mobile)) {
     signalsElectronics.increment(1); signalsMobile.increment(1);
   } else if (disclose(subcat == Subcategory.tablet)) {
