@@ -81,6 +81,13 @@ export const SUBCATEGORY_ICONS: Record<string, string> = {
   other: '📦',
 };
 
+// Dirección del backend. Cada persona que prueba el proyecto levanta el
+// backend en su propia máquina, así que "localhost" apunta correctamente al
+// suyo propio, sin importar si el frontend se sirve desde Vercel o en local.
+// Cuando el backend pase a vivir en un servidor real, basta con fijar
+// VITE_API_URL en el build de Vercel.
+export const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+
 async function handleJson<T>(r: Response): Promise<T> {
   if (!r.ok) {
     const body = await r.text().catch(() => r.statusText);
@@ -90,17 +97,17 @@ async function handleJson<T>(r: Response): Promise<T> {
 }
 
 export async function getState(): Promise<AegisState> {
-  return handleJson<AegisState>(await fetch('/api/state'));
+  return handleJson<AegisState>(await fetch(`${API_BASE}/state`));
 }
 
 export async function getInsights(storeProfile?: string, lang: Lang = 'en'): Promise<Insights> {
   const params = new URLSearchParams({ lang });
   if (storeProfile) params.set('store', storeProfile);
-  return handleJson<Insights>(await fetch(`/api/insights?${params}`));
+  return handleJson<Insights>(await fetch(`${API_BASE}/insights?${params}`));
 }
 
 export async function postCampaign(data: Omit<Campaign, 'id'>): Promise<{ id: string }> {
-  return handleJson<{ id: string }>(await fetch('/api/campaigns', {
+  return handleJson<{ id: string }>(await fetch(`${API_BASE}/campaigns`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -108,5 +115,5 @@ export async function postCampaign(data: Omit<Campaign, 'id'>): Promise<{ id: st
 }
 
 export async function getMatch(id: string): Promise<MatchResult> {
-  return handleJson<MatchResult>(await fetch(`/api/match/${id}`));
+  return handleJson<MatchResult>(await fetch(`${API_BASE}/match/${id}`));
 }

@@ -3,7 +3,7 @@ import StoreView from './components/StoreView.tsx';
 import UserView from './components/UserView.tsx';
 import LandingScreen from './components/LandingScreen.tsx';
 import TourGuide from './components/TourGuide.tsx';
-import type { Campaign, MatchResult, Lang } from './api.ts';
+import { API_BASE, type Campaign, type MatchResult, type Lang } from './api.ts';
 import { type ConnectedAPI, type WalletInfo, listWallets, connectWallet, deployViaLace, seedViaLace } from './lace.ts';
 import { T } from './i18n.ts';
 import styles from './App.module.css';
@@ -46,11 +46,11 @@ export default function App() {
   const t = T[lang];
 
   useEffect(() => {
-    fetch('/api/contract-address')
+    fetch(`${API_BASE}/contract-address`)
       .then(r => r.json())
       .then(({ address }) => { if (address) setContractAddress(address); })
       .catch(() => {});
-    fetch('/api/network')
+    fetch(`${API_BASE}/network`)
       .then(r => r.json())
       .then(({ networkId }) => { if (networkId) setNetworkId(networkId); })
       .catch(() => {});

@@ -1,3 +1,5 @@
+import { API_BASE } from './api.ts';
+
 export type ConnectedAPI = {
   getUnshieldedAddress: () => Promise<{ unshieldedAddress: string }>;
   balanceUnsealedTransaction: (txHex: string) => Promise<{ tx: string }>;
@@ -48,13 +50,13 @@ export async function laceBalanceAndSubmit(
 export async function deployViaLace(
   lace: ConnectedAPI,
 ): Promise<string> {
-  const r = await fetch('/api/build-tx/deploy');
+  const r = await fetch(`${API_BASE}/build-tx/deploy`);
   if (!r.ok) throw new Error(`Build deploy tx failed: ${await r.text()}`);
   const { tx, contractAddress } = await r.json();
 
   await laceBalanceAndSubmit(lace, tx);
 
-  const r2 = await fetch('/api/contract-address', {
+  const r2 = await fetch(`${API_BASE}/contract-address`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ address: contractAddress }),
@@ -74,7 +76,7 @@ const DEFAULT_SEED = {
 };
 
 export async function seedViaLace(lace: ConnectedAPI): Promise<void> {
-  const r = await fetch('/api/build-tx/seed', {
+  const r = await fetch(`${API_BASE}/build-tx/seed`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(DEFAULT_SEED),
@@ -91,7 +93,7 @@ export async function submitSignalViaLace(
   lace: ConnectedAPI,
   subcategory: string,
 ): Promise<void> {
-  const r = await fetch('/api/build-tx/signal', {
+  const r = await fetch(`${API_BASE}/build-tx/signal`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ subcategory }),
