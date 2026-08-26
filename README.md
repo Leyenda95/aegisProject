@@ -1,4 +1,8 @@
-# AEGIS — Private Commerce Intelligence on Midnight
+<p align="center">
+  <img width=auto height="350" alt="test aegis png" src="https://github.com/user-attachments/assets/05aba816-8505-4cc9-be66-8583f900d919" />
+</p>
+
+# AEGIS - Private Commerce Intelligence on Midnight
 
 Market intelligence powered by anonymous ZK signals. Stores see what customers want. Customers stay invisible.
 
