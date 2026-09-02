@@ -24,20 +24,20 @@ line();
 const storePk = AegisSimulator.storePublicKey(STORE_KEY);
 sim.actingAs(ADMIN_KEY);
 sim.registerStore(storePk);
-line('2) registerStore(storePk) — el admin da de alta una tienda');
+line('2) registerStore(storePk): el admin da de alta una tienda');
 line();
 
 const receipt = makeReceipt(Subcategory.mobile, 89999n, 1n);
 const commitment = AegisSimulator.receiptCommitment(receipt);
 sim.actingAs(STORE_KEY);
 sim.attestReceipt(commitment);
-line('3) attestReceipt(commitment) — la tienda sella un recibo sin decir cuál es');
+line('3) attestReceipt(commitment): la tienda sella un recibo sin decir cuál es');
 line('   (demuestra pertenencia al árbol de tiendas, no revela cuál de ellas es)');
 line();
 
 sim.holdingReceipt(receipt);
 sim.submitPurchase();
-line('4) submitPurchase() — el usuario envía el recibo ya sellado como señal');
+line('4) submitPurchase(): el usuario envía el recibo ya sellado como señal');
 line(`   totalSignals       = ${sim.ledger.totalSignals}`);
 line(`   signalsElectronics = ${sim.ledger.signalsElectronics}`);
 line(`   signalsMobile      = ${sim.ledger.signalsMobile}`);
@@ -72,7 +72,7 @@ line(`   campaignCount  = ${sim.ledger.campaignCount}`);
 line();
 
 sim.seed({ initMobile: 10n, totalElectronics: 10n, grandTotal: 10n });
-line('8) seed(...) — solo se puede llamar una vez');
+line('8) seed(...): solo se puede llamar una vez');
 line(`   isSeeded           = ${sim.ledger.isSeeded}`);
 line(`   signalsMobile      = ${sim.ledger.signalsMobile}`);
 line(`   signalsElectronics = ${sim.ledger.signalsElectronics}`);

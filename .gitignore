@@ -7,6 +7,8 @@ midnight-level-db/
 .contract-address-*
 .admin-key-*
 .store-key-*
+.operator-wallet-seed-*
+.operator-wallet-state-*
 .claude/settings.local.json
 *.log
 .vscode/

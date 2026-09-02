@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Subcategory } from '../managed/aegis/contract/index.js';
-import { AegisSimulator, makeReceipt } from '../simulator.js';
+import { AegisSimulator, makeReceipt, makeMultiReceipt } from '../simulator.js';
 
 const ADMIN_KEY = new Uint8Array(32).fill(1);
 const STORE_KEY = new Uint8Array(32).fill(2);
@@ -56,7 +56,7 @@ describe('attestReceipt', () => {
     const commitment = AegisSimulator.receiptCommitment(receipt);
     sim.actingAs(STORE_KEY);
     // El witness getStorePath corta aquí mismo, antes incluso de que el
-    // circuito llegue a su propio assert — no hay ruta Merkle que ofrecer
+    // circuito llegue a su propio assert, no hay ruta Merkle que ofrecer
     // para una hoja que nunca se insertó en el árbol.
     expect(() => sim.attestReceipt(commitment)).toThrow(/Store not registered in the Merkle tree/);
   });
@@ -124,6 +124,24 @@ describe('submitPurchase', () => {
     expect(sim.ledger.signalsMobile).toBe(2n);
     expect(sim.ledger.signalsTablet).toBe(1n);
     expect(sim.ledger.totalSignals).toBe(3n);
+  });
+
+  it('un recibo con varias subcategorías señala cada una por sus unidades (rollup)', () => {
+    const sim = withRegisteredStore();
+    const receipt = makeMultiReceipt([
+      { subcategory: Subcategory.tops, qty: 15n, amount: 28500n },
+      { subcategory: Subcategory.bottoms, qty: 5n, amount: 29500n },
+    ], 1n);
+    const commitment = AegisSimulator.receiptCommitment(receipt);
+    sim.actingAs(STORE_KEY);
+    sim.attestReceipt(commitment);
+    sim.holdingReceipt(receipt);
+    sim.submitPurchase();
+
+    expect(sim.ledger.signalsTops).toBe(15n);
+    expect(sim.ledger.signalsBottoms).toBe(5n);
+    expect(sim.ledger.signalsFashion).toBe(20n);
+    expect(sim.ledger.totalSignals).toBe(20n);
   });
 });
 

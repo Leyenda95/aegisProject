@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
+import { T } from '../i18n.ts';
+import type { Lang } from '../api.ts';
 
 type Props = {
+  lang: Lang;
   onScan: (data: string) => void;
   onClose: () => void;
 };
 
-export default function QrScanner({ onScan, onClose }: Props) {
+export default function QrScanner({ lang, onScan, onClose }: Props) {
+  const t = T[lang];
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +32,9 @@ export default function QrScanner({ onScan, onClose }: Props) {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const code = jsQR(frame.data, frame.width, frame.height);
-          if (code) {
+          // jsQR a veces "engancha" un patrón antes de tiempo y devuelve
+          // data vacía, no es un escaneo válido, hay que seguir mirando.
+          if (code && code.data.trim()) {
             stopped = true;
             onScan(code.data);
             return;
@@ -41,7 +47,7 @@ export default function QrScanner({ onScan, onClose }: Props) {
     async function start() {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        // En desarrollo, StrictMode monta el efecto dos veces seguidas — si
+        // En desarrollo, StrictMode monta el efecto dos veces seguidas, si
         // la limpieza ya se disparó mientras esperábamos la cámara, no
         // toques el <video> ni sigas: ya no está en el DOM.
         if (stopped) {
@@ -53,7 +59,7 @@ export default function QrScanner({ onScan, onClose }: Props) {
           try {
             await videoRef.current.play();
           } catch (playErr: any) {
-            // Interrumpido por el remount de StrictMode — inofensivo, el
+            // Interrumpido por el remount de StrictMode, inofensivo, el
             // segundo montaje (el real) sigue su curso normalmente.
             if (playErr?.name === 'AbortError') return;
             throw playErr;
@@ -61,7 +67,7 @@ export default function QrScanner({ onScan, onClose }: Props) {
         }
         if (!stopped) tick();
       } catch (e: any) {
-        if (!stopped) setError(e?.message ?? 'No se pudo acceder a la cámara');
+        if (!stopped) setError(e?.message ?? t.scannerCameraError);
       }
     }
 
@@ -88,7 +94,7 @@ export default function QrScanner({ onScan, onClose }: Props) {
         background: '#926A45', color: '#FFFFFF', padding: '10px 24px', borderRadius: 8,
         border: 'none', fontSize: 14, cursor: 'pointer',
       }}>
-        Cancelar
+        {t.scannerCancel}
       </button>
     </div>
   );

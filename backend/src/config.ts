@@ -3,6 +3,8 @@ export type NetworkConfig = {
   indexer: string;
   indexerWS: string;
   proofServer: string;
+  /** Endpoint RPC del nodo, solo lo usa la wallet operadora del backend (ver operatorWallet.ts). */
+  relayURL: string;
 };
 
 export const LOCAL_CONFIG: NetworkConfig = {
@@ -10,6 +12,7 @@ export const LOCAL_CONFIG: NetworkConfig = {
   indexer: 'http://127.0.0.1:8088/api/v4/graphql',
   indexerWS: 'ws://127.0.0.1:8088/api/v4/graphql/ws',
   proofServer: 'http://127.0.0.1:6300',
+  relayURL: 'ws://127.0.0.1:9944',
 };
 
 export const PREPROD_CONFIG: NetworkConfig = {
@@ -17,6 +20,7 @@ export const PREPROD_CONFIG: NetworkConfig = {
   indexer: 'https://indexer.preprod.midnight.network/api/v4/graphql',
   indexerWS: 'wss://indexer.preprod.midnight.network/api/v4/graphql/ws',
   proofServer: 'http://127.0.0.1:6300',
+  relayURL: 'wss://rpc.preprod.midnight.network',
 };
 
 export const PREVIEW_CONFIG: NetworkConfig = {
@@ -24,6 +28,7 @@ export const PREVIEW_CONFIG: NetworkConfig = {
   indexer: 'https://indexer.preview.midnight.network/api/v4/graphql',
   indexerWS: 'wss://indexer.preview.midnight.network/api/v4/graphql/ws',
   proofServer: 'http://127.0.0.1:6300',
+  relayURL: 'wss://rpc.preview.midnight.network',
 };
 
 export function getConfig(): NetworkConfig {

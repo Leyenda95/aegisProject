@@ -45,7 +45,7 @@
   box-sizing: border-box;
 }
 
-/* ─ Tablet (680px – 1080px) ─────────── */
+/* Tablet (680px - 1080px) */
 @media (max-width: 1080px) {
   .header {
     padding: 12px 24px;
@@ -56,7 +56,7 @@
   }
 }
 
-/* ─ Mobile (< 680px) ────────────────── */
+/* Mobile (< 680px) */
 @media (max-width: 680px) {
   .header {
     padding: 10px 16px;

@@ -1,4 +1,4 @@
-/* ─ Root ────────────────────────────── */
+/* Root */
 .root {
   position: fixed;
   inset: 0;
@@ -25,7 +25,7 @@
 }
 
 
-/* ─ Grain ────────────────────────────── */
+/* Grain */
 .grain {
   position: absolute;
   inset: -50%;
@@ -51,7 +51,7 @@
   100% { transform: translate( 2%, -2% ); }
 }
 
-/* ─ Logo hero (EFFECT 3) ─────────────── */
+/* Logo hero (EFFECT 3) */
 .heroWrap {
   position: relative;
   display: flex;
@@ -93,7 +93,7 @@
 
 } */
 
-/* ─ Content ─────────────────────────── */
+/* Content */
 .content {
   position: relative;
   display: flex;
@@ -145,7 +145,7 @@
   margin-bottom: 48px;
 }
 
-/* ─ CTA ─────────────────────────────── */
+/* CTA */
 .cta {
   background: linear-gradient(135deg, rgba(69,109,146,0.25) 0%, rgba(42,80,120,0.15) 100%);
   color: #fff;
@@ -173,7 +173,7 @@
 }
 
 
-/* ─ Tablet (680px – 1080px) ─────────── */
+/* Tablet (680px - 1080px) */
 @media (max-width: 1080px) {
   .title {
     font-size: 52px;
@@ -190,7 +190,7 @@
   }
 }
 
-/* ─ Mobile (< 680px) ────────────────── */
+/* Mobile (< 680px) */
 @media (max-width: 680px) {
   .heroWrap {
     flex-direction: column;
@@ -249,7 +249,7 @@
   }
 }
 
-/* ─ Midnight footer ─────────────────── */
+/* Midnight footer */
 .footer {
   position: absolute;
   bottom: 32px;

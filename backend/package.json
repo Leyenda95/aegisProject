@@ -8,8 +8,9 @@
   },
   "scripts": {
     "start": "MIDNIGHT_NETWORK=local tsx src/index.ts",
-    "start:preprod": "MIDNIGHT_NETWORK=preprod NODE_OPTIONS=--max-old-space-size=4096 tsx src/index.ts",
-    "start:preview": "MIDNIGHT_NETWORK=preview NODE_OPTIONS=--max-old-space-size=4096 tsx src/index.ts",
+    "start:preprod": "MIDNIGHT_NETWORK=preprod NODE_OPTIONS=--max-old-space-size=6144 tsx src/index.ts",
+    "start:preview": "MIDNIGHT_NETWORK=preview NODE_OPTIONS=--max-old-space-size=6144 tsx src/index.ts",
+    "setup-operator-wallet": "NODE_OPTIONS=--max-old-space-size=6144 tsx scripts/setup-operator-wallet.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -23,11 +24,14 @@
     "@midnight-ntwrk/midnight-js-network-id": "4.1.1",
     "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.1.1",
     "@midnight-ntwrk/midnight-js-types": "4.1.1",
+    "@midnightntwrk/wallet-sdk": "1.2.0",
     "pino": "^9.0.0",
-    "pino-pretty": "^13.0.0"
+    "pino-pretty": "^13.0.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
   }

@@ -3,18 +3,24 @@ import { writeFileSync } from 'node:fs';
 import type { ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import {
   Subcategory, registerCampaign, readState, buildDeployTx, buildSignalTx, buildSeedTx, type SeedData,
-  buildRegisterStoreTx, buildAttestReceiptTx, makeReceipt, receiptFromJSON, receiptToJSON, type ReceiptJSON,
+  buildRegisterStoreTx, buildAttestReceiptTx, isStoreRegistered, makeReceipt, receiptFromJSON, receiptToJSON,
+  type ReceiptJSON, type ReceiptLineInput,
 } from './contract.js';
 import { generateInsights, matchCampaign, type Campaign } from './agent.js';
 import type { AegisProviders } from './providers.js';
+import type { NetworkConfig } from './config.js';
 
 const NETWORK = process.env['MIDNIGHT_NETWORK'] ?? 'local';
 const ADDRESS_FILE = `.contract-address-${NETWORK}`;
+// Ver MOCK_CHAIN en contract.ts, aquí solo se usa para no exigir un
+// contrato desplegado en las rutas que en modo mock no lo necesitan.
+const MOCK_CHAIN = process.env['MOCK_CHAIN'] === 'true';
 
 type AppContext = {
   providers: AegisProviders;
   contractAddress: ContractAddress | null;
   networkId: string;
+  config: NetworkConfig;
 };
 
 const campaigns = new Map<string, Campaign>();
@@ -90,32 +96,50 @@ async function handleRequest(
       ];
       for (const f of fields) {
         if (typeof body[f] !== 'number' || body[f] < 0 || body[f] > 65535) {
-          return json(res, 400, { error: `Invalid value for ${f}: must be 0–65535` });
+          return json(res, 400, { error: `Invalid value for ${f}: must be 0-65535` });
         }
       }
       const tx = await buildSeedTx(ctx.providers, ctx.contractAddress, body as SeedData);
       return json(res, 200, { tx });
     }
 
+    // ¿Ya está la tienda de demo registrada on-chain? Lo comprueba contra
+    // el ledger, sin necesitar wallet, así el frontend no repite el alta
+    // en cada recarga (ver diseño de privacidad/backend en la memoria).
+    if (method === 'GET' && url === '/store-registered') {
+      if (!ctx.contractAddress && !MOCK_CHAIN) return json(res, 200, { registered: false });
+      const registered = await isStoreRegistered(ctx.providers, ctx.contractAddress as any);
+      return json(res, 200, { registered });
+    }
+
     // El admin da de alta la tienda de demo en el árbol de tiendas registradas.
-    // Solo hace falta llamarlo una vez por contrato desplegado.
-    if (method === 'GET' && url === '/build-tx/register-store') {
-      if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
-      const tx = await buildRegisterStoreTx(ctx.providers, ctx.contractAddress);
+    // El backend prueba; Lace (conectada en el navegador) balancea, firma y
+    // envía. Con MOCK_CHAIN=true no hace falta contrato desplegado (ver contract.ts).
+    if (method === 'POST' && url === '/register-store') {
+      if (!ctx.contractAddress && !MOCK_CHAIN) return json(res, 400, { error: 'Contract not deployed yet' });
+      const tx = await buildRegisterStoreTx(ctx.providers, ctx.contractAddress as any);
       return json(res, 200, { tx });
     }
 
-    // La tienda "vende" y sella el compromiso del recibo on-chain. Devuelve
-    // el recibo completo: quien llama es responsable de convertirlo en QR y
-    // de no guardarlo en ningún sitio más — ver el diseño de privacidad.
-    if (method === 'POST' && url === '/build-tx/attest-receipt') {
-      if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
-      const { subcategory, amount } = await parseBody(req);
-      const subcat = Subcategory[subcategory as keyof typeof Subcategory];
-      if (subcat === undefined) return json(res, 400, { error: 'Invalid subcategory' });
-      if (typeof amount !== 'number' || amount < 0) return json(res, 400, { error: 'Invalid amount' });
-      const receipt = makeReceipt(subcat, BigInt(amount));
-      const tx = await buildAttestReceiptTx(ctx.providers, ctx.contractAddress, receipt);
+    // La tienda "vende" y sella el compromiso del recibo on-chain. Igual
+    // que arriba, el backend prueba y Lace envía. Devuelve el recibo
+    // completo: quien llama es responsable de convertirlo en QR y de no
+    // guardarlo en ningún sitio más, ver el diseño de privacidad.
+    if (method === 'POST' && url === '/attest-receipt') {
+      if (!ctx.contractAddress && !MOCK_CHAIN) return json(res, 400, { error: 'Contract not deployed yet' });
+      const body = await parseBody(req) as { lines?: { subcategory: string; qty: number; amount: number }[] };
+      const rawLines = Array.isArray(body.lines) ? body.lines : [];
+      const lines: ReceiptLineInput[] = [];
+      for (const l of rawLines) {
+        const idx = Subcategory[l.subcategory as keyof typeof Subcategory];
+        if (idx === undefined) return json(res, 400, { error: `Invalid subcategory: ${l.subcategory}` });
+        if (typeof l.qty !== 'number' || l.qty <= 0) return json(res, 400, { error: 'Invalid qty' });
+        if (typeof l.amount !== 'number' || l.amount < 0) return json(res, 400, { error: 'Invalid amount' });
+        lines.push({ subcategory: idx as unknown as number, qty: Math.round(l.qty), amount: Math.round(l.amount) });
+      }
+      if (lines.length === 0) return json(res, 400, { error: 'Empty receipt' });
+      const receipt = makeReceipt(lines);
+      const tx = await buildAttestReceiptTx(ctx.providers, ctx.contractAddress as any, receipt);
       return json(res, 200, { tx, receipt: receiptToJSON(receipt) });
     }
 

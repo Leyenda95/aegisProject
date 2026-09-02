@@ -22,7 +22,7 @@ function writeAll(entries: VaultEntry[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
   } catch {
-    // localStorage no disponible (privado/bloqueado) — la bóveda no persiste, no es fatal.
+    // localStorage no disponible (privado/bloqueado), la bóveda no persiste, no es fatal.
   }
 }
 

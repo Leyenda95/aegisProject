@@ -15,12 +15,12 @@ const en = {
   seeded: 'Loaded',
   contractPrefix: 'Contract:',
 
-  // StoreView — signals
+  // StoreView, signals
   signalsTitle: 'Aggregated signals on Midnight',
   signalsTotal: (n: number) => `${n} total`,
   signalsRefresh: 'updates every 10s',
 
-  // StoreView — insights
+  // StoreView, insights
   insightsTitle: 'Market Intelligence',
   insightsPlaceholder: 'Describe your store (e.g. urban fashion for young people)',
   insightsGenerate: 'Generate insights',
@@ -29,7 +29,7 @@ const en = {
   insightsTrending: 'TRENDING',
   insightsRecommendations: 'RECOMMENDATIONS',
 
-  // StoreView — campaign
+  // StoreView, campaign
   campaignTitle: 'Create campaign',
   campaignTargetLabel: 'Target category',
   campaignMinLabel: 'Minimum signals required',
@@ -44,6 +44,21 @@ const en = {
   campaignNoMatch: '○ No match',
   campaignRefresh: '↻ Refresh',
 
+  // StoreView, point of sale / catalogue
+  posTitle: 'Point of sale (demo)',
+  posDeployFirst: 'Deploy the contract first.',
+  posConnectFirst: 'Connect the wallet first. The store needs to sign the receipt seal.',
+  posCatalogHint: 'Add products to the basket. Checkout seals the receipt on-chain and generates the QR for the customer.',
+  posAdd: 'Add',
+  posBasket: 'Basket',
+  posEmpty: 'Empty basket.',
+  posTotal: 'Total',
+  posSealNote: (s: string) => `On-chain records the subcategories and their unit counts: ${s}`,
+  posCheckout: 'Charge & generate QR',
+  posSealing: 'Sealing...',
+  posNewSale: 'New sale',
+  posScanHint: 'Receipt sealed. Have the customer scan this code with the app.',
+
   // UserView
   userTitle: 'User device',
   userSubtitle: 'Select what you bought. Your signal is published anonymously, nobody sees who you are or how much you spent.',
@@ -51,12 +66,27 @@ const en = {
   userNeedsDeploy: 'Deploy the contract first using the button in the header.',
   userStep1: 'Select a category',
   userStep2: 'Select a subcategory',
-  userSubmit: 'Contribute anonymous signal →',
+  userSubmit: 'Contribute anonymous signal',
   userSubmitting: 'Waiting for Wallet confirmation...',
   userPrivacy: 'Privacy guaranteed:',
-  userPrivacyDetail: 'Only the subcategory is published on-chain. No identity, no amount, no store. Transaction signed by your wallet on preprod.',
+  userPrivacyDetail: 'Only the purchased subcategories and their unit counts are published on-chain. No identity, no amount, no store. Transaction signed by your wallet on preprod.',
   userSentTitle: 'Signal published on Midnight',
   userSentDetail: 'Transaction submitted. Preprod version.',
+
+  // UserView, scan / vault
+  scanSectionLabel: 'Receipt from a real purchase',
+  scanIntro: 'The store shows you a QR code when you pay. Scan it to add the receipt to your vault, you decide if and when to turn it into a signal.',
+  scanButton: '📷 Scan receipt',
+  scanNotAegis: 'QR not recognised as an Aegis receipt',
+  scanReadFailed: 'Could not read the QR',
+  vaultLabel: (n: number) => `Your vault (${n})`,
+  vaultEmpty: "You haven't scanned any receipt yet.",
+  sendSignal: 'Send signal',
+  sendSignalError: 'Error sending the signal',
+  scannerCancel: 'Cancel',
+  scannerCameraError: 'Could not access the camera',
+  posSealError: 'Could not seal the receipt',
+  errorUnknown: 'Unknown error',
 
   // Profile tab
   profileTab: 'My profile',
@@ -70,7 +100,7 @@ const en = {
   profileReceipts: 'Recent receipts',
   profileYourData: 'Your data (local)',
   profileWhatMidnightSees: 'What Midnight sees',
-  profileAnonymous: 'No identity · No amount · No store',
+  profileAnonymous: 'No identity, no amount, no store',
 };
 
 const es: typeof en = {
@@ -113,18 +143,47 @@ const es: typeof en = {
   campaignNoMatch: '○ Sin coincidencia',
   campaignRefresh: '↻ Actualizar',
 
+  posTitle: 'Punto de venta (demo)',
+  posDeployFirst: 'Despliega el contrato primero.',
+  posConnectFirst: 'Conecta la billetera primero, la tienda necesita firmar el sello del recibo.',
+  posCatalogHint: 'Añade productos a la cesta. Al cobrar se sella el recibo on-chain y se genera el QR para el cliente.',
+  posAdd: 'Añadir',
+  posBasket: 'Cesta',
+  posEmpty: 'Cesta vacía.',
+  posTotal: 'Total',
+  posSealNote: (s: string) => `On-chain se señalan las subcategorías y sus unidades: ${s}`,
+  posCheckout: 'Cobrar y generar QR',
+  posSealing: 'Sellando...',
+  posNewSale: 'Nueva venta',
+  posScanHint: 'Recibo sellado, que el cliente escanee este código con la app.',
+
   userTitle: 'Dispositivo de usuario',
   userSubtitle: 'Selecciona lo que has comprado. Tu señal se publica de forma anónima, nadie ve quién eres ni cuánto has gastado.',
   userNeedsLace: 'Conecta tu billetera en el encabezado para enviar transacciones on-chain.',
   userNeedsDeploy: 'Despliega el contrato primero usando el botón del encabezado.',
   userStep1: 'Selecciona una categoría',
   userStep2: 'Selecciona una subcategoría',
-  userSubmit: 'Contribuir señal anónima →',
+  userSubmit: 'Contribuir señal anónima',
   userSubmitting: 'Esperando confirmación de la billetera...',
   userPrivacy: 'Privacidad garantizada:',
-  userPrivacyDetail: 'Solo la subcategoría se publica on-chain. Sin identidad, sin importe, sin tienda. · Transacción firmada por tu billetera en preprod.',
+  userPrivacyDetail: 'Solo las subcategorías compradas y sus unidades se publican on-chain. Sin identidad, sin importe, sin tienda. Transacción firmada por tu billetera en preprod.',
   userSentTitle: 'Señal publicada en Midnight',
   userSentDetail: 'Transacción enviada. Version preprod.',
+
+  // UserView, escaneo / bóveda
+  scanSectionLabel: 'Recibo de una compra real',
+  scanIntro: 'La tienda te enseña un código QR al pagar. Escanéalo para añadir el recibo a tu bóveda, decides tú, y cuándo, convertirlo en una señal.',
+  scanButton: '📷 Escanear recibo',
+  scanNotAegis: 'QR no reconocido como recibo de Aegis',
+  scanReadFailed: 'No se pudo leer el QR',
+  vaultLabel: (n: number) => `Tu bóveda (${n})`,
+  vaultEmpty: 'Todavía no has escaneado ningún recibo.',
+  sendSignal: 'Enviar señal',
+  sendSignalError: 'Error enviando la señal',
+  scannerCancel: 'Cancelar',
+  scannerCameraError: 'No se pudo acceder a la cámara',
+  posSealError: 'No se pudo sellar el recibo',
+  errorUnknown: 'Error desconocido',
 
   // Profile tab
   profileTab: 'Mi perfil',
@@ -138,7 +197,7 @@ const es: typeof en = {
   profileReceipts: 'Últimas compras',
   profileYourData: 'Tus datos (local)',
   profileWhatMidnightSees: 'Lo que Midnight ve',
-  profileAnonymous: 'Sin identidad · Sin importe · Sin tienda',
+  profileAnonymous: 'Sin identidad, sin importe, sin tienda',
 };
 
 export const T: Record<Lang, typeof en> = { en, es };

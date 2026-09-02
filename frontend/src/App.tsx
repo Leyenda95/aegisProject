@@ -4,7 +4,7 @@ import UserView from './components/UserView.tsx';
 import LandingScreen from './components/LandingScreen.tsx';
 import TourGuide from './components/TourGuide.tsx';
 import { API_BASE, type Campaign, type MatchResult, type Lang } from './api.ts';
-import { type ConnectedAPI, type WalletInfo, listWallets, connectWallet, deployViaLace, seedViaLace, registerStoreViaLace } from './lace.ts';
+import { type ConnectedAPI, type WalletInfo, listWallets, connectWallet, deployViaLace, seedViaLace, registerStoreViaLace, checkStoreRegistered } from './lace.ts';
 import { T } from './i18n.ts';
 import styles from './App.module.css';
 
@@ -57,6 +57,7 @@ export default function App() {
       .then(r => r.json())
       .then(({ networkId }) => { if (networkId) setNetworkId(networkId); })
       .catch(() => {});
+    checkStoreRegistered().then(registered => { if (registered) setStoreRegistered(true); });
   }, []);
 
   async function handleConnectWallet(walletKey?: string) {
@@ -211,7 +212,7 @@ export default function App() {
               </button>
               {laceSlow && (
                 <span style={{ fontSize: 11, color: '#888', maxWidth: 200, textAlign: 'right', lineHeight: 1.4 }}>
-                  La wallet está iniciando — el popup de autorización aparecerá en breve
+                  La wallet está iniciando, el popup de autorización aparecerá en breve
                 </span>
               )}
             </div>
@@ -238,7 +239,7 @@ export default function App() {
                     border: '1px solid #926A45',
                     padding: '9px 18px', fontSize: 13,
                   }}>
-                    {registeringStore ? 'Registrando tienda…' : 'Registrar tienda de demo'}
+                    {registeringStore ? 'Registrando tienda...' : 'Registrar tienda de demo'}
                   </button>
                   {registerStoreError && (
                     <span style={{ fontSize: 11, color: '#f87171', maxWidth: 220, textAlign: 'right' }}>{registerStoreError}</span>
@@ -263,11 +264,11 @@ export default function App() {
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                 {walletAddress && (
                   <span style={{ fontSize: 12, color: '#666666', fontFamily: 'monospace', background: '#111111', border: '1px solid #222222', borderRadius: 6, padding: '4px 10px' }}>
-                    …{walletAddress.slice(-14)}
+                    ...{walletAddress.slice(-14)}
                   </span>
                 )}
                 <span style={{ fontSize: 11, color: '#666', fontFamily: 'monospace' }}>
-                  {t.contractPrefix} …{contractAddress.slice(-10)}
+                  {t.contractPrefix} ...{contractAddress.slice(-10)}
                 </span>
               </div>
             </div>

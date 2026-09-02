@@ -46,12 +46,12 @@ export class AegisSimulator {
     return ledger(this.circuitContext.currentQueryContext.state);
   }
 
-  /** Hash público de una clave secreta de tienda/admin — cálculo local, sin transacción. */
+  /** Hash público de una clave secreta de tienda/admin, cálculo local, sin transacción. */
   static storePublicKey(secretKey: Uint8Array): Uint8Array {
     return pureCircuits.storePublicKey(secretKey);
   }
 
-  /** Compromiso de un recibo — cálculo local, sin transacción. */
+  /** Compromiso de un recibo, cálculo local, sin transacción. */
   static receiptCommitment(receipt: Receipt): Uint8Array {
     return pureCircuits.receiptCommitment(receipt);
   }
@@ -125,11 +125,28 @@ export class AegisSimulator {
   }
 }
 
-/** Construye un Receipt con un nonce por defecto — útil en tests. */
+const MAX_LINES = 8;
+
+export type ReceiptLineInput = { subcategory: Subcategory; qty: bigint; amount: bigint };
+
+function padLines(active: ReceiptLineInput[]): Receipt['lines'] {
+  const zeroSub = 0 as unknown as Subcategory; // relleno: enum 0, se ignora porque i >= lineCount
+  const out = active.slice(0, MAX_LINES).map(l => ({ subcategory: l.subcategory, qty: l.qty, amount: l.amount }));
+  while (out.length < MAX_LINES) out.push({ subcategory: zeroSub, qty: 0n, amount: 0n });
+  return out;
+}
+
+/** Recibo de una sola subcategoría (qty 1), atajo para los tests que solo comprueban el mapeo a contadores. */
 export function makeReceipt(subcategory: Subcategory, amount: bigint, timestamp: bigint, nonce?: Uint8Array): Receipt {
+  return makeMultiReceipt([{ subcategory, qty: 1n, amount }], timestamp, nonce);
+}
+
+/** Recibo con varias subcategorías (rollup), hasta 8 líneas. */
+export function makeMultiReceipt(lines: ReceiptLineInput[], timestamp: bigint, nonce?: Uint8Array): Receipt {
+  const active = lines.slice(0, MAX_LINES);
   return {
-    subcategory,
-    amount,
+    lines: padLines(active),
+    lineCount: BigInt(active.length),
     timestamp,
     nonce: nonce ?? crypto.getRandomValues(new Uint8Array(32)),
   };

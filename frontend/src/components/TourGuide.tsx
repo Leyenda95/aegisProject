@@ -18,7 +18,7 @@ const STEPS: Step[] = [
     target: 'aggregated-signals',
     title: { en: 'Aggregated Signals', es: 'Señales Agregadas' },
     desc: {
-      en: 'Every purchase signal is ZK-proven before being added to the aggregate. No individual data is ever visible — only the total count per category.',
+      en: 'Every purchase signal is ZK-proven before being added to the aggregate. No individual data is ever visible, only the total count per category.',
       es: 'Cada señal de compra se verifica con ZK antes de sumarse al agregado. Ningún dato individual es visible, solo el total por categoría.',
     },
     tab: 'store', side: 'bottom',
@@ -27,7 +27,7 @@ const STEPS: Step[] = [
     target: 'categories-grid',
     title: { en: 'Market Categories', es: 'Categorías de Mercado' },
     desc: {
-      en: 'Signals are broken down by category and subcategory. Click any category to explore the distribution — all derived from anonymous aggregated data.',
+      en: 'Signals are broken down by category and subcategory. Click any category to explore the distribution, all derived from anonymous aggregated data.',
       es: 'Las señales se desglosan por categoría y subcategoría. Haz clic para explorar el desglose, todo a partir de datos anónimos.',
     },
     tab: 'store', side: 'bottom',
@@ -36,7 +36,7 @@ const STEPS: Step[] = [
     target: 'insights-section',
     title: { en: 'Market Intelligence', es: 'Inteligencia de Mercado' },
     desc: {
-      en: 'An AI agent analyses the aggregated signals and surfaces strategic insights for your store — without ever accessing individual user data.',
+      en: 'An AI agent analyses the aggregated signals and surfaces strategic insights for your store, without ever accessing individual user data.',
       es: 'Un agente IA analiza las señales agregadas y genera inteligencia estratégica para tu tienda, sin acceder nunca a datos de usuarios individuales.',
     },
     tab: 'store', side: 'top',
@@ -45,7 +45,7 @@ const STEPS: Step[] = [
     target: 'campaign-section',
     title: { en: 'Create a Campaign', es: 'Crear una Campaña' },
     desc: {
-      en: 'Target a category and set a minimum signal threshold. You discover that demand exists — not who the buyers are.',
+      en: 'Target a category and set a minimum signal threshold. You discover that demand exists, not who the buyers are.',
       es: 'Apunta a una categoría y define un umbral mínimo de señales. Descubres que hay demanda, sin saber quiénes son los compradores.',
     },
     tab: 'store', side: 'top',
@@ -56,8 +56,8 @@ const STEPS: Step[] = [
     hint: { en: '↑ Click the tab to continue', es: '↑ Clic en la pestaña para continuar' },
     title: { en: 'Now: The User Side', es: 'Ahora: El Lado del Usuario' },
     desc: {
-      en: "The store sees aggregated signals — now see the experience from the user's perspective. Click the User tab above to continue.",
-      es: 'La tienda ve señales agregadas — ahora ve la experiencia desde el punto de vista del usuario. Haz clic en la pestaña Usuario para continuar.',
+      en: "The store sees aggregated signals. Now see the experience from the user's perspective. Click the User tab above to continue.",
+      es: 'La tienda ve señales agregadas. Ahora ve la experiencia desde el punto de vista del usuario. Haz clic en la pestaña Usuario para continuar.',
     },
     tab: 'store', side: 'bottom', noScroll: true,
   },
@@ -65,7 +65,7 @@ const STEPS: Step[] = [
     target: 'profile-section',
     title: { en: 'Your Receipts, One Place', es: 'Tus Recibos, en un Solo Lugar' },
     desc: {
-      en: 'Every purchase from every store — all on your own device. No central server holds your data. You own it, and you decide what stays private.',
+      en: 'Every purchase from every store, all on your own device. No central server holds your data. You own it, and you decide what stays private.',
       es: 'Cada compra de cada tienda, todo en tu dispositivo. Ningún servidor central guarda tus datos. Tú los posees y decides qué queda privado.',
     },
     tab: 'user', side: 'right',
@@ -85,7 +85,7 @@ const STEPS: Step[] = [
     target: 'contribute-section',
     title: { en: 'Contribute Anonymously', es: 'Contribuir de Forma Anónima' },
     desc: {
-      en: 'In this demo you share category and subcategory — but the same system works with age, spending patterns, personal interests, or any signal you choose. Everything verified on Midnight without revealing your identity.',
+      en: 'In this demo you share category and subcategory, but the same system works with age, spending patterns, personal interests, or any signal you choose. Everything verified on Midnight without revealing your identity.',
       es: 'En esta demo compartes categoría y subcategoría, pero el mismo sistema funciona con la edad, patrones de gasto, intereses personales o cualquier señal que elijas. Todo verificado en Midnight sin revelar tu identidad.',
     },
     tab: 'user', side: 'top', noScroll: true,
@@ -238,7 +238,7 @@ export default function TourGuide({ lang, onClose, onSetTab }: Props) {
       transform: visible ? 'translateY(0)' : 'translateY(10px)',
       transition: `opacity ${FADE}ms ease, transform ${FADE}ms ease`,
     }}>
-      {/* Overlay strips — no position transitions, only opacity via parent */}
+      {/* Overlay strips, no position transitions, only opacity via parent */}
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: Math.max(0, sy), background: 'rgba(0,0,0,0.75)' }} />
       <div style={{ position: 'fixed', top: sy + sh, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.75)' }} />
       <div style={{ position: 'fixed', top: sy, left: 0, width: Math.max(0, sx), height: sh, background: 'rgba(0,0,0,0.75)' }} />
@@ -314,7 +314,7 @@ export default function TourGuide({ lang, onClose, onSetTab }: Props) {
               }}>
                 {isLast
                   ? (lang === 'es' ? 'Finalizar' : 'Finish')
-                  : (lang === 'es' ? 'Siguiente →' : 'Next →')}
+                  : (lang === 'es' ? 'Siguiente' : 'Next')}
               </button>
             </div>
           )}

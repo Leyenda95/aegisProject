@@ -26,7 +26,7 @@ async function main() {
     logger.info('No contract address found. Deploy via the wallet in the frontend.');
   }
 
-  createServer({ providers, contractAddress, networkId: config.networkId });
+  createServer({ providers, contractAddress, networkId: config.networkId, config });
 }
 
 main().catch((err) => {

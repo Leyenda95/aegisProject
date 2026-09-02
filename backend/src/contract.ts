@@ -19,6 +19,16 @@ export type { Receipt };
 
 const NETWORK = process.env['MIDNIGHT_NETWORK'] ?? 'local';
 
+/**
+ * Con MOCK_CHAIN=true, buildRegisterStoreTx/buildAttestReceiptTx no tocan
+ * la red de Midnight en absoluto (ni prueban ni construyen nada), sirve
+ * para seguir probando el flujo/UI de tienda sin depender del proof
+ * server. isStoreRegistered también responde en local en ese modo, con
+ * un flag en memoria, se resetea al reiniciar el backend.
+ */
+const MOCK_CHAIN = process.env['MOCK_CHAIN'] === 'true';
+let mockStoreRegistered = false;
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const zkConfigPath = path.resolve(__dirname, '../../contract/managed/aegis');
 
@@ -35,7 +45,7 @@ const PRIVATE_STATE_ID = 'aegis';
 /**
  * Claves operativas del backend (admin del registro de tiendas, y la propia
  * tienda de demo). Se generan una vez y se guardan en disco para que sean
- * estables entre reinicios — nunca se commitean (ver .gitignore).
+ * estables entre reinicios, nunca se commitean (ver .gitignore).
  */
 function loadOrCreateKey(fileName: string): Uint8Array {
   if (existsSync(fileName)) {
@@ -54,32 +64,69 @@ export function getStoreKey(): Uint8Array {
   return loadOrCreateKey(`.store-key-${NETWORK}`);
 }
 
+// Un recibo sella hasta 8 líneas (rollup por subcategoría). El circuito ZK
+// tiene tamaño fijo: siempre son 8 entradas; las no usadas van a cero y
+// lineCount dice cuántas cuentan.
+export const MAX_RECEIPT_LINES = 8;
+
+/** Línea del rollup tal y como la manda el frontend (ya agrupada por subcategoría). */
+export type ReceiptLineInput = { subcategory: number; qty: number; amount: number };
+
 /** Forma de un Receipt apta para JSON (bigint/Uint8Array no lo son). */
-export type ReceiptJSON = { subcategory: number; amount: string; timestamp: string; nonce: string };
+export type ReceiptLineJSON = { subcategory: number; qty: number; amount: string };
+export type ReceiptJSON = { lines: ReceiptLineJSON[]; timestamp: string; nonce: string };
+
+type RtLine = Receipt['lines'][number];
+
+/** Rellena hasta 8 líneas con ceros, mismo padding en la tienda (sella) y en el comprador (gasta), para que el commitment coincida. */
+function padLines(lines: { subcategory: number; qty: number | bigint; amount: number | bigint | string }[]): RtLine[] {
+  const out: RtLine[] = lines.slice(0, MAX_RECEIPT_LINES).map(l => ({
+    subcategory: l.subcategory as unknown as RtLine['subcategory'],
+    qty: BigInt(l.qty),
+    amount: BigInt(l.amount as any),
+  }));
+  while (out.length < MAX_RECEIPT_LINES) {
+    out.push({ subcategory: 0 as unknown as RtLine['subcategory'], qty: 0n, amount: 0n });
+  }
+  return out;
+}
 
 export function receiptToJSON(r: Receipt): ReceiptJSON {
+  const count = Number(r.lineCount);
   return {
-    subcategory: r.subcategory as unknown as number,
-    amount: r.amount.toString(),
+    lines: r.lines.slice(0, count).map(l => ({
+      subcategory: l.subcategory as unknown as number,
+      qty: Number(l.qty),
+      amount: l.amount.toString(),
+    })),
     timestamp: r.timestamp.toString(),
     nonce: Buffer.from(r.nonce).toString('hex'),
   };
 }
 
-/** Genera un recibo nuevo con timestamp y nonce frescos — lo llama la tienda al vender. */
-export function makeReceipt(subcategory: number, amount: bigint): Receipt {
+/**
+ * Genera un recibo nuevo con timestamp y nonce frescos, lo llama la tienda
+ * al vender. Recibe el rollup por subcategoría; se ordena por importe
+ * descendente y se queda con las 8 de mayor valor (el resto no se sella).
+ */
+export function makeReceipt(lines: ReceiptLineInput[]): Receipt {
+  const active = lines
+    .filter(l => l.qty > 0 && l.amount >= 0)
+    .sort((a, b) => (b.amount - a.amount) || (a.subcategory - b.subcategory))
+    .slice(0, MAX_RECEIPT_LINES);
   return {
-    subcategory: subcategory as any,
-    amount,
+    lines: padLines(active),
+    lineCount: BigInt(active.length),
     timestamp: BigInt(Date.now()),
     nonce: new Uint8Array(randomBytes(32)),
   };
 }
 
 export function receiptFromJSON(j: ReceiptJSON): Receipt {
+  const active = (j.lines ?? []).slice(0, MAX_RECEIPT_LINES);
   return {
-    subcategory: j.subcategory as any,
-    amount: BigInt(j.amount),
+    lines: padLines(active),
+    lineCount: BigInt(active.length),
     timestamp: BigInt(j.timestamp),
     nonce: new Uint8Array(Buffer.from(j.nonce, 'hex')),
   };
@@ -187,11 +234,41 @@ export async function buildSeedTx(
   return txToHex(provenTx);
 }
 
-/** El admin da de alta la tienda de demo en el árbol Merkle de tiendas registradas. */
+/**
+ * ¿Ya está la tienda de demo en el árbol de tiendas registradas? El admin
+ * y la tienda son claves que el propio backend gestiona (getAdminKey/
+ * getStoreKey), así que puede comprobarlo contra el ledger público sin
+ * necesitar ninguna wallet, es la misma comprobación de pertenencia que
+ * hace el witness getStorePath (ver witnesses.ts).
+ */
+export async function isStoreRegistered(
+  providers: AegisProviders,
+  contractAddress: ContractAddress,
+): Promise<boolean> {
+  if (MOCK_CHAIN) return mockStoreRegistered;
+  const state = await providers.publicDataProvider.queryContractState(contractAddress);
+  if (!state) return false;
+  const storePk = pureCircuits.storePublicKey(getStoreKey());
+  return ledger(state.data).registeredStores.findPathForLeaf(storePk) !== undefined;
+}
+
+/**
+ * El admin da de alta la tienda de demo en el árbol Merkle de tiendas
+ * registradas. La autorización del circuito ya la resuelve el secreto de
+ * admin (server-side), el backend prueba, pero es Lace (conectada en el
+ * navegador) quien balancea, firma y envía. La wallet operadora resultó
+ * poco fiable (ver operatorWallet.ts) así que se deja de usar por ahora;
+ * esto vuelve a depender solo de que el usuario tenga DUST en su Lace,
+ * igual que ya funciona para signal/deploy/seed.
+ */
 export async function buildRegisterStoreTx(
   providers: AegisProviders,
   contractAddress: ContractAddress,
 ): Promise<string> {
+  if (MOCK_CHAIN) {
+    mockStoreRegistered = true;
+    return '';
+  }
   const adminKey = getAdminKey();
   const storeKey = getStoreKey();
   const storePk = pureCircuits.storePublicKey(storeKey);
@@ -212,14 +289,17 @@ export async function buildRegisterStoreTx(
 /**
  * La tienda sella el compromiso de un recibo. Genera el recibo aquí mismo
  * (el backend hace de "caja" en esta demo) y lo devuelve junto a la
- * transacción: el llamador es quien debe convertirlo en QR — nunca se
- * guarda ni se loguea más allá de esta respuesta.
+ * transacción probada: el llamador (Lace, en el navegador) es quien
+ * balancea, firma y envía. Ver nota de buildRegisterStoreTx.
  */
 export async function buildAttestReceiptTx(
   providers: AegisProviders,
   contractAddress: ContractAddress,
   receipt: Receipt,
 ): Promise<string> {
+  if (MOCK_CHAIN) {
+    return '';
+  }
   const storeKey = getStoreKey();
   const commitment = pureCircuits.receiptCommitment(receipt);
 

@@ -8,6 +8,11 @@ import {
   type AegisState, type Insights, type Campaign, type MatchResult, type Category, type Lang,
 } from '../api.ts';
 import { attestReceiptViaLace, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
+import {
+  PRODUCTS, SUBCAT_TO_CATEGORY, cartLinesFrom, cartTotalCents, rollupBySubcategory, sealedLines, formatEUR,
+} from '../catalog.ts';
+import ProductImage from './ProductImage.tsx';
+import ReceiptTicket from './ReceiptTicket.tsx';
 import { T } from '../i18n.ts';
 import { useBreakpoint } from '../hooks/useBreakpoint.ts';
 
@@ -47,6 +52,11 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
     letterSpacing: 0.3, marginBottom: 0,
   };
 
+  const stepBtn: React.CSSProperties = {
+    background: '#1A1A1A', border: '1px solid #333333', color: '#DDDDDD',
+    fontSize: 16, lineHeight: 1, width: 28, height: 28, borderRadius: 6, cursor: 'pointer', padding: 0,
+  };
+
   const [state, setState] = useState<AegisState | null>(null);
   const [manualRefreshing, setManualRefreshing] = useState(false);
   const [expandedCat, setExpandedCat] = useState<Category | null>(null);
@@ -60,25 +70,59 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
   const [campaignOpen, setCampaignOpen] = useState(false);
 
   const [posOpen, setPosOpen] = useState(false);
-  const [posCat, setPosCat] = useState<Category | null>(null);
-  const [posSubcat, setPosSubcat] = useState<string | null>(null);
-  const [posAmount, setPosAmount] = useState('');
+  const [browseCat, setBrowseCat] = useState<Category>('electronics');
+  const [cart, setCart] = useState<Record<string, number>>({});
   const [posSelling, setPosSelling] = useState(false);
   const [posError, setPosError] = useState<string | null>(null);
   const [posReceipt, setPosReceipt] = useState<ReceiptJSON | null>(null);
   const [posQr, setPosQr] = useState<string | null>(null);
 
-  async function handleGenerateReceipt() {
-    if (!lace || !posSubcat) return;
+  const cartLines = cartLinesFrom(cart);
+  const cartCount = cartLines.reduce((n, l) => n + l.qty, 0);
+  const totalCents = cartTotalCents(cartLines);
+  const rollup = rollupBySubcategory(cartLines);
+  const sealed = sealedLines(rollup);
+  const overflowCount = rollup.length - sealed.length;
+  const sealedTicketLines = sealed.map(r => ({
+    label: `${catLabel[SUBCAT_TO_CATEGORY[r.subcategory]]} › ${subLabel[r.subcategory]}`,
+    qty: r.qty,
+    amountCents: r.amountCents,
+  }));
+  const sealedSummary = sealed.map(r => `${subLabel[r.subcategory]} ×${r.qty}`).join(' · ')
+    + (overflowCount > 0 ? ` (+${overflowCount})` : '');
+
+  function addToCart(id: string) {
+    setCart(c => ({ ...c, [id]: (c[id] ?? 0) + 1 }));
+  }
+
+  function setQty(id: string, qty: number) {
+    setCart(c => {
+      const next = { ...c };
+      if (qty <= 0) delete next[id];
+      else next[id] = qty;
+      return next;
+    });
+  }
+
+  async function handleCheckout() {
+    if (!lace || cartLines.length === 0 || sealed.length === 0) return;
     setPosSelling(true);
     setPosError(null);
     try {
-      const amountCents = Math.round(Number(posAmount) * 100);
-      const receipt = await attestReceiptViaLace(lace, posSubcat, amountCents);
-      setPosReceipt(receipt);
-      setPosQr(await QRCode.toDataURL(JSON.stringify(receipt), { margin: 1, width: 260 }));
+      // Se sellan las 8 subcategorías de mayor importe (rollup). El desglose
+      // por producto viaja en el QR solo para pintar el ticket original.
+      const receipt = await attestReceiptViaLace(
+        lace,
+        sealed.map(r => ({ subcategory: r.subcategory, qty: r.qty, amount: r.amountCents })),
+      );
+      const receiptForQr: ReceiptJSON = {
+        ...receipt,
+        items: cartLines.slice(0, 24).map(l => ({ name: l.product.name[lang], qty: l.qty, unitCents: l.product.priceCents })),
+      };
+      setPosReceipt(receiptForQr);
+      setPosQr(await QRCode.toDataURL(JSON.stringify(receiptForQr), { margin: 1, width: 260 }));
     } catch (e: any) {
-      setPosError(e?.message ?? 'No se pudo sellar el recibo');
+      setPosError(e?.message ?? t.posSealError);
     } finally {
       setPosSelling(false);
     }
@@ -87,10 +131,8 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
   function handleResetPos() {
     setPosReceipt(null);
     setPosQr(null);
-    setPosCat(null);
-    setPosSubcat(null);
-    setPosAmount('');
     setPosError(null);
+    setCart({});
   }
 
   async function handleManualRefresh() {
@@ -132,7 +174,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
     setLoadingInsights(true);
     setInsightsError(null);
     try { setInsights(await getInsights(storeProfile || undefined, lang)); }
-    catch (e: any) { setInsightsError(e?.message ?? 'Unknown error'); }
+    catch (e: any) { setInsightsError(e?.message ?? t.errorUnknown); }
     finally { setLoadingInsights(false); }
   }
 
@@ -279,7 +321,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
         )}
       </div>
 
-      {/* Punto de venta (demo) — genera un recibo sellado y su QR */}
+      {/* Punto de venta (demo): la cesta de productos genera el recibo sellado y su QR */}
       <div style={card}>
         <button
           onClick={() => setPosOpen(o => !o)}
@@ -289,76 +331,116 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
             marginBottom: posOpen ? (isMobile ? 14 : 20) : 0,
           }}
         >
-          <h2 style={sectionTitle}>Punto de venta (demo)</h2>
+          <h2 style={sectionTitle}>{t.posTitle}</h2>
           <span style={{ fontSize: 18, color: '#456D92', transition: 'transform 0.2s', display: 'inline-block', transform: posOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
         </button>
 
         {posOpen && (!contractAddress ? (
-          <p style={{ color: '#888888', fontSize: 13 }}>Despliega el contrato primero.</p>
+          <p style={{ color: '#888888', fontSize: 13 }}>{t.posDeployFirst}</p>
         ) : !lace ? (
-          <p style={{ color: '#888888', fontSize: 13 }}>Conecta la wallet primero — la tienda necesita firmar el sello del recibo.</p>
+          <p style={{ color: '#888888', fontSize: 13 }}>{t.posConnectFirst}</p>
         ) : posQr && posReceipt ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            <p style={{ color: '#AAAAAA', fontSize: 13, textAlign: 'center' }}>
-              Recibo sellado — que el cliente escanee este código con la app.
-            </p>
-            <img src={posQr} alt="QR del recibo" style={{ borderRadius: 8, background: '#fff', padding: 8 }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+            <p style={{ color: '#AAAAAA', fontSize: 13, textAlign: 'center' }}>{t.posScanHint}</p>
+            <ReceiptTicket
+              lang={lang}
+              lines={cartLines.map(l => ({ name: l.product.name[lang], qty: l.qty, unitCents: l.product.priceCents }))}
+              totalCents={totalCents}
+              sealedLines={sealedTicketLines}
+              overflowCount={overflowCount}
+              receipt={posReceipt}
+              qr={posQr}
+            />
             <button onClick={handleResetPos} style={{ background: '#111111', border: '1px solid #222222', color: '#AAAAAA', fontSize: 13, padding: '8px 16px' }}>
-              Nueva venta
+              {t.posNewSale}
             </button>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 8 }}>
+            <p style={{ color: '#888888', fontSize: 13 }}>{t.posCatalogHint}</p>
+
+            {/* Filtro de categoría */}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)', gap: 8 }}>
               {CATEGORIES.map(cat => (
-                <button key={cat} onClick={() => { setPosCat(cat); setPosSubcat(null); }} style={{
-                  background: posCat === cat ? '#926a4510' : '#111111',
-                  border: `2px solid ${posCat === cat ? '#926A45' : '#222222'}`,
-                  borderRadius: 10, padding: isMobile ? '10px 6px' : '12px 8px',
-                  color: posCat === cat ? '#FFFFFF' : '#888888',
-                  fontSize: isMobile ? 13 : 12, cursor: 'pointer',
+                <button key={cat} onClick={() => setBrowseCat(cat)} style={{
+                  background: browseCat === cat ? '#926a4510' : '#111111',
+                  border: `2px solid ${browseCat === cat ? '#926A45' : '#222222'}`,
+                  borderRadius: 10, padding: isMobile ? '8px 4px' : '10px 6px',
+                  color: browseCat === cat ? '#FFFFFF' : '#888888',
+                  fontSize: 12, cursor: 'pointer',
                 }}>
                   {catLabel[cat]}
                 </button>
               ))}
             </div>
-            {posCat && (
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 8 }}>
-                {SUBCATEGORIES[posCat].map((sub: string) => (
-                  <button key={sub} onClick={() => setPosSubcat(sub)} style={{
-                    background: posSubcat === sub ? '#926a4510' : '#111111',
-                    border: `2px solid ${posSubcat === sub ? '#926A45' : '#1A1A1A'}`,
-                    borderRadius: 10, padding: isMobile ? '10px 6px' : '12px 8px',
-                    color: posSubcat === sub ? '#ffffff' : '#555555',
-                    fontSize: isMobile ? 13 : 12, cursor: 'pointer',
+
+            {/* Catálogo */}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 10 }}>
+              {PRODUCTS.filter(prod => SUBCAT_TO_CATEGORY[prod.subcategory] === browseCat).map(prod => {
+                const qty = cart[prod.id] ?? 0;
+                return (
+                  <div key={prod.id} style={{
+                    background: '#111111', border: `1px solid ${qty > 0 ? '#926A45' : '#1F1F1F'}`,
+                    borderRadius: 10, padding: 10, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center',
                   }}>
-                    {subLabel[sub]}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div>
-              <label style={{ fontSize: isMobile ? 13 : undefined }}>Importe (€)</label>
-              <input type="number" min={0} step="0.01" placeholder="0.00" value={posAmount}
-                onChange={e => setPosAmount(e.target.value)} />
+                    <ProductImage product={prod} size={isMobile ? 84 : 104} />
+                    <div style={{ fontSize: 12, color: '#DDDDDD', textAlign: 'center', lineHeight: 1.3, minHeight: 32 }}>{prod.name[lang]}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#c0956de5' }}>{formatEUR(prod.priceCents, lang)}</div>
+                    {qty === 0 ? (
+                      <button onClick={() => addToCart(prod.id)} style={{ background: '#926A45', color: '#FFFFFF', fontSize: 12, padding: '6px 14px', width: '100%' }}>
+                        {t.posAdd}
+                      </button>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center' }}>
+                        <button onClick={() => setQty(prod.id, qty - 1)} style={stepBtn}>−</button>
+                        <span style={{ fontSize: 14, fontWeight: 700, minWidth: 18, textAlign: 'center' }}>{qty}</span>
+                        <button onClick={() => setQty(prod.id, qty + 1)} style={stepBtn}>+</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            {posError && <p style={{ color: '#f87171', fontSize: 13 }}>{posError}</p>}
-            <button
-              onClick={handleGenerateReceipt}
-              disabled={!posSubcat || !posAmount || posSelling}
-              style={{
-                background: '#926A45', color: '#fff', width: isMobile ? '100%' : undefined,
-                alignSelf: isMobile ? undefined : 'flex-start', fontSize: isMobile ? 14 : undefined,
-                opacity: (!posSubcat || !posAmount || posSelling) ? 0.4 : 1,
-              }}
-            >
-              {posSelling ? 'Sellando…' : 'Generar recibo y QR'}
-            </button>
+
+            {/* Cesta */}
+            <div style={{ background: '#0D0D0D', border: '1px solid #2A2A2A', borderRadius: 10, padding: isMobile ? 12 : 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#FFFFFF' }}>{t.posBasket} ({cartCount})</div>
+              {cartLines.length === 0 ? (
+                <p style={{ color: '#666666', fontSize: 13 }}>{t.posEmpty}</p>
+              ) : (
+                <>
+                  {cartLines.map(l => (
+                    <div key={l.product.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#CCCCCC' }}>
+                      <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {l.qty}× {l.product.name[lang]}
+                      </span>
+                      <span style={{ color: '#DDDDDD' }}>{formatEUR(l.product.priceCents * l.qty, lang)}</span>
+                      <button onClick={() => setQty(l.product.id, 0)} style={{ background: 'transparent', border: 'none', color: '#666666', cursor: 'pointer', fontSize: 14, padding: '0 4px' }}>✕</button>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #222222', paddingTop: 8, fontSize: 15, fontWeight: 700, color: '#FFFFFF' }}>
+                    <span>{t.posTotal}</span><span>{formatEUR(totalCents, lang)}</span>
+                  </div>
+                  <p style={{ fontSize: 11.5, color: '#888888', lineHeight: 1.5 }}>{t.posSealNote(sealedSummary)}</p>
+                </>
+              )}
+              {posError && <p style={{ color: '#f87171', fontSize: 13 }}>{posError}</p>}
+              <button
+                onClick={handleCheckout}
+                disabled={cartLines.length === 0 || posSelling}
+                style={{
+                  background: '#926A45', color: '#fff', width: '100%', fontSize: isMobile ? 14 : undefined,
+                  opacity: (cartLines.length === 0 || posSelling) ? 0.4 : 1,
+                }}
+              >
+                {posSelling ? t.posSealing : t.posCheckout}
+              </button>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Crear campaña — desplegable */}
+      {/* Crear campaña, desplegable */}
       <div style={card} data-tour="campaign-section">
         <button
           onClick={() => setCampaignOpen(o => !o)}

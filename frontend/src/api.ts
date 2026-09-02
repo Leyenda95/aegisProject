@@ -44,7 +44,7 @@ export const SUBCATEGORIES = {
 
 export type Subcategory = typeof SUBCATEGORIES[Category][number];
 
-// Mismo orden que el enum Subcategory del contrato (contract/aegis.compact) —
+// Mismo orden que el enum Subcategory del contrato (contract/aegis.compact) -
 // el índice numérico que llega en un recibo escaneado se traduce con esto.
 export const SUBCATEGORY_INDEX: readonly string[] = CATEGORIES.flatMap(c => SUBCATEGORIES[c]);
 

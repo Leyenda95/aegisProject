@@ -3,6 +3,7 @@ import { SUBCATEGORY_INDEX, SUBCATEGORY_LABELS, type Lang } from '../api.ts';
 import { submitSignalViaLace, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
 import { listVault, addToVault, removeFromVault, type VaultEntry } from '../vault.ts';
 import QrScanner from './QrScanner.tsx';
+import RedactedTicket from './RedactedTicket.tsx';
 import { T } from '../i18n.ts';
 import { useBreakpoint } from '../hooks/useBreakpoint.ts';
 import ProfileSection from './ProfileSection.tsx';
@@ -14,7 +15,8 @@ type Props = {
 };
 
 function isReceiptJSON(v: any): v is ReceiptJSON {
-  return v && typeof v.subcategory === 'number' && typeof v.amount === 'string'
+  return v && Array.isArray(v.lines) && v.lines.length > 0
+    && v.lines.every((l: any) => l && typeof l.subcategory === 'number' && typeof l.qty === 'number' && typeof l.amount === 'string')
     && typeof v.timestamp === 'string' && typeof v.nonce === 'string';
 }
 
@@ -27,6 +29,7 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
 
   const [vault, setVault] = useState<VaultEntry[]>([]);
   const [scanning, setScanning] = useState(false);
+  const [scanned, setScanned] = useState<ReceiptJSON | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [submitErrors, setSubmitErrors] = useState<Record<string, string>>({});
@@ -40,16 +43,24 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
   const needsDeploy = lace && !contractAddress;
 
   function handleScan(data: string) {
+    if (!data || !data.trim()) return; // lectura vacía de la cámara: se ignora, sigue escaneando
     setScanning(false);
     try {
       const parsed = JSON.parse(data);
-      if (!isReceiptJSON(parsed)) throw new Error('QR no reconocido como recibo de Aegis');
-      addToVault(parsed);
-      setVault(listVault());
+      if (!isReceiptJSON(parsed)) throw new Error(t.scanNotAegis);
+      setScanned(parsed);
       setScanError(null);
     } catch (e: any) {
-      setScanError(e?.message ?? 'No se pudo leer el QR');
+      setScanError(e?.message ?? t.scanReadFailed);
     }
+  }
+
+  function confirmScanned() {
+    if (scanned) {
+      addToVault(scanned);
+      setVault(listVault());
+    }
+    setScanned(null);
   }
 
   async function handleSubmit(entry: VaultEntry) {
@@ -63,7 +74,7 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
       setJustSentId(entry.id);
       setTimeout(() => setJustSentId(null), 4000);
     } catch (e: any) {
-      setSubmitErrors(prev => ({ ...prev, [entry.id]: e?.message ?? 'Error enviando la señal' }));
+      setSubmitErrors(prev => ({ ...prev, [entry.id]: e?.message ?? t.sendSignalError }));
     } finally {
       setSubmittingId(null);
     }
@@ -111,10 +122,10 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
 
         <div style={{ marginBottom: isMobile ? 14 : 20 }}>
           <div style={{ fontSize: 12, color: '#999999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
-            Recibo de una compra real
+            {t.scanSectionLabel}
           </div>
           <p style={{ color: '#999999', fontSize: isMobile ? 12 : 13, lineHeight: 1.6, marginBottom: 12 }}>
-            La tienda te enseña un código QR al pagar. Escanéalo para añadir el recibo a tu bóveda — decides tú, y cuándo, convertirlo en una señal.
+            {t.scanIntro}
           </p>
           <button
             onClick={() => { setScanError(null); setScanning(true); }}
@@ -125,7 +136,7 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
               opacity: (needsLace || needsDeploy) ? 0.3 : 1, cursor: (needsLace || needsDeploy) ? 'not-allowed' : 'pointer',
             }}
           >
-            📷 Escanear recibo
+            {t.scanButton}
           </button>
           {scanError && (
             <p style={{ color: '#f87171', fontSize: 13, marginTop: 8 }}>{scanError}</p>
@@ -134,15 +145,18 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
 
         <div>
           <div style={{ fontSize: 12, color: '#999999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
-            Tu bóveda ({vault.length})
+            {t.vaultLabel(vault.length)}
           </div>
           {vault.length === 0 ? (
-            <p style={{ color: '#666666', fontSize: isMobile ? 13 : 14 }}>Todavía no has escaneado ningún recibo.</p>
+            <p style={{ color: '#666666', fontSize: isMobile ? 13 : 14 }}>{t.vaultEmpty}</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {vault.map(entry => {
-                const subKey = SUBCATEGORY_INDEX[entry.receipt.subcategory];
-                const amount = (Number(entry.receipt.amount) / 100).toFixed(2);
+                const rls = entry.receipt.lines ?? [];
+                const summary = rls
+                  .map(l => `${subLabel[SUBCATEGORY_INDEX[l.subcategory]] ?? '?'} ×${l.qty}`)
+                  .join(' · ');
+                const amount = (rls.reduce((s, l) => s + Number(l.amount), 0) / 100).toFixed(2);
                 const sending = submittingId === entry.id;
                 return (
                   <div key={entry.id} style={{
@@ -151,7 +165,7 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
                   }}>
                     <div>
                       <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, color: '#FFFFFF' }}>
-                        {subLabel[subKey] ?? subKey}
+                        {summary}
                       </div>
                       <div style={{ fontSize: 12, color: '#AAAAAA' }}>{amount} €</div>
                       {submitErrors[entry.id] && (
@@ -170,7 +184,7 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
                           opacity: sending ? 0.5 : 1,
                         }}
                       >
-                        {sending ? '…' : 'Enviar señal'}
+                        {sending ? '...' : t.sendSignal}
                       </button>
                     )}
                   </div>
@@ -189,7 +203,16 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
 
       </div>{/* end profile-section tour frame */}
 
-      {scanning && <QrScanner onScan={handleScan} onClose={() => setScanning(false)} />}
+      {scanning && <QrScanner lang={lang} onScan={handleScan} onClose={() => setScanning(false)} />}
+
+      {scanned && (
+        <RedactedTicket
+          lang={lang}
+          receipt={scanned}
+          onConfirm={confirmScanned}
+          onCancel={() => setScanned(null)}
+        />
+      )}
 
       {/* Midnight branding */}
       <div style={{ textAlign: 'center', marginTop: isMobile ? 40 : 80, padding: '24px 0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 25 }}>

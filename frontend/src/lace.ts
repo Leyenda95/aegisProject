@@ -1,8 +1,22 @@
 import { API_BASE } from './api.ts';
 
-// Igual que ReceiptJSON en backend/src/contract.ts — el recibo tal y como
+// Igual que ReceiptJSON en backend/src/contract.ts, el recibo tal y como
 // viaja por la red y se codifica en el QR (bigint/Uint8Array no son JSON).
-export type ReceiptJSON = { subcategory: number; amount: string; timestamp: string; nonce: string };
+//
+// `lines` = el rollup por subcategoría que SÍ se sella y se señala (máx 8,
+// las de mayor importe). `subcategory` es el índice del enum Subcategory,
+// `amount` va en céntimos como string.
+//
+// `items` es un extra SOLO del QR/dispositivo: el desglose por producto para
+// pintar el ticket original y la animación de censura. El backend lo ignora.
+export type ReceiptLine = { subcategory: number; qty: number; amount: string };
+export type ReceiptItem = { name: string; qty: number; unitCents: number };
+export type ReceiptJSON = {
+  lines: ReceiptLine[];
+  timestamp: string;
+  nonce: string;
+  items?: ReceiptItem[];
+};
 
 export type ConnectedAPI = {
   getUnshieldedAddress: () => Promise<{ unshieldedAddress: string }>;
@@ -17,7 +31,7 @@ function isWalletUnavailable(e: any): boolean {
 export type WalletInfo = { key: string; name: string; icon: string; rdns: string; apiVersion: string };
 
 // Las wallets se anuncian bajo claves arbitrarias (strings fijos como 'lace'/'1am',
-// o UUIDs CAIP-372 según la versión) — nunca asumir una clave concreta, usar nombre/rdns.
+// o UUIDs CAIP-372 según la versión), nunca asumir una clave concreta, usar nombre/rdns.
 export function listWallets(): WalletInfo[] {
   const midnight = (window as any).midnight as Record<string, any> | undefined;
   if (!midnight) return [];
@@ -93,9 +107,21 @@ export async function seedViaLace(lace: ConnectedAPI): Promise<void> {
   await laceBalanceAndSubmit(lace, tx);
 }
 
-/** Alta única de la tienda de demo en el árbol de tiendas registradas — la hace el admin. */
+export async function checkStoreRegistered(): Promise<boolean> {
+  const r = await fetch(`${API_BASE}/store-registered`);
+  if (!r.ok) return false;
+  const { registered } = await r.json();
+  return Boolean(registered);
+}
+
+/**
+ * Alta única de la tienda de demo en el árbol de tiendas registradas.
+ * La wallet operadora del backend resultó poco fiable (sync de horas,
+ * cortes de red que la dejaban colgada, ver operatorWallet.ts), así que
+ * esto vuelve a pasar por Lace: el backend prueba, Lace balancea/firma/envía.
+ */
 export async function registerStoreViaLace(lace: ConnectedAPI): Promise<void> {
-  const r = await fetch(`${API_BASE}/build-tx/register-store`);
+  const r = await fetch(`${API_BASE}/register-store`, { method: 'POST' });
   if (!r.ok) {
     const { error } = await r.json().catch(() => ({ error: r.statusText }));
     throw new Error(error ?? 'Failed to build register-store tx');
@@ -104,18 +130,22 @@ export async function registerStoreViaLace(lace: ConnectedAPI): Promise<void> {
   await laceBalanceAndSubmit(lace, tx);
 }
 
-/** La tienda vende y sella el compromiso del recibo on-chain. Devuelve el
- * recibo completo — quien llama es responsable de convertirlo en QR y no
- * guardarlo en ningún otro sitio. */
+/** Línea del rollup que la tienda manda a sellar (subcategoría por nombre del enum, importe en céntimos). */
+export type AttestLine = { subcategory: string; qty: number; amount: number };
+
+/**
+ * La tienda vende y sella el compromiso del recibo on-chain. Recibe el
+ * rollup por subcategoría (ya recortado a las 8 de mayor importe) y devuelve
+ * el recibo sellado, quien llama lo convierte en QR. Lace balancea/firma/envía.
+ */
 export async function attestReceiptViaLace(
   lace: ConnectedAPI,
-  subcategory: string,
-  amount: number,
+  lines: AttestLine[],
 ): Promise<ReceiptJSON> {
-  const r = await fetch(`${API_BASE}/build-tx/attest-receipt`, {
+  const r = await fetch(`${API_BASE}/attest-receipt`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ subcategory, amount }),
+    body: JSON.stringify({ lines }),
   });
   if (!r.ok) {
     const { error } = await r.json().catch(() => ({ error: r.statusText }));

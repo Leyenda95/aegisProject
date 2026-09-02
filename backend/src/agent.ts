@@ -160,7 +160,7 @@ export async function generateInsights(state: AegisState, storeProfile?: string,
   }
 
   const system = `You are Aegis, a market intelligence agent for retail stores.
-You work with ZK aggregated purchase signals from Midnight — fully anonymous, no individual data visible.
+You work with ZK aggregated purchase signals from Midnight, fully anonymous, no individual data visible.
 Always respond ONLY with valid JSON matching exactly: { "summary": string, "trending": string[], "recommendations": string[] }`;
 
   const user = `${storeContext ? storeContext + '\n\n' : ''}Analyze this market data and generate intelligence:

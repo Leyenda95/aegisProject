@@ -4,7 +4,7 @@
   gap: 28px;
 }
 
-/* ─ Summary ─────────────────────────── */
+/* Summary */
 .summary {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -37,7 +37,7 @@
   letter-spacing: 0.8px;
 }
 
-/* ─ Section label ───────────────────── */
+/* Section label */
 .sectionLabel {
   font-size: 10px;
   color: #666;
@@ -48,7 +48,7 @@
   border-bottom: 1px solid #141414;
 }
 
-/* ─ Category list ───────────────────── */
+/* Category list */
 .catRow {
   display: flex;
   justify-content: space-between;
@@ -73,7 +73,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ─ Receipt list ────────────────────── */
+/* Receipt list */
 .receiptRow {
   display: grid;
   grid-template-columns: 20px 1fr auto auto;
