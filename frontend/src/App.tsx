@@ -10,6 +10,9 @@ import styles from './App.module.css';
 
 type Tab = 'store' | 'user';
 
+// Tutorial guiado desactivado de momento. Poner a true para reactivarlo.
+const TOUR_ENABLED = false;
+
 const btnBase: React.CSSProperties = {
   padding: '10px 22px', fontSize: 14, fontWeight: 600, borderRadius: 8, cursor: 'pointer', border: 'none',
 };
@@ -40,7 +43,7 @@ export default function App() {
   const [registerStoreError, setRegisterStoreError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (landed) {
+    if (landed && TOUR_ENABLED) {
       const t = setTimeout(() => setTourActive(true), 800);
       return () => clearTimeout(t);
     }
