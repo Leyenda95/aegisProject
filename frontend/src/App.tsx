@@ -6,6 +6,9 @@ import TourGuide from './components/TourGuide.tsx';
 import { API_BASE, type Campaign, type MatchResult, type Lang } from './api.ts';
 import { type ConnectedAPI, type WalletInfo, listWallets, connectWallet, deployViaLace, seedViaLace, registerStoreViaLace, checkStoreRegistered } from './lace.ts';
 import { T } from './i18n.ts';
+import { useAggregateState } from './hooks/useAggregateState.ts';
+import StatsRibbon from './components/StatsRibbon.tsx';
+import SignalsBreakdown from './components/SignalsBreakdown.tsx';
 import styles from './App.module.css';
 
 type Tab = 'store' | 'user';
@@ -16,6 +19,22 @@ const TOUR_ENABLED = false;
 const btnBase: React.CSSProperties = {
   padding: '10px 22px', fontSize: 14, fontWeight: 600, borderRadius: 8, cursor: 'pointer', border: 'none',
 };
+
+const pill: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', gap: 7,
+  fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.04em',
+  padding: '4px 11px', border: '1px solid var(--line)', borderRadius: 999,
+  color: 'var(--ink-dim)', whiteSpace: 'nowrap',
+};
+
+/** Los errores del SDK son larguísimos. Deja el detalle en la consola y muestra solo un código corto. */
+function briefError(label: string, e: unknown): string {
+  console.error(`[${label}]`, e);
+  const msg = (e as any)?.message ?? String(e);
+  let h = 0;
+  for (let i = 0; i < msg.length; i++) h = (h * 31 + msg.charCodeAt(i)) | 0;
+  return `${label} · ERR-${(Math.abs(h) % 0xffff).toString(16).toUpperCase().padStart(4, '0')}`;
+}
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('store');
@@ -35,12 +54,15 @@ export default function App() {
   const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
   const [deploying, setDeploying] = useState(false);
   const [deployError, setDeployError] = useState<string | null>(null);
-  const [seeded, setSeeded] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [seedError, setSeedError] = useState<string | null>(null);
+  const [seeded, setSeeded] = useState(false);
   const [storeRegistered, setStoreRegistered] = useState(false);
   const [registeringStore, setRegisteringStore] = useState(false);
   const [registerStoreError, setRegisterStoreError] = useState<string | null>(null);
+
+  const { state: aggregateState } = useAggregateState();
+  const [breakdownOpen, setBreakdownOpen] = useState(false);
 
   useEffect(() => {
     if (landed && TOUR_ENABLED) {
@@ -103,7 +125,7 @@ export default function App() {
       const address = await deployViaLace(lace);
       setContractAddress(address);
     } catch (e: any) {
-      setDeployError(e.message ?? 'Deploy failed');
+      setDeployError(briefError('deploy', e));
     } finally {
       setDeploying(false);
     }
@@ -117,12 +139,7 @@ export default function App() {
       await seedViaLace(lace);
       setSeeded(true);
     } catch (e: any) {
-      const msg: string = e.message ?? '';
-      if (msg.toLowerCase().includes('already seeded')) {
-        setSeeded(true);
-      } else {
-        setSeedError(msg || 'Seed failed');
-      }
+      setSeedError(briefError('seed', e));
     } finally {
       setSeeding(false);
     }
@@ -136,7 +153,7 @@ export default function App() {
       await registerStoreViaLace(lace);
       setStoreRegistered(true);
     } catch (e: any) {
-      setRegisterStoreError(e.message ?? 'Register store failed');
+      setRegisterStoreError(briefError('register-store', e));
     } finally {
       setRegisteringStore(false);
     }
@@ -159,28 +176,23 @@ export default function App() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <nav className={styles.nav}>
-          {(['store', 'user'] as Tab[]).map(id => (
-            <button key={id} data-tour={id === 'user' ? 'tab-user' : undefined} onClick={() => setTab(id)} style={{
-              ...btnBase,
-              background: tab === id ? '#926A45' : 'transparent',
-              color: tab === id ? '#FFFFFF' : '#AAAAAA',
-              border: `1px solid ${tab === id ? '#926A45' : '#333333'}`,
-            }}>
-              {id === 'store' ? t.tabStore : t.tabUser}
-            </button>
-          ))}
-        </nav>
+        {/* Red */}
+        {landed && (
+          <span style={pill}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: lace ? '#63B98A' : '#8a6440' }} />
+            {networkId}
+          </span>
+        )}
 
         {/* Controls */}
         <div className={styles.controls}>
-          <div style={{ display: 'flex', background: '#111111', borderRadius: 8, padding: 3, border: '1px solid #2A2A2A' }}>
+          <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: 8, padding: 3, border: '1px solid var(--line)' }}>
             {(['es', 'en'] as Lang[]).map(l => (
               <button key={l} onClick={() => setLang(l)} style={{
-                background: lang === l ? '#926A45' : 'transparent',
+                background: lang === l ? 'var(--bronze-wash)' : 'transparent',
                 color: lang === l ? '#FFFFFF' : '#888888',
-                border: 'none', padding: '5px 14px', fontSize: 12, fontWeight: 700, borderRadius: 6,
+                border: `1px solid ${lang === l ? 'var(--bronze-deep)' : 'transparent'}`,
+                padding: '5px 14px', fontSize: 12, fontWeight: 700, borderRadius: 6,
               }}>
                 {l.toUpperCase()}
               </button>
@@ -249,7 +261,8 @@ export default function App() {
                   )}
                 </div>
               )}
-              {false && !seeded && (
+              {/* Datos de demo: visible tras desplegar, se oculta cuando ya se ha sembrado (flag local o isSeeded on-chain, que se resetea al redesplegar). */}
+              {!seeded && Number(aggregateState?.isSeeded ?? 0) === 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                   <button onClick={handleSeed} disabled={seeding} style={{
                     ...btnBase,
@@ -260,28 +273,56 @@ export default function App() {
                     {seeding ? t.seeding : t.seedData}
                   </button>
                   {seedError && (
-                    <span style={{ fontSize: 11, color: '#f87171', maxWidth: 220, textAlign: 'right' }}>{seedError}</span>
+                    <span style={{ fontSize: 12, color: '#f87171', maxWidth: 240, textAlign: 'right', lineHeight: 1.4 }}>{seedError}</span>
                   )}
                 </div>
               )}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                {walletAddress && (
-                  <span style={{ fontSize: 12, color: '#666666', fontFamily: 'monospace', background: '#111111', border: '1px solid #222222', borderRadius: 6, padding: '4px 10px' }}>
-                    ...{walletAddress.slice(-14)}
-                  </span>
-                )}
-                <span style={{ fontSize: 11, color: '#666', fontFamily: 'monospace' }}>
-                  {t.contractPrefix} ...{contractAddress.slice(-10)}
-                </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={pill}>Wallet · {walletAddress ? `…${walletAddress.slice(-6)}` : 'connected'}</span>
+                <span style={pill}>{t.contractPrefix} 0x…{contractAddress.slice(-4)}</span>
               </div>
             </div>
           )}
         </div>
       </header>
 
+      {landed && (
+        <StatsRibbon
+          state={aggregateState}
+          lang={lang}
+          breakdownOpen={breakdownOpen}
+          onToggleBreakdown={() => setBreakdownOpen(o => !o)}
+        />
+      )}
+      {landed && breakdownOpen && (
+        <div style={{ borderBottom: '1px solid var(--line)', background: 'var(--surface)', padding: '16px 24px' }}>
+          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+            <SignalsBreakdown state={aggregateState} lang={lang} />
+          </div>
+        </div>
+      )}
+
+      {landed && (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 16px 0' }}>
+          <div style={{ display: 'inline-flex', gap: 3, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 10, padding: 3 }}>
+            {(['store', 'user'] as Tab[]).map(id => (
+              <button key={id} data-tour={id === 'user' ? 'tab-user' : undefined} onClick={() => setTab(id)} style={{
+                background: tab === id ? 'var(--bronze-wash)' : 'transparent',
+                color: tab === id ? '#FFFFFF' : '#888888',
+                border: `1px solid ${tab === id ? 'var(--bronze-deep)' : 'transparent'}`,
+                borderRadius: 7, padding: '8px 28px', fontSize: 13, fontWeight: 600,
+                fontFamily: 'var(--font-display)', cursor: 'pointer',
+              }}>
+                {id === 'store' ? t.tabStore : t.tabUser}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <main className={styles.main}>
         {tab === 'store'
-          ? <StoreView lang={lang} lace={lace} contractAddress={contractAddress} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} />
+          ? <StoreView lang={lang} lace={lace} contractAddress={contractAddress} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} aggregateState={aggregateState} />
           : <UserView lang={lang} lace={lace} contractAddress={contractAddress} />}
       </main>
 

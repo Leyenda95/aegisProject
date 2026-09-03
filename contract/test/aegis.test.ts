@@ -91,7 +91,7 @@ describe('submitPurchase', () => {
   it.each([
     [Subcategory.mobile, 'signalsElectronics', 'signalsMobile'],
     [Subcategory.outerwear, 'signalsFashion', 'signalsOuterwear'],
-    [Subcategory.snacks, 'signalsFood', 'signalsSnacks'],
+    [Subcategory.cafes, 'signalsFood', 'signalsCafes'],
     [Subcategory.supplements, 'signalsSports', 'signalsSupplements'],
     [Subcategory.tools, 'signalsHome', 'signalsTools'],
   ] as const)('mapea %s a sus dos contadores', (subcategory, category, sub) => {
@@ -156,7 +156,7 @@ describe('registerCampaign', () => {
 });
 
 describe('seed', () => {
-  it('inicializa los contadores solo la primera vez', () => {
+  it('inicializa los contadores', () => {
     const sim = new AegisSimulator();
     sim.seed({ initMobile: 5n, totalElectronics: 5n, grandTotal: 5n });
 
@@ -166,10 +166,15 @@ describe('seed', () => {
     expect(sim.ledger.isSeeded).toBe(1n);
   });
 
-  it('rechaza sembrar dos veces', () => {
+  it('es re-ejecutable: cada llamada acumula otro lote', () => {
     const sim = new AegisSimulator();
-    sim.seed();
-    expect(() => sim.seed()).toThrow(/Already seeded/);
+    sim.seed({ initMobile: 5n, totalElectronics: 5n, grandTotal: 5n });
+    sim.seed({ initMobile: 3n, totalElectronics: 3n, grandTotal: 3n });
+
+    expect(sim.ledger.signalsMobile).toBe(8n);
+    expect(sim.ledger.signalsElectronics).toBe(8n);
+    expect(sim.ledger.totalSignals).toBe(8n);
+    expect(sim.ledger.isSeeded).toBe(2n);
   });
 
   it('convive con señales enviadas antes o después', () => {

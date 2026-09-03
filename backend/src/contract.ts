@@ -139,7 +139,7 @@ export type AegisState = {
   signalsCamera: bigint; signalsAudio: bigint; signalsGaming: bigint;
   signalsShoes: bigint; signalsTops: bigint; signalsBottoms: bigint;
   signalsAccessories: bigint; signalsOuterwear: bigint;
-  signalsGroceries: bigint; signalsRestaurant: bigint; signalsDrinks: bigint; signalsSnacks: bigint;
+  signalsGroceries: bigint; signalsRestaurant: bigint; signalsCafes: bigint; signalsFastfood: bigint; signalsLocalshops: bigint;
   signalsEquipment: bigint; signalsClothing: bigint; signalsFootwear: bigint; signalsSupplements: bigint;
   signalsFurniture: bigint; signalsAppliances: bigint; signalsDecor: bigint; signalsTools: bigint;
   totalSignals: bigint;
@@ -196,7 +196,7 @@ export async function buildDeployTx(
 export type SeedData = {
   mobile: number; tablet: number; computer: number; camera: number; audio: number; gaming: number;
   shoes: number; tops: number; bottoms: number; accessories: number; outerwear: number;
-  groceries: number; restaurant: number; drinks: number; snacks: number;
+  groceries: number; restaurant: number; cafes: number; fastfood: number; localshops: number;
   equipment: number; clothing: number; footwear: number; supplements: number;
   furniture: number; appliances: number; decor: number; tools: number;
   other: number;
@@ -210,7 +210,7 @@ export async function buildSeedTx(
   const b = (n: number) => BigInt(n);
   const totalElectronics = b(data.mobile + data.tablet + data.computer + data.camera + data.audio + data.gaming);
   const totalFashion = b(data.shoes + data.tops + data.bottoms + data.accessories + data.outerwear);
-  const totalFood = b(data.groceries + data.restaurant + data.drinks + data.snacks);
+  const totalFood = b(data.groceries + data.restaurant + data.cafes + data.fastfood + data.localshops);
   const totalSports = b(data.equipment + data.clothing + data.footwear + data.supplements);
   const totalHome = b(data.furniture + data.appliances + data.decor + data.tools);
   const grandTotal = totalElectronics + totalFashion + totalFood + totalSports + totalHome + b(data.other);
@@ -222,7 +222,7 @@ export async function buildSeedTx(
     args: [
       b(data.mobile), b(data.tablet), b(data.computer), b(data.camera), b(data.audio), b(data.gaming),
       b(data.shoes), b(data.tops), b(data.bottoms), b(data.accessories), b(data.outerwear),
-      b(data.groceries), b(data.restaurant), b(data.drinks), b(data.snacks),
+      b(data.groceries), b(data.restaurant), b(data.cafes), b(data.fastfood), b(data.localshops),
       b(data.equipment), b(data.clothing), b(data.footwear), b(data.supplements),
       b(data.furniture), b(data.appliances), b(data.decor), b(data.tools),
       b(data.other),

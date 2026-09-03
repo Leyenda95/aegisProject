@@ -143,7 +143,22 @@
   align-items: center;
   gap: 16px;
   width: 100%;
-  max-width: 340px;
+  max-width: 344px;
+  /* Bisel de móvil: la reconstrucción del ticket ocurre "en el teléfono". */
+  border: 11px solid #232120;
+  border-radius: 34px;
+  background: #0c0c0d;
+  padding: 20px 16px 22px;
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.6);
+}
+
+.panel::before {
+  content: "";
+  width: 58px;
+  height: 5px;
+  border-radius: 3px;
+  background: #2b2825;
+  margin-bottom: 2px;
 }
 
 .enter {

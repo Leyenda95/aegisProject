@@ -90,7 +90,7 @@ async function handleRequest(
       const fields: Array<keyof SeedData> = [
         'mobile','tablet','computer','camera','audio','gaming',
         'shoes','tops','bottoms','accessories','outerwear',
-        'groceries','restaurant','drinks','snacks',
+        'groceries','restaurant','cafes','fastfood','localshops',
         'equipment','clothing','footwear','supplements',
         'furniture','appliances','decor','tools','other',
       ];
@@ -191,10 +191,10 @@ async function handleRequest(
         signalsCamera: zero(), signalsAudio: zero(), signalsGaming: zero(),
         signalsShoes: zero(), signalsTops: zero(), signalsBottoms: zero(),
         signalsAccessories: zero(), signalsOuterwear: zero(),
-        signalsGroceries: zero(), signalsRestaurant: zero(), signalsDrinks: zero(), signalsSnacks: zero(),
+        signalsGroceries: zero(), signalsRestaurant: zero(), signalsCafes: zero(), signalsFastfood: zero(), signalsLocalshops: zero(),
         signalsEquipment: zero(), signalsClothing: zero(), signalsFootwear: zero(), signalsSupplements: zero(),
         signalsFurniture: zero(), signalsAppliances: zero(), signalsDecor: zero(), signalsTools: zero(),
-        totalSignals: zero(), campaignCount: zero(),
+        totalSignals: zero(), campaignCount: zero(), isSeeded: zero(),
       });
       const s = await readState(ctx.providers, ctx.contractAddress);
       return json(res, 200, {
@@ -217,8 +217,9 @@ async function handleRequest(
         signalsOuterwear: s.signalsOuterwear.toString(),
         signalsGroceries: s.signalsGroceries.toString(),
         signalsRestaurant: s.signalsRestaurant.toString(),
-        signalsDrinks: s.signalsDrinks.toString(),
-        signalsSnacks: s.signalsSnacks.toString(),
+        signalsCafes: s.signalsCafes.toString(),
+        signalsFastfood: s.signalsFastfood.toString(),
+        signalsLocalshops: s.signalsLocalshops.toString(),
         signalsEquipment: s.signalsEquipment.toString(),
         signalsClothing: s.signalsClothing.toString(),
         signalsFootwear: s.signalsFootwear.toString(),
@@ -229,6 +230,7 @@ async function handleRequest(
         signalsTools: s.signalsTools.toString(),
         totalSignals: s.totalSignals.toString(),
         campaignCount: s.campaignCount.toString(),
+        isSeeded: s.isSeeded.toString(),
       });
     }
 

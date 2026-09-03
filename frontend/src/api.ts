@@ -5,10 +5,11 @@ export type AegisState = {
   signalsCamera: string; signalsAudio: string; signalsGaming: string;
   signalsShoes: string; signalsTops: string; signalsBottoms: string;
   signalsAccessories: string; signalsOuterwear: string;
-  signalsGroceries: string; signalsRestaurant: string; signalsDrinks: string; signalsSnacks: string;
+  signalsGroceries: string; signalsRestaurant: string; signalsCafes: string; signalsFastfood: string; signalsLocalshops: string;
   signalsEquipment: string; signalsClothing: string; signalsFootwear: string; signalsSupplements: string;
   signalsFurniture: string; signalsAppliances: string; signalsDecor: string; signalsTools: string;
   totalSignals: string; campaignCount: string;
+  isSeeded?: string;
 };
 
 export type Insights = {
@@ -33,10 +34,16 @@ export type MatchResult = {
 export const CATEGORIES = ['electronics', 'fashion', 'food', 'sports', 'home', 'other'] as const;
 export type Category = typeof CATEGORIES[number];
 
+/** Categoría -> nombre del contador de categoría en AegisState. */
+export const CATEGORY_STATE_KEY: Record<Category, keyof AegisState> = {
+  electronics: 'signalsElectronics', fashion: 'signalsFashion', food: 'signalsFood',
+  sports: 'signalsSports', home: 'signalsHome', other: 'signalsOther',
+};
+
 export const SUBCATEGORIES = {
   electronics: ['mobile', 'tablet', 'computer', 'camera', 'audio', 'gaming'],
   fashion:     ['shoes', 'tops', 'bottoms', 'accessories', 'outerwear'],
-  food:        ['groceries', 'restaurant', 'drinks', 'snacks'],
+  food:        ['groceries', 'restaurant', 'cafes', 'fastfood', 'localshops'],
   sports:      ['equipment', 'clothing', 'footwear', 'supplements'],
   home:        ['furniture', 'appliances', 'decor', 'tools'],
   other:       ['other'],
@@ -59,14 +66,14 @@ export const SUBCATEGORY_LABELS: Record<Lang, Record<string, string>> = {
   en: {
     mobile: 'Mobile', tablet: 'Tablet', computer: 'Computer', camera: 'Camera', audio: 'Audio', gaming: 'Gaming',
     shoes: 'Shoes', tops: 'Tops', bottoms: 'Bottoms', accessories: 'Accessories', outerwear: 'Outerwear',
-    groceries: 'Groceries', restaurant: 'Restaurant', drinks: 'Drinks', snacks: 'Snacks',
+    groceries: 'Groceries', restaurant: 'Restaurants', cafes: 'Cafés', fastfood: 'Fast food', localshops: 'Local shops',
     equipment: 'Equipment', clothing: 'Clothing', footwear: 'Footwear', supplements: 'Supplements',
     furniture: 'Furniture', appliances: 'Appliances', decor: 'Decor', tools: 'Tools', other: 'Other',
   },
   es: {
     mobile: 'Móvil', tablet: 'Tablet', computer: 'Ordenador', camera: 'Cámara', audio: 'Audio', gaming: 'Videojuegos',
     shoes: 'Calzado', tops: 'Camisetas', bottoms: 'Pantalones', accessories: 'Accesorios', outerwear: 'Abrigos',
-    groceries: 'Supermercado', restaurant: 'Restauración', drinks: 'Bebidas', snacks: 'Snacks',
+    groceries: 'Supermercado', restaurant: 'Restaurantes', cafes: 'Cafeterías', fastfood: 'Comida rápida', localshops: 'Tiendas locales',
     equipment: 'Equipamiento', clothing: 'Ropa', footwear: 'Calzado', supplements: 'Suplementos',
     furniture: 'Muebles', appliances: 'Electrodomésticos', decor: 'Decoración', tools: 'Herramientas', other: 'Otros',
   },
@@ -79,7 +86,7 @@ export const CATEGORY_ICONS: Record<Category, string> = {
 export const SUBCATEGORY_ICONS: Record<string, string> = {
   mobile: '📱', tablet: '📟', computer: '🖥️', camera: '📷', audio: '🎧', gaming: '🎮',
   shoes: '👟', tops: '👕', bottoms: '👖', accessories: '👜', outerwear: '🧥',
-  groceries: '🥦', restaurant: '🍽️', drinks: '🥤', snacks: '🍿',
+  groceries: '🥦', restaurant: '🍽️', cafes: '☕', fastfood: '🍔', localshops: '🏪',
   equipment: '🏋️', clothing: '🩳', footwear: '⛸️', supplements: '💊',
   furniture: '🛋️', appliances: '🫧', decor: '🖼️', tools: '🔧',
   other: '📦',

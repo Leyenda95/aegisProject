@@ -92,7 +92,7 @@ export class AegisSimulator {
     initCamera?: bigint; initAudio?: bigint; initGaming?: bigint;
     initShoes?: bigint; initTops?: bigint; initBottoms?: bigint;
     initAccessories?: bigint; initOuterwear?: bigint;
-    initGroceries?: bigint; initRestaurant?: bigint; initDrinks?: bigint; initSnacks?: bigint;
+    initGroceries?: bigint; initRestaurant?: bigint; initCafes?: bigint; initFastfood?: bigint; initLocalshops?: bigint;
     initEquipment?: bigint; initClothing?: bigint; initFootwear?: bigint; initSupplements?: bigint;
     initFurniture?: bigint; initAppliances?: bigint; initDecor?: bigint; initTools?: bigint;
     initOther?: bigint;
@@ -107,7 +107,7 @@ export class AegisSimulator {
       counts.initCamera ?? z, counts.initAudio ?? z, counts.initGaming ?? z,
       counts.initShoes ?? z, counts.initTops ?? z, counts.initBottoms ?? z,
       counts.initAccessories ?? z, counts.initOuterwear ?? z,
-      counts.initGroceries ?? z, counts.initRestaurant ?? z, counts.initDrinks ?? z, counts.initSnacks ?? z,
+      counts.initGroceries ?? z, counts.initRestaurant ?? z, counts.initCafes ?? z, counts.initFastfood ?? z, counts.initLocalshops ?? z,
       counts.initEquipment ?? z, counts.initClothing ?? z, counts.initFootwear ?? z, counts.initSupplements ?? z,
       counts.initFurniture ?? z, counts.initAppliances ?? z, counts.initDecor ?? z, counts.initTools ?? z,
       counts.initOther ?? z,

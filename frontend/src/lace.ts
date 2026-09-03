@@ -86,9 +86,9 @@ export async function deployViaLace(
 
 const DEFAULT_SEED = {
   mobile: 312, tablet: 187, computer: 245, camera: 98, audio: 201, gaming: 278,
-  shoes: 334, tops: 289, bottoms: 198, accessories: 145, outerwear: 112,
-  groceries: 421, restaurant: 356, drinks: 267, snacks: 189,
-  equipment: 134, clothing: 176, footwear: 155, supplements: 93,
+  shoes: 334, tops: 889, bottoms: 798, accessories: 345, outerwear: 212,
+  groceries: 921, restaurant: 356, cafes: 267, fastfood: 189, localshops: 150,
+  equipment: 134, clothing: 276, footwear: 355, supplements: 193,
   furniture: 88, appliances: 121, decor: 167, tools: 74,
   other: 63,
 };

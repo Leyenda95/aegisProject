@@ -28,7 +28,7 @@ const LABELS = {
     sports: 'Sports', home: 'Home', other: 'Other',
     mobile: 'Mobile', tablet: 'Tablet', computer: 'Computer', camera: 'Camera', audio: 'Audio', gaming: 'Gaming',
     shoes: 'Shoes', tops: 'Tops', bottoms: 'Bottoms', accessories: 'Accessories', outerwear: 'Outerwear',
-    groceries: 'Groceries', restaurant: 'Restaurant', drinks: 'Drinks', snacks: 'Snacks',
+    groceries: 'Groceries', restaurant: 'Restaurants', cafes: 'Cafés', fastfood: 'Fast food', localshops: 'Local shops',
     equipment: 'Equipment', clothing: 'Clothing', footwear: 'Footwear', supplements: 'Supplements',
     furniture: 'Furniture', appliances: 'Appliances', decor: 'Decor', tools: 'Tools',
     signals: 'signals', total: 'TOTAL SIGNALS',
@@ -38,7 +38,7 @@ const LABELS = {
     sports: 'Deportes', home: 'Hogar', other: 'Otros',
     mobile: 'Móvil', tablet: 'Tablet', computer: 'Ordenador', camera: 'Cámara', audio: 'Audio', gaming: 'Videojuegos',
     shoes: 'Calzado', tops: 'Camisetas', bottoms: 'Pantalones', accessories: 'Accesorios', outerwear: 'Abrigos',
-    groceries: 'Supermercado', restaurant: 'Restauración', drinks: 'Bebidas', snacks: 'Snacks',
+    groceries: 'Supermercado', restaurant: 'Restaurantes', cafes: 'Cafeterías', fastfood: 'Comida rápida', localshops: 'Tiendas locales',
     equipment: 'Equipamiento', clothing: 'Ropa deportiva', footwear: 'Calzado deportivo', supplements: 'Suplementos',
     furniture: 'Muebles', appliances: 'Electrodomésticos', decor: 'Decoración', tools: 'Herramientas',
     signals: 'señales', total: 'TOTAL SEÑALES',
@@ -60,8 +60,8 @@ ${l.fashion.toUpperCase()} (${s(state.signalsFashion)} ${l.signals}):
   ${l.accessories}: ${s(state.signalsAccessories)} | ${l.outerwear}: ${s(state.signalsOuterwear)}
 
 ${l.food.toUpperCase()} (${s(state.signalsFood)} ${l.signals}):
-  ${l.groceries}: ${s(state.signalsGroceries)} | ${l.restaurant}: ${s(state.signalsRestaurant)}
-  ${l.drinks}: ${s(state.signalsDrinks)} | ${l.snacks}: ${s(state.signalsSnacks)}
+  ${l.groceries}: ${s(state.signalsGroceries)} | ${l.restaurant}: ${s(state.signalsRestaurant)} | ${l.cafes}: ${s(state.signalsCafes)}
+  ${l.fastfood}: ${s(state.signalsFastfood)} | ${l.localshops}: ${s(state.signalsLocalshops)}
 
 ${l.sports.toUpperCase()} (${s(state.signalsSports)} ${l.signals}):
   ${l.equipment}: ${s(state.signalsEquipment)} | ${l.clothing}: ${s(state.signalsClothing)}
@@ -106,7 +106,7 @@ async function callClaude(systemPrompt: string, userMessage: string): Promise<st
 const SECTOR_SUBCATS: Record<string, { keywords: string[]; subcats: (keyof typeof LABELS.es)[] }> = {
   fashion:     { keywords: ['moda','fashion','ropa','calzado','zapatos','textil','clothing','apparel','boutique'], subcats: ['shoes','tops','bottoms','accessories','outerwear'] },
   electronics: { keywords: ['electrónica','electronics','tecnología','tech','móviles','ordenadores','gadget'],    subcats: ['mobile','tablet','computer','camera','audio','gaming'] },
-  food:        { keywords: ['alimentación','food','comida','restaurante','cocina','supermercado','grocery'],      subcats: ['groceries','restaurant','drinks','snacks'] },
+  food:        { keywords: ['alimentación','food','comida','restaurante','cocina','supermercado','grocery'],      subcats: ['groceries','restaurant','cafes','fastfood','localshops'] },
   sports:      { keywords: ['deporte','sports','fitness','gym','gimnasio','atletismo'],                          subcats: ['equipment','clothing','footwear','supplements'] },
   home:        { keywords: ['hogar','home','decoración','muebles','casa','furniture'],                           subcats: ['furniture','appliances','decor','tools'] },
 };
@@ -144,7 +144,7 @@ export async function generateInsights(state: AegisState, storeProfile?: string,
       mobile: state.signalsMobile, tablet: state.signalsTablet, computer: state.signalsComputer,
       camera: state.signalsCamera, audio: state.signalsAudio, gaming: state.signalsGaming,
       groceries: state.signalsGroceries, restaurant: state.signalsRestaurant,
-      drinks: state.signalsDrinks, snacks: state.signalsSnacks,
+      cafes: state.signalsCafes, fastfood: state.signalsFastfood, localshops: state.signalsLocalshops,
       equipment: state.signalsEquipment, clothing: state.signalsClothing,
       footwear: state.signalsFootwear, supplements: state.signalsSupplements,
       furniture: state.signalsFurniture, appliances: state.signalsAppliances,

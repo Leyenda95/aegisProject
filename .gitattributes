@@ -1,0 +1,16 @@
+# Normaliza los finales de línea: en el repo siempre LF, sin importar el editor
+# ni el SO. Con esto, un fichero que solo cambia CRLF<->LF deja de aparecer como
+# modificado (adiós al descarte perpetuo de README.md).
+* text=auto eol=lf
+
+# Binarios: git no los toca nunca
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.avif binary
+*.webp binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.woff  binary
+*.woff2 binary

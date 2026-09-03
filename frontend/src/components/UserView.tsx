@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SUBCATEGORY_INDEX, SUBCATEGORY_LABELS, type Lang } from '../api.ts';
 import { submitSignalViaLace, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
+import { decodeReceiptFromQr } from '../receiptCodec.ts';
 import { listVault, addToVault, removeFromVault, type VaultEntry } from '../vault.ts';
 import QrScanner from './QrScanner.tsx';
 import RedactedTicket from './RedactedTicket.tsx';
@@ -25,7 +26,7 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
   const subLabel = SUBCATEGORY_LABELS[lang];
   const bp = useBreakpoint();
   const isMobile = bp === 'mobile';
-  const [activeTab, setActiveTab] = useState<'contribute' | 'profile'>('profile');
+  const [activeTab, setActiveTab] = useState<'contribute' | 'profile'>('contribute');
 
   const [vault, setVault] = useState<VaultEntry[]>([]);
   const [scanning, setScanning] = useState(false);
@@ -42,11 +43,11 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
   const needsLace = !lace;
   const needsDeploy = lace && !contractAddress;
 
-  function handleScan(data: string) {
+  async function handleScan(data: string) {
     if (!data || !data.trim()) return; // lectura vacía de la cámara: se ignora, sigue escaneando
     setScanning(false);
     try {
-      const parsed = JSON.parse(data);
+      const parsed = await decodeReceiptFromQr(data);
       if (!isReceiptJSON(parsed)) throw new Error(t.scanNotAegis);
       setScanned(parsed);
       setScanError(null);
@@ -81,25 +82,21 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
   }
 
   return (
-    <div style={{ maxWidth: 520, margin: '0 auto' }}>
-      {/* Logo: outside tour frame */}
-      <div style={{ textAlign: 'center', marginBottom: isMobile ? 8 : 12 }}>
-        <img src="/images/aegis_hor_letras.svg" alt="Aegis" style={{ height: isMobile ? 90 : 180, objectFit: 'contain', marginBottom: isMobile ? 12 : 40 }} />
-      </div>
-
+    <div style={{ maxWidth: 560, margin: '0 auto' }}>
       {/* Tour frame: title + subtitle + tabs + content */}
       <div data-tour="profile-section">
         <h2 style={{ fontSize: isMobile ? 17 : 20, fontWeight: 700, marginBottom: 4, textAlign: 'center' }}>{t.userTitle}</h2>
         <p style={{ color: '#999999', fontSize: isMobile ? 12 : 13, lineHeight: 1.6, textAlign: 'center', marginBottom: isMobile ? 16 : 24 }}>{t.userSubtitle}</p>
 
         {/* Tab switcher */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, background: '#111', borderRadius: 10, padding: 4, marginBottom: isMobile ? 16 : 24 }}>
-          {(['profile', 'contribute'] as const).map(tab => (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, background: 'var(--surface-2)', border: '1px solid #2A2A2A', borderRadius: 9, padding: 3, marginBottom: isMobile ? 16 : 24 }}>
+          {(['contribute', 'profile'] as const).map(tab => (
             <button key={tab} data-tour={tab === 'profile' ? 'profile-tab' : 'contribute-tab'} onClick={() => setActiveTab(tab)} style={{
-              background: activeTab === tab ? '#926A45' : 'transparent',
-              color: activeTab === tab ? '#FFFFFF' : '#666',
-              border: 'none', borderRadius: 8, padding: isMobile ? '9px' : '10px',
-              fontSize: isMobile ? 13 : 13, fontWeight: 600, cursor: 'pointer',
+              background: activeTab === tab ? '#926a4520' : 'transparent',
+              color: activeTab === tab ? '#FFFFFF' : '#888888',
+              border: `1px solid ${activeTab === tab ? '#926A45' : 'transparent'}`,
+              borderRadius: 6, padding: isMobile ? '9px' : '10px',
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }}>
               {tab === 'profile' ? t.profileTab : t.contributeTab}
             </button>
@@ -108,14 +105,19 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
 
         {activeTab === 'profile' && <ProfileSection lang={lang} />}
 
-        {activeTab === 'contribute' && <div data-tour="contribute-section">
+        {activeTab === 'contribute' && <div data-tour="contribute-section" style={{
+          border: `${isMobile ? 8 : 10}px solid var(--raised)`, borderRadius: isMobile ? 24 : 30,
+          background: 'var(--ground)', padding: isMobile ? 16 : 22, maxWidth: 420, margin: '0 auto',
+          boxShadow: '0 22px 55px rgba(0, 0, 0, 0.5)',
+        }}>
+        <div style={{ width: 58, height: 5, borderRadius: 3, background: 'var(--line)', margin: '2px auto 16px' }} />
         {needsLace && (
-          <div style={{ background: '#111111', border: '1px solid #222222', borderRadius: 8, padding: isMobile ? 12 : 14, marginBottom: 16, fontSize: isMobile ? 12 : 13, color: '#BBBBBB' }}>
+          <div style={{ background: 'var(--surface-2)', border: '1px solid #222222', borderRadius: 8, padding: isMobile ? 12 : 14, marginBottom: 16, fontSize: isMobile ? 12 : 13, color: '#BBBBBB' }}>
             {t.userNeedsLace}
           </div>
         )}
         {needsDeploy && (
-          <div style={{ background: '#111111', border: '1px solid #92400e', borderRadius: 8, padding: isMobile ? 12 : 14, marginBottom: 16, fontSize: isMobile ? 12 : 13, color: '#fbbf24' }}>
+          <div style={{ background: 'var(--surface-2)', border: '1px solid #92400e', borderRadius: 8, padding: isMobile ? 12 : 14, marginBottom: 16, fontSize: isMobile ? 12 : 13, color: '#fbbf24' }}>
             {t.userNeedsDeploy}
           </div>
         )}
@@ -131,8 +133,8 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
             onClick={() => { setScanError(null); setScanning(true); }}
             disabled={!!needsLace || !!needsDeploy}
             style={{
-              width: '100%', background: 'transparent', border: '2px solid #926A45', color: '#926A45',
-              padding: isMobile ? '12px' : '13px', fontSize: isMobile ? 14 : 15, borderRadius: 10,
+              width: '100%', background: '#926a4514', border: '2px solid #926A45', color: '#E8C9A6',
+              padding: isMobile ? '18px' : '24px', fontSize: isMobile ? 16 : 18, fontWeight: 700, borderRadius: 12,
               opacity: (needsLace || needsDeploy) ? 0.3 : 1, cursor: (needsLace || needsDeploy) ? 'not-allowed' : 'pointer',
             }}
           >
@@ -160,7 +162,7 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
                 const sending = submittingId === entry.id;
                 return (
                   <div key={entry.id} style={{
-                    background: '#111111', border: '1px solid #1A1A1A', borderRadius: 10,
+                    background: 'var(--surface-2)', border: '1px solid #1A1A1A', borderRadius: 10,
                     padding: isMobile ? 12 : 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
                   }}>
                     <div>
@@ -194,7 +196,7 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
           )}
         </div>
 
-        <div style={{ marginTop: 14, marginBottom: 16, background: '#0D0D0D', border: '1px solid #2A2A2A', borderRadius: 8, padding: isMobile ? 12 : 16 }}>
+        <div style={{ marginTop: 14, marginBottom: 16, background: 'var(--surface-2)', border: '1px solid #2A2A2A', borderRadius: 8, padding: isMobile ? 12 : 16 }}>
           <div style={{ fontSize: isMobile ? 12 : 12, color: '#BBBBBB', lineHeight: 1.7 }}>
             <strong style={{ color: '#DDDDDD' }}>{t.userPrivacy}</strong> {t.userPrivacyDetail}
           </div>

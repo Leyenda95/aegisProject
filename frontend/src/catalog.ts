@@ -54,14 +54,11 @@ export const PRODUCTS: Product[] = [
   mk('abrigo-lana', 'outerwear', 'Abrigo de lana', 'Wool coat', 14900, 'wool coat'),
 
   // Alimentación
-  mk('cesta-compra', 'groceries', 'Cesta de la compra', 'Grocery basket', 3450, 'groceries'),
-  mk('pack-despensa', 'groceries', 'Pack despensa', 'Pantry pack', 1990, 'pantry food'),
-  mk('menu-dia', 'restaurant', 'Menú del día', 'Set lunch menu', 1500, 'lunch plate'),
-  mk('cena-dos', 'restaurant', 'Cena para dos', 'Dinner for two', 4800, 'restaurant dinner'),
-  mk('cafe-especialidad', 'drinks', 'Café de especialidad 250 g', 'Specialty coffee 250g', 990, 'coffee beans'),
-  mk('refrescos-x6', 'drinks', 'Pack de refrescos x6', 'Soft drinks x6', 450, 'soda cans'),
-  mk('frutos-secos', 'snacks', 'Bolsa de frutos secos', 'Mixed nuts bag', 550, 'nuts'),
-  mk('tableta-chocolate', 'snacks', 'Tableta de chocolate', 'Chocolate bar', 320, 'chocolate'),
+  mk('supermercado', 'groceries', 'Supermercado', 'Groceries', 3450, 'supermarket groceries'),
+  mk('restaurante', 'restaurant', 'Restaurantes', 'Restaurants', 2800, 'restaurant meal'),
+  mk('cafeteria', 'cafes', 'Cafeterías', 'Cafés', 650, 'coffee shop'),
+  mk('comida-rapida', 'fastfood', 'Comida rápida', 'Fast food', 950, 'fast food'),
+  mk('tienda-local', 'localshops', 'Tiendas locales', 'Local shops', 1290, 'local shop storefront'),
 
   // Deportes
   mk('esterilla-yoga', 'equipment', 'Esterilla de yoga', 'Yoga mat', 2490, 'yoga mat'),

@@ -7,7 +7,7 @@ export enum Subcategory {
   // Fashion
   shoes, tops, bottoms, accessories, outerwear,
   // Food
-  groceries, restaurant, drinks, snacks,
+  groceries, restaurant, cafes, fastfood, localshops,
   // Sports
   equipment, clothing, footwear, supplements,
   // Home
@@ -65,8 +65,9 @@ export ledger signalsOuterwear: Counter;
 // Food subcategory counters
 export ledger signalsGroceries: Counter;
 export ledger signalsRestaurant: Counter;
-export ledger signalsDrinks: Counter;
-export ledger signalsSnacks: Counter;
+export ledger signalsCafes: Counter;
+export ledger signalsFastfood: Counter;
+export ledger signalsLocalshops: Counter;
 
 // Sports subcategory counters
 export ledger signalsEquipment: Counter;
@@ -179,10 +180,12 @@ circuit bumpSubcategory(sub: Subcategory, q: Uint<16>): [] {
     signalsFood.increment(q); signalsGroceries.increment(q);
   } else if (sub == Subcategory.restaurant) {
     signalsFood.increment(q); signalsRestaurant.increment(q);
-  } else if (sub == Subcategory.drinks) {
-    signalsFood.increment(q); signalsDrinks.increment(q);
-  } else if (sub == Subcategory.snacks) {
-    signalsFood.increment(q); signalsSnacks.increment(q);
+  } else if (sub == Subcategory.cafes) {
+    signalsFood.increment(q); signalsCafes.increment(q);
+  } else if (sub == Subcategory.fastfood) {
+    signalsFood.increment(q); signalsFastfood.increment(q);
+  } else if (sub == Subcategory.localshops) {
+    signalsFood.increment(q); signalsLocalshops.increment(q);
   } else if (sub == Subcategory.equipment) {
     signalsSports.increment(q); signalsEquipment.increment(q);
   } else if (sub == Subcategory.clothing) {
@@ -229,7 +232,7 @@ export circuit seed(
   initCamera: Uint<16>, initAudio: Uint<16>, initGaming: Uint<16>,
   initShoes: Uint<16>, initTops: Uint<16>, initBottoms: Uint<16>,
   initAccessories: Uint<16>, initOuterwear: Uint<16>,
-  initGroceries: Uint<16>, initRestaurant: Uint<16>, initDrinks: Uint<16>, initSnacks: Uint<16>,
+  initGroceries: Uint<16>, initRestaurant: Uint<16>, initCafes: Uint<16>, initFastfood: Uint<16>, initLocalshops: Uint<16>,
   initEquipment: Uint<16>, initClothing: Uint<16>, initFootwear: Uint<16>, initSupplements: Uint<16>,
   initFurniture: Uint<16>, initAppliances: Uint<16>, initDecor: Uint<16>, initTools: Uint<16>,
   initOther: Uint<16>,
@@ -237,8 +240,7 @@ export circuit seed(
   totalSports: Uint<16>, totalHome: Uint<16>,
   grandTotal: Uint<16>
 ): [] {
-  assert(disclose(isSeeded.read() == 0), "Already seeded");
-
+  // Datos de demo: re-ejecutable. isSeeded solo cuenta cuántas veces se ha llamado.
   signalsMobile.increment(disclose(initMobile));
   signalsTablet.increment(disclose(initTablet));
   signalsComputer.increment(disclose(initComputer));
@@ -254,8 +256,9 @@ export circuit seed(
 
   signalsGroceries.increment(disclose(initGroceries));
   signalsRestaurant.increment(disclose(initRestaurant));
-  signalsDrinks.increment(disclose(initDrinks));
-  signalsSnacks.increment(disclose(initSnacks));
+  signalsCafes.increment(disclose(initCafes));
+  signalsFastfood.increment(disclose(initFastfood));
+  signalsLocalshops.increment(disclose(initLocalshops));
 
   signalsEquipment.increment(disclose(initEquipment));
   signalsClothing.increment(disclose(initClothing));

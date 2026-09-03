@@ -15,3 +15,6 @@ midnight-level-db/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Metadatos NTFS de Windows al descargar archivos (no son ficheros reales)
+*:Zone.Identifier

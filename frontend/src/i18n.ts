@@ -19,6 +19,8 @@ const en = {
   signalsTitle: 'Aggregated signals on Midnight',
   signalsTotal: (n: number) => `${n} total`,
   signalsRefresh: 'updates every 10s',
+  signalsUnit: 'signals on Midnight',
+  signalsBreakdown: 'Full breakdown',
 
   // StoreView, insights
   insightsTitle: 'Market Intelligence',
@@ -43,6 +45,7 @@ const en = {
   campaignActive: 'Active',
   campaignNoMatch: '○ No match',
   campaignRefresh: '↻ Refresh',
+  storeTools: 'Store tools',
 
   // StoreView, point of sale / catalogue
   posTitle: 'Point of sale (demo)',
@@ -120,6 +123,8 @@ const es: typeof en = {
   signalsTitle: 'Señales agregadas en Midnight',
   signalsTotal: (n: number) => `${n} en total`,
   signalsRefresh: 'se actualiza cada 10s',
+  signalsUnit: 'señales en Midnight',
+  signalsBreakdown: 'Desglose completo',
 
   insightsTitle: 'Inteligencia de mercado',
   insightsPlaceholder: 'Describe tu tienda (ej: moda urbana para jóvenes)',
@@ -142,6 +147,7 @@ const es: typeof en = {
   campaignActive: 'Activa',
   campaignNoMatch: '○ Sin coincidencia',
   campaignRefresh: '↻ Actualizar',
+  storeTools: 'Herramientas de tienda',
 
   posTitle: 'Punto de venta (demo)',
   posDeployFirst: 'Despliega el contrato primero.',
