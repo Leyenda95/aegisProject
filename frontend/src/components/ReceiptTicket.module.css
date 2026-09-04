@@ -137,6 +137,98 @@
   overflow-y: auto;
 }
 
+.stage {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 640px;
+}
+
+.sideMenu {
+  width: 100%;
+  max-width: 260px;
+  background: #141414;
+  border: 1px solid #262626;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sideMenuTitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #999999;
+}
+
+.previewNote {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #8a7a5f;
+  background: rgba(146, 106, 69, 0.1);
+  border: 1px solid rgba(146, 106, 69, 0.3);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+/* index.css estiliza TODO <input> (incluidos checkbox) con width:100% y
+   padding pensados para campos de texto; hay que resetearlo aquí o el
+   checkbox se estira al ancho de la fila entera y empuja el texto fuera. */
+.toggleRow input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  margin-top: 2px;
+  accent-color: #926a45;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toggleRow.disabled {
+  opacity: 0.6;
+}
+
+.toggleBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.toggleLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #eeeeee;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.toggleHint {
+  font-size: 11px;
+  color: #888888;
+  line-height: 1.4;
+  margin-top: 1px;
+  overflow-wrap: anywhere;
+}
+
+.avgValue {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #c0956de5;
+}
+
 .panel {
   display: flex;
   flex-direction: column;
