@@ -258,7 +258,7 @@ export default function App() {
                     border: '1px solid #926A45',
                     padding: '9px 18px', fontSize: 13,
                   }}>
-                    {registeringStore ? 'Registrando tienda...' : 'Registrar tienda de demo'}
+                    {registeringStore ? t.registeringStore : t.registerStore}
                   </button>
                   {registerStoreError && (
                     <span style={{ fontSize: 11, color: '#f87171', maxWidth: 220, textAlign: 'right' }}>{registerStoreError}</span>

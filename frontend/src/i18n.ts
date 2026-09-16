@@ -14,6 +14,8 @@ const en = {
   seeding: 'Loading...',
   seeded: 'Loaded',
   contractPrefix: 'Contract:',
+  registerStore: 'Register demo store',
+  registeringStore: 'Registering store...',
 
   // StoreView, signals
   signalsTitle: 'Aggregated signals on Midnight',
@@ -124,6 +126,8 @@ const es: typeof en = {
   seeding: 'Cargando...',
   seeded: 'Datos cargados',
   contractPrefix: 'Contrato:',
+  registerStore: 'Registrar tienda de demo',
+  registeringStore: 'Registrando tienda...',
 
   signalsTitle: 'Señales agregadas en Midnight',
   signalsTotal: (n: number) => `${n} en total`,
