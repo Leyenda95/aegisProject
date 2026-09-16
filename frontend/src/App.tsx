@@ -4,7 +4,7 @@ import UserView from './components/UserView.tsx';
 import LandingScreen from './components/LandingScreen.tsx';
 import TourGuide from './components/TourGuide.tsx';
 import { API_BASE, type Campaign, type MatchResult, type Lang } from './api.ts';
-import { type ConnectedAPI, type WalletInfo, listWallets, connectWallet, deployViaLace, seedViaLace, registerStoreViaLace, checkStoreRegistered } from './lace.ts';
+import { type ConnectedAPI, type WalletInfo, type ReceiptJSON, listWallets, connectWallet, deployViaLace, seedViaLace, registerStoreViaLace, checkStoreRegistered } from './lace.ts';
 import { T } from './i18n.ts';
 import { useAggregateState } from './hooks/useAggregateState.ts';
 import StatsRibbon from './components/StatsRibbon.tsx';
@@ -58,6 +58,10 @@ export default function App() {
   const [seedError, setSeedError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
   const [storeRegistered, setStoreRegistered] = useState(false);
+  // Último recibo sellado en la pestaña Tienda de esta misma sesión de demo,
+  // para poder usarlo directamente en la pestaña Usuario sin pasar por
+  // cámara/QR (ver UserView "usar último recibo").
+  const [lastReceipt, setLastReceipt] = useState<ReceiptJSON | null>(null);
   const [registeringStore, setRegisteringStore] = useState(false);
   const [registerStoreError, setRegisterStoreError] = useState<string | null>(null);
 
@@ -322,8 +326,8 @@ export default function App() {
 
       <main className={styles.main}>
         {tab === 'store'
-          ? <StoreView lang={lang} lace={lace} contractAddress={contractAddress} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} aggregateState={aggregateState} />
-          : <UserView lang={lang} lace={lace} contractAddress={contractAddress} />}
+          ? <StoreView lang={lang} lace={lace} contractAddress={contractAddress} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} aggregateState={aggregateState} onReceiptGenerated={setLastReceipt} />
+          : <UserView lang={lang} lace={lace} contractAddress={contractAddress} lastReceipt={lastReceipt} onReceiptConsumed={() => setLastReceipt(null)} />}
       </main>
 
     </div>

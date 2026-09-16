@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CATEGORIES, CATEGORY_LABELS, CATEGORY_STATE_KEY, type AegisState, type Category, type Lang } from '../api.ts';
 import { T } from '../i18n.ts';
 import { useBreakpoint } from '../hooks/useBreakpoint.ts';
@@ -30,13 +30,17 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
   const bumped = useCountBumps(counts);
 
   const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const ups = Object.entries(bumped);
-    if (ups.length === 0) return;
+    if (ups.length === 0) return; // `bumped` se limpia solo a los 1500ms (ver useCountBumps);
+    // eso también dispara este efecto, así que NO hay que tocar el temporizador aquí,
+    // o cancelaríamos el que ya está en marcha para ocultar el toast.
     setToast(ups.map(([c, d]) => `${catLabel[c as Category]} +${d}`).join(' · '));
-    const id = setTimeout(() => setToast(null), 2600);
-    return () => clearTimeout(id);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2600);
   }, [bumped, catLabel]);
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
   return (
     <div style={{

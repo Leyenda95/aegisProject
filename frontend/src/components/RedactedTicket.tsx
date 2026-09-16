@@ -31,6 +31,11 @@ type Props = {
   receipt: ReceiptJSON;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Sobrescribe el texto del botón de confirmación (por defecto tt.add). */
+  confirmLabel?: string;
+  /** Deshabilita ambos botones, p. ej. mientras se firma/envía una transacción. */
+  confirmDisabled?: boolean;
+  error?: string | null;
 };
 
 const L = {
@@ -41,7 +46,7 @@ const L = {
     plainTitle: 'Tu ticket completo',
     plainText: 'Se queda íntegro en tu dispositivo. Pulsa «Con censura» para ver qué se publica en Midnight.',
     onlyThis: 'Solo esto se publica en Midnight',
-    rest: 'Todo lo demás (tienda, fecha, artículos, precios e importe) se queda en tu dispositivo y nunca llega a la red.',
+    rest: 'Todo lo demás se queda en tu dispositivo y nunca llega a la red.',
     midtag: '↑ ESTO VA ON-CHAIN',
     add: 'Añadir a mi bóveda', discard: 'Descartar',
     locale: 'es-ES',
@@ -68,7 +73,7 @@ const L = {
     plainTitle: 'Your full receipt',
     plainText: 'It stays complete on your device. Tap "Censored" to see what gets published on Midnight.',
     onlyThis: 'Only this is published on Midnight',
-    rest: 'Everything else (store, date, items, prices and amount) stays on your device and never reaches the network.',
+    rest: 'Everything else stays on your device and never reaches the network.',
     midtag: '↑ THIS GOES ON-CHAIN',
     add: 'Add to my vault', discard: 'Discard',
     locale: 'en-GB',
@@ -96,7 +101,7 @@ const L = {
  * solo las subcategorías selladas) y dos botones alternan con la vista "sin
  * censura" y repiten la animación.
  */
-export default function RedactedTicket({ lang, receipt, onConfirm, onCancel }: Props) {
+export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, confirmLabel, confirmDisabled, error }: Props) {
   const tt = L[lang];
   const isMobile = useBreakpoint() === 'mobile';
   const [redacted, setRedacted] = useState(true);
@@ -282,9 +287,10 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel }: P
         </div>
 
         <div className={styles.actions}>
-          <button onClick={onConfirm} style={{ flex: 1, background: '#926A45', color: '#fff' }}>{tt.add}</button>
-          <button onClick={onCancel} style={{ flex: 1, background: '#111111', border: '1px solid #333333', color: '#AAAAAA' }}>{tt.discard}</button>
+          <button onClick={onConfirm} disabled={confirmDisabled} style={{ flex: 1, background: '#926A45', color: '#fff', opacity: confirmDisabled ? 0.6 : 1, cursor: confirmDisabled ? 'not-allowed' : 'pointer' }}>{confirmLabel ?? tt.add}</button>
+          <button onClick={onCancel} disabled={confirmDisabled} style={{ flex: 1, background: '#111111', border: '1px solid #333333', color: '#AAAAAA', opacity: confirmDisabled ? 0.6 : 1 }}>{tt.discard}</button>
         </div>
+        {error && <p style={{ color: '#f87171', fontSize: 12.5, marginTop: 10, textAlign: 'center' }}>{error}</p>}
       </div>
 
       <div className={styles.sideMenu}>

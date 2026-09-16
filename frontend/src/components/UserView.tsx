@@ -13,6 +13,10 @@ type Props = {
   lang: Lang;
   lace: ConnectedAPI | null;
   contractAddress: string | null;
+  /** Último recibo sellado en la pestaña Tienda de esta misma sesión de demo. */
+  lastReceipt: ReceiptJSON | null;
+  /** Se llama tras publicar la señal directamente desde `lastReceipt`, para que App lo limpie (ya no se puede reenviar, el contrato marca cada recibo como usado). */
+  onReceiptConsumed?: () => void;
 };
 
 function isReceiptJSON(v: any): v is ReceiptJSON {
@@ -21,7 +25,7 @@ function isReceiptJSON(v: any): v is ReceiptJSON {
     && typeof v.timestamp === 'string' && typeof v.nonce === 'string';
 }
 
-export default function UserView({ lang, lace, contractAddress }: Props) {
+export default function UserView({ lang, lace, contractAddress, lastReceipt, onReceiptConsumed }: Props) {
   const t = T[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
   const bp = useBreakpoint();
@@ -35,6 +39,14 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [submitErrors, setSubmitErrors] = useState<Record<string, string>>({});
   const [justSentId, setJustSentId] = useState<string | null>(null);
+  // Fuente del ticket abierto en RedactedTicket: 'scan' sigue el flujo de
+  // siempre (confirmar -> bóveda -> "Enviar señal" aparte); 'direct' es el
+  // atajo con `lastReceipt` (confirmar publica la señal ahí mismo, sin pasar
+  // por la bóveda).
+  const [publishSource, setPublishSource] = useState<'scan' | 'direct' | null>(null);
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const [justPublished, setJustPublished] = useState(false);
 
   useEffect(() => {
     setVault(listVault());
@@ -50,18 +62,51 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
       const parsed = await decodeReceiptFromQr(data);
       if (!isReceiptJSON(parsed)) throw new Error(t.scanNotAegis);
       setScanned(parsed);
+      setPublishSource('scan');
       setScanError(null);
     } catch (e: any) {
       setScanError(e?.message ?? t.scanReadFailed);
     }
   }
 
-  function confirmScanned() {
+  function useLastReceipt() {
+    if (!lastReceipt) return;
+    setPublishError(null);
+    setPublishSource('direct');
+    setScanned(lastReceipt);
+  }
+
+  async function handleTicketConfirm() {
+    if (publishSource === 'direct') {
+      if (!lace || !scanned) return;
+      setPublishing(true);
+      setPublishError(null);
+      try {
+        await submitSignalViaLace(lace, scanned);
+        setScanned(null);
+        setPublishSource(null);
+        onReceiptConsumed?.();
+        setJustPublished(true);
+        setTimeout(() => setJustPublished(false), 4000);
+      } catch (e: any) {
+        setPublishError(e?.message ?? t.sendSignalError);
+      } finally {
+        setPublishing(false);
+      }
+      return;
+    }
     if (scanned) {
       addToVault(scanned);
       setVault(listVault());
     }
     setScanned(null);
+    setPublishSource(null);
+  }
+
+  function handleTicketCancel() {
+    setScanned(null);
+    setPublishSource(null);
+    setPublishError(null);
   }
 
   async function handleSubmit(entry: VaultEntry) {
@@ -129,19 +174,48 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
           <p style={{ color: '#999999', fontSize: isMobile ? 12 : 13, lineHeight: 1.6, marginBottom: 12 }}>
             {t.scanIntro}
           </p>
-          <button
-            onClick={() => { setScanError(null); setScanning(true); }}
-            disabled={!!needsLace || !!needsDeploy}
-            style={{
-              width: '100%', background: '#926a4514', border: '2px solid #926A45', color: '#E8C9A6',
-              padding: isMobile ? '18px' : '24px', fontSize: isMobile ? 16 : 18, fontWeight: 700, borderRadius: 12,
-              opacity: (needsLace || needsDeploy) ? 0.3 : 1, cursor: (needsLace || needsDeploy) ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {t.scanButton}
-          </button>
-          {scanError && (
-            <p style={{ color: '#f87171', fontSize: 13, marginTop: 8 }}>{scanError}</p>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
+            <div>
+              <button
+                onClick={() => { setScanError(null); setScanning(true); }}
+                disabled
+                style={{
+                  width: '100%', background: '#926a4514', border: '2px solid #926A45', color: '#E8C9A6',
+                  padding: isMobile ? '14px 10px' : '18px 10px', fontSize: isMobile ? 14 : 15, fontWeight: 700, borderRadius: 12,
+                  opacity: 0.3, cursor: 'not-allowed',
+                }}
+              >
+                {t.scanButton}
+              </button>
+              <p style={{ color: '#666666', fontSize: 11.5, marginTop: 8, lineHeight: 1.5 }}>
+                {t.scanUnavailable}
+              </p>
+              {scanError && (
+                <p style={{ color: '#f87171', fontSize: 12, marginTop: 8 }}>{scanError}</p>
+              )}
+            </div>
+
+            <div>
+              <button
+                onClick={useLastReceipt}
+                disabled={!lastReceipt || !!needsLace || !!needsDeploy}
+                style={{
+                  width: '100%', background: '#456d9214', border: '2px solid #456D92', color: '#A8C2E0',
+                  padding: isMobile ? '14px 10px' : '18px 10px', fontSize: isMobile ? 14 : 15, fontWeight: 700, borderRadius: 12,
+                  opacity: (!lastReceipt || needsLace || needsDeploy) ? 0.3 : 1, cursor: (!lastReceipt || needsLace || needsDeploy) ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {t.useLastReceiptButton}
+              </button>
+              {!lastReceipt && (
+                <p style={{ color: '#666666', fontSize: 11.5, marginTop: 8, lineHeight: 1.5 }}>
+                  {t.useLastReceiptEmpty}
+                </p>
+              )}
+            </div>
+          </div>
+          {justPublished && (
+            <p style={{ color: '#64d1a9dc', fontSize: 13, fontWeight: 600, marginTop: 10 }}>{t.userSentTitle} ✓</p>
           )}
         </div>
 
@@ -211,8 +285,11 @@ export default function UserView({ lang, lace, contractAddress }: Props) {
         <RedactedTicket
           lang={lang}
           receipt={scanned}
-          onConfirm={confirmScanned}
-          onCancel={() => setScanned(null)}
+          onConfirm={handleTicketConfirm}
+          onCancel={handleTicketCancel}
+          confirmLabel={publishSource === 'direct' ? (publishing ? t.publishing : t.publishSignal) : undefined}
+          confirmDisabled={publishSource === 'direct' && publishing}
+          error={publishSource === 'direct' ? publishError : null}
         />
       )}
 

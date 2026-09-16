@@ -25,9 +25,11 @@ type Props = {
   matches: Record<string, MatchResult>;
   setMatches: Dispatch<SetStateAction<Record<string, MatchResult>>>;
   aggregateState: AegisState | null;
+  /** Notifica el recibo sellado a App, para que UserView pueda usarlo sin cámara/QR. */
+  onReceiptGenerated?: (receipt: ReceiptJSON) => void;
 };
 
-export default function StoreView({ lang, lace, contractAddress, campaigns, setCampaigns, matches, setMatches, aggregateState }: Props) {
+export default function StoreView({ lang, lace, contractAddress, campaigns, setCampaigns, matches, setMatches, aggregateState, onReceiptGenerated }: Props) {
   const t = T[lang];
   const catLabel = CATEGORY_LABELS[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
@@ -114,6 +116,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
       };
       setPosReceipt(receiptForQr);
       setPosQr(await QRCode.toDataURL(await encodeReceiptForQr(receiptForQr), { margin: 1, width: 260 }));
+      onReceiptGenerated?.(receiptForQr);
     } catch (e: any) {
       setPosError(e?.message ?? t.posSealError);
     } finally {
