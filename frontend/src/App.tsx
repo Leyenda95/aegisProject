@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import StoreView from './components/StoreView.tsx';
 import UserView from './components/UserView.tsx';
 import LandingScreen from './components/LandingScreen.tsx';
@@ -188,7 +188,7 @@ export default function App() {
           <img src="/images/Aegis_logo_original.png" alt="Aegis" style={{ width: 95, height: 40, objectFit: 'contain' }} />
           <div>
             <h1 style={{ fontSize: 19, fontWeight: 600, color: '#FFFFFF', letterSpacing: 2.6, lineHeight: 1.1 }}>AEGIS</h1>
-            <p className={styles.brandTagline} style={{ fontSize: 12, color: '#AAAAAA', marginTop: 3 }}>{t.tagline}</p>
+            <p className={styles.brandTagline} style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 3 }}>{t.tagline}</p>
           </div>
         </div>
 
@@ -206,7 +206,7 @@ export default function App() {
             {(['es', 'en'] as Lang[]).map(l => (
               <button key={l} onClick={() => setLang(l)} style={{
                 background: lang === l ? 'var(--bronze-wash)' : 'transparent',
-                color: lang === l ? '#FFFFFF' : '#888888',
+                color: lang === l ? '#FFFFFF' : 'var(--ink-dim)',
                 border: `1px solid ${lang === l ? 'var(--bronze-deep)' : 'transparent'}`,
                 padding: '5px 14px', fontSize: 12, fontWeight: 700, borderRadius: 6,
               }}>
@@ -224,7 +224,7 @@ export default function App() {
               {availableWallets.map(w => (
                 <button key={w.key} onClick={() => handleConnectWallet(w.key)} disabled={laceLoading} style={{
                   ...btnBase,
-                  background: '#926A45', color: '#FFFFFF',
+                  background: 'var(--bronze-deep)', color: '#FFFFFF',
                   padding: '10px 18px', fontSize: 13,
                   textTransform: 'capitalize',
                 }}>
@@ -236,7 +236,7 @@ export default function App() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
               <button onClick={() => handleConnectWallet()} disabled={laceLoading} style={{
                 ...btnBase,
-                background: '#926A45', color: '#FFFFFF',
+                background: 'var(--bronze-deep)', color: '#FFFFFF',
                 padding: '10px 24px', fontSize: 14,
               }}>
                 {laceLoading ? t.connecting : t.connectLace}
@@ -251,7 +251,7 @@ export default function App() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
               <button onClick={handleDeploy} disabled={deploying || !!confirmingMsg} style={{
                 ...btnBase,
-                background: '#926A45', color: '#FFFFFF',
+                background: 'var(--bronze-deep)', color: '#FFFFFF',
                 padding: '10px 24px', fontSize: 14,
               }}>
                 {deploying ? t.deploying : t.deployContract}
@@ -266,8 +266,8 @@ export default function App() {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                   <button onClick={handleRegisterStore} disabled={registeringStore || !!confirmingMsg} style={{
                     ...btnBase,
-                    background: 'transparent', color: '#926A45',
-                    border: '1px solid #926A45',
+                    background: 'transparent', color: 'var(--bronze-deep)',
+                    border: '1px solid var(--bronze-deep)',
                     padding: '9px 18px', fontSize: 13,
                   }}>
                     {registeringStore ? t.registeringStore : t.registerStore}
@@ -282,8 +282,8 @@ export default function App() {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                   <button onClick={handleSeed} disabled={seeding || !!confirmingMsg} style={{
                     ...btnBase,
-                    background: 'transparent', color: '#926A45',
-                    border: '1px solid #926A45',
+                    background: 'transparent', color: 'var(--bronze-deep)',
+                    border: '1px solid var(--bronze-deep)',
                     padding: '9px 18px', fontSize: 13,
                   }}>
                     {seeding ? t.seeding : t.seedData}
@@ -336,7 +336,7 @@ export default function App() {
             {(['store', 'user'] as Tab[]).map(id => (
               <button key={id} data-tour={id === 'user' ? 'tab-user' : undefined} onClick={() => setTab(id)} style={{
                 background: tab === id ? 'var(--bronze-wash)' : 'transparent',
-                color: tab === id ? '#FFFFFF' : '#888888',
+                color: tab === id ? '#FFFFFF' : 'var(--ink-dim)',
                 border: `1px solid ${tab === id ? 'var(--bronze-deep)' : 'transparent'}`,
                 borderRadius: 7, padding: '8px 28px', fontSize: 13, fontWeight: 600,
                 fontFamily: 'var(--font-display)', cursor: 'pointer',

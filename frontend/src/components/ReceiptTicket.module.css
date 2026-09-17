@@ -1,4 +1,4 @@
-.wrap {
+﻿.wrap {
   display: flex;
   justify-content: center;
   padding: 6px 0 14px;
@@ -163,7 +163,7 @@
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: #999999;
+  color: var(--ink-soft);
 }
 
 .previewNote {
@@ -192,7 +192,7 @@
   border: none;
   background: none;
   margin-top: 2px;
-  accent-color: #926a45;
+  accent-color: var(--bronze-deep);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -217,7 +217,7 @@
 
 .toggleHint {
   font-size: 11px;
-  color: #888888;
+  color: var(--ink-dim);
   line-height: 1.4;
   margin-top: 1px;
   overflow-wrap: anywhere;
@@ -349,11 +349,11 @@
   cursor: pointer;
   border: 1px solid #333333;
   background: #111111;
-  color: #888888;
+  color: var(--ink-dim);
 }
 
 .modeBtnOn {
-  border-color: #926a45;
+  border-color: var(--bronze-deep);
   background: rgba(146, 106, 69, 0.15);
   color: #ffffff;
 }

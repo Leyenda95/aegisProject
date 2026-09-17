@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import QRCode from 'qrcode';
 import {
@@ -56,7 +56,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
   };
 
   const stepBtn: React.CSSProperties = {
-    background: 'var(--surface-2)', border: '1px solid var(--line)', color: '#DDDDDD',
+    background: 'var(--surface-2)', border: '1px solid var(--line)', color: 'var(--ink-pale)',
     fontSize: 16, lineHeight: 1, width: 28, height: 28, borderRadius: 6, cursor: 'pointer', padding: 0,
   };
 
@@ -211,15 +211,15 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
     <>
       {/* Punto de venta (protagonista): cesta -> recibo sellado -> QR */}
       <div style={card}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: isMobile ? 12 : 16 }}>{t.posTitle}</div>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 15 : 16, fontWeight: 600, color: 'var(--ink)', marginBottom: isMobile ? 12 : 16 }}>{t.posTitle}</div>
 
         {!contractAddress ? (
-          <p style={{ color: '#888888', fontSize: 13 }}>{t.posDeployFirst}</p>
+          <p style={{ color: 'var(--ink-dim)', fontSize: 13 }}>{t.posDeployFirst}</p>
         ) : !lace ? (
-          <p style={{ color: '#888888', fontSize: 13 }}>{t.posConnectFirst}</p>
+          <p style={{ color: 'var(--ink-dim)', fontSize: 13 }}>{t.posConnectFirst}</p>
         ) : posQr && posReceipt ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-            <p style={{ color: '#AAAAAA', fontSize: 13, textAlign: 'center' }}>{t.posScanHint}</p>
+            <p style={{ color: 'var(--ink-soft)', fontSize: 13, textAlign: 'center' }}>{t.posScanHint}</p>
             <ReceiptTicket
               lang={lang}
               lines={cartLines.map(l => ({ name: l.product.name[lang], qty: l.qty, unitCents: l.product.priceCents }))}
@@ -233,10 +233,10 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
               {t.posGoToUserCallout}
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={onGoToUser} style={{ background: '#926A45', color: '#FFFFFF', fontSize: 13, padding: '8px 16px', fontWeight: 600 }}>
+              <button onClick={onGoToUser} style={{ background: 'var(--bronze-deep)', color: '#FFFFFF', fontSize: 13, padding: '8px 16px', fontWeight: 600 }}>
                 {t.posGoToUser}
               </button>
-              <button onClick={handleResetPos} style={{ background: 'var(--surface-2)', border: '1px solid #222222', color: '#AAAAAA', fontSize: 13, padding: '8px 16px' }}>
+              <button onClick={handleResetPos} style={{ background: 'var(--surface-2)', border: '1px solid #222222', color: 'var(--ink-soft)', fontSize: 13, padding: '8px 16px' }}>
                 {t.posNewSale}
               </button>
             </div>
@@ -247,15 +247,15 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
               {cartLines.length === 0 && (
                 <div className="aegis-hint" style={{ alignSelf: 'flex-start', marginBottom: 6 }}>{t.posFirstPurchase}</div>
               )}
-              <p style={{ color: '#888888', fontSize: 13, margin: 0 }}>{t.posCatalogHint}</p>
+              <p style={{ color: 'var(--ink-dim)', fontSize: 13, margin: 0 }}>{t.posCatalogHint}</p>
 
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)', gap: 8 }}>
                 {POS_CATEGORY_ORDER.map(cat => (
                   <button key={cat} onClick={() => setBrowseCat(cat)} style={{
                     background: browseCat === cat ? '#926a4510' : 'var(--surface-2)',
-                    border: `2px solid ${browseCat === cat ? '#926A45' : 'var(--line)'}`,
+                    border: `2px solid ${browseCat === cat ? 'var(--bronze-deep)' : 'var(--line)'}`,
                     borderRadius: 10, padding: isMobile ? '8px 4px' : '10px 6px',
-                    color: browseCat === cat ? '#FFFFFF' : '#888888',
+                    color: browseCat === cat ? '#FFFFFF' : 'var(--ink-dim)',
                     fontSize: 12, cursor: 'pointer',
                   }}>
                     {catLabel[cat]}
@@ -268,14 +268,14 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
                   const qty = cart[prod.id] ?? 0;
                   return (
                     <div key={prod.id} style={{
-                      background: 'var(--surface-2)', border: `1px solid ${qty > 0 ? '#926A45' : 'var(--line)'}`,
+                      background: 'var(--surface-2)', border: `1px solid ${qty > 0 ? 'var(--bronze-deep)' : 'var(--line)'}`,
                       borderRadius: 10, padding: 10, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center',
                     }}>
                       <ProductImage product={prod} size={isMobile ? 84 : 104} />
-                      <div style={{ fontSize: 12, color: '#DDDDDD', textAlign: 'center', lineHeight: 1.3, minHeight: 32 }}>{prod.name[lang]}</div>
+                      <div style={{ fontSize: 12, color: 'var(--ink-pale)', textAlign: 'center', lineHeight: 1.3, minHeight: 32 }}>{prod.name[lang]}</div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: '#c0956de5' }}>{formatEUR(prod.priceCents, lang)}</div>
                       {qty === 0 ? (
-                        <button onClick={() => addToCart(prod.id)} style={{ background: '#926A45', color: '#FFFFFF', fontSize: 12, padding: '6px 14px', width: '100%' }}>
+                        <button onClick={() => addToCart(prod.id)} style={{ background: 'var(--bronze-deep)', color: '#FFFFFF', fontSize: 12, padding: '6px 14px', width: '100%' }}>
                           {t.posAdd}
                         </button>
                       ) : (
@@ -298,22 +298,22 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
             }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#FFFFFF' }}>{t.posBasket} ({cartCount})</div>
               {cartLines.length === 0 ? (
-                <p style={{ color: '#666666', fontSize: 13 }}>{t.posEmpty}</p>
+                <p style={{ color: 'var(--ink-dim)', fontSize: 13 }}>{t.posEmpty}</p>
               ) : (
                 <>
                   {cartLines.map(l => (
-                    <div key={l.product.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#CCCCCC' }}>
+                    <div key={l.product.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-pale)' }}>
                       <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {l.qty}× {l.product.name[lang]}
                       </span>
-                      <span style={{ color: '#DDDDDD' }}>{formatEUR(l.product.priceCents * l.qty, lang)}</span>
-                      <button onClick={() => setQty(l.product.id, 0)} style={{ background: 'transparent', border: 'none', color: '#666666', cursor: 'pointer', fontSize: 14, padding: '0 4px' }}>✕</button>
+                      <span style={{ color: 'var(--ink-pale)' }}>{formatEUR(l.product.priceCents * l.qty, lang)}</span>
+                      <button onClick={() => setQty(l.product.id, 0)} style={{ background: 'transparent', border: 'none', color: 'var(--ink-dim)', cursor: 'pointer', fontSize: 14, padding: '0 4px' }}>✕</button>
                     </div>
                   ))}
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #222222', paddingTop: 8, fontSize: 15, fontWeight: 700, color: '#FFFFFF' }}>
                     <span>{t.posTotal}</span><span>{formatEUR(totalCents, lang)}</span>
                   </div>
-                  <p style={{ fontSize: 11.5, color: '#888888', lineHeight: 1.5 }}>{t.posSealNote(sealedSummary)}</p>
+                  <p style={{ fontSize: 11.5, color: 'var(--ink-dim)', lineHeight: 1.5 }}>{t.posSealNote(sealedSummary)}</p>
                 </>
               )}
               {posError && <p style={{ color: '#f87171', fontSize: 13 }}>{posError}</p>}
@@ -321,7 +321,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
                 onClick={handleCheckout}
                 disabled={cartLines.length === 0 || posSelling || !!confirmingMsg}
                 style={{
-                  background: '#926A45', color: '#fff', width: '100%', fontSize: isMobile ? 14 : undefined,
+                  background: 'var(--bronze-deep)', color: '#fff', width: '100%', fontSize: isMobile ? 14 : undefined,
                   opacity: (cartLines.length === 0 || posSelling || !!confirmingMsg) ? 0.4 : 1,
                 }}
               >
@@ -361,7 +361,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
                   style={{ flex: 1 }}
                 />
                 <button onClick={handleInsights} disabled={loadingInsights}
-                  style={{ background: '#926A45', color: '#FFFFFF', whiteSpace: 'nowrap', fontSize: isMobile ? 14 : undefined }}>
+                  style={{ background: 'var(--bronze-deep)', color: '#FFFFFF', whiteSpace: 'nowrap', fontSize: isMobile ? 14 : undefined }}>
                   {loadingInsights ? t.insightsGenerating : t.insightsGenerate}
                 </button>
               </div>
@@ -372,25 +372,25 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
                   <p style={{ color: '#E0E0E0', lineHeight: 1.6, marginBottom: 16, fontSize: isMobile ? 14 : undefined }}>{insights.summary}</p>
                   {(insights.trending ?? []).length > 0 && (
                     <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontSize: 12, color: '#AAAAAA', marginBottom: 8 }}>{t.insightsTrending}</div>
+                      <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>{t.insightsTrending}</div>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         {insights.trending.map((item, i) => (
-                          <span key={i} style={{ background: 'var(--ground)', border: '1px solid #926A45', borderRadius: 20, padding: '4px 12px', fontSize: 13 }}>{item}</span>
+                          <span key={i} style={{ background: 'var(--ground)', border: '1px solid var(--bronze-deep)', borderRadius: 20, padding: '4px 12px', fontSize: 13 }}>{item}</span>
                         ))}
                       </div>
                     </div>
                   )}
                   <div>
-                    <div style={{ fontSize: 12, color: '#AAAAAA', marginBottom: 8 }}>{t.insightsRecommendations}</div>
+                    <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>{t.insightsRecommendations}</div>
                     <ul style={{ paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {(insights.recommendations ?? []).map((r, i) => (
-                        <li key={i} style={{ color: '#CCCCCC', fontSize: isMobile ? 13 : 14, lineHeight: 1.5 }}>{r}</li>
+                        <li key={i} style={{ color: 'var(--ink-pale)', fontSize: isMobile ? 13 : 14, lineHeight: 1.5 }}>{r}</li>
                       ))}
                     </ul>
                   </div>
                 </>
               ) : (
-                <p style={{ color: '#666666', fontSize: isMobile ? 13 : 14 }}>{t.insightsEmpty}</p>
+                <p style={{ color: 'var(--ink-dim)', fontSize: isMobile ? 13 : 14 }}>{t.insightsEmpty}</p>
               )}
             </div>
 
@@ -415,7 +415,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
                   <input type="text" placeholder={t.campaignMessagePlaceholder} value={form.message}
                     onChange={e => setForm(f => ({ ...f, message: e.target.value }))} required />
                 </div>
-                <button type="submit" disabled={creating} style={{ background: '#926A45', color: '#fff', width: isMobile ? '100%' : undefined, alignSelf: isMobile ? undefined : 'flex-start', fontSize: isMobile ? 14 : undefined }}>
+                <button type="submit" disabled={creating} style={{ background: 'var(--bronze-deep)', color: '#fff', width: isMobile ? '100%' : undefined, alignSelf: isMobile ? undefined : 'flex-start', fontSize: isMobile ? 14 : undefined }}>
                   {creating ? t.campaignSubmitting : t.campaignSubmit}
                 </button>
               </form>
@@ -432,10 +432,10 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
                       <div key={c.id} style={{ background: 'var(--ground)', border: '1px solid #1A1A1A', borderRadius: 8, padding: isMobile ? 12 : 16, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'flex-start', gap: isMobile ? 10 : 16 }}>
                         <div>
                           <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, marginBottom: 4 }}>{c.message}</div>
-                          <div style={{ fontSize: 12, color: '#AAAAAA' }}>
+                          <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
                             {catLabel[c.targetCategory as Category]} · {t.campaignMinSuffix(c.minSignals)} · {t.campaignId(c.id)}
                           </div>
-                          {match && <div style={{ fontSize: 12, color: '#AAAAAA', marginTop: 8 }}>{match.reason}</div>}
+                          {match && <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 8 }}>{match.reason}</div>}
                         </div>
                         <div style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', alignItems: isMobile ? 'center' : 'flex-end', gap: 8, flexShrink: 0 }}>
                           {match && (
@@ -448,7 +448,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
                             </span>
                           )}
                           <button onClick={() => handleRefreshMatch(c.id)} disabled={refreshing === c.id}
-                            style={{ background: 'var(--surface-2)', border: '1px solid #222222', color: '#AAAAAA', fontSize: 12, padding: '5px 12px' }}>
+                            style={{ background: 'var(--surface-2)', border: '1px solid #222222', color: 'var(--ink-soft)', fontSize: 12, padding: '5px 12px' }}>
                             {refreshing === c.id ? '...' : t.campaignRefresh}
                           </button>
                         </div>
@@ -465,7 +465,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
 
       {/* Midnight branding */}
       <div style={{ marginTop: isMobile ? 24 : 80, padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 25, width: '100%' }}>
-        <span style={{ fontSize: 11, color: '#8f8f8f', letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
+        <span style={{ fontSize: 11, color: 'var(--ink-dim)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
         <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" style={{ height: 28, opacity: 0.85 }} />
       </div>
     </>

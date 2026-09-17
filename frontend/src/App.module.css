@@ -4,7 +4,7 @@
   align-items: center;
   gap: 28px;
   background: linear-gradient(180deg, #131211, #0f0e0d);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(176, 129, 63, 0.4);
   position: sticky;
   top: 0;
   z-index: 10;

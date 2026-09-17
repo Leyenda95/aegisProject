@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import styles from './LandingScreen.module.css';
 
 export default function LandingScreen({ onEnter }: { onEnter: () => void }) {
@@ -23,7 +23,7 @@ export default function LandingScreen({ onEnter }: { onEnter: () => void }) {
 
       <div className={styles.footer}>
         <div style={{ textAlign: 'center', padding: '24px 0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 25 }}>
-          <span style={{ fontSize: 11, color: '#8f8f8f', letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
+          <span style={{ fontSize: 11, color: 'var(--ink-dim)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
           <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" style={{ height: 28, opacity: 0.85 }} />
         </div>
       </div>

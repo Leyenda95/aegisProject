@@ -93,8 +93,7 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
             background: breakdownOpen ? 'var(--bronze-wash)' : 'transparent',
             border: `1px solid ${breakdownOpen ? 'var(--bronze-deep)' : 'var(--line)'}`,
             borderRadius: 999, padding: '5px 12px', cursor: 'pointer',
-            fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.04em',
-            textTransform: 'uppercase', color: 'var(--ink-dim)',
+            fontFamily: 'var(--font-body)', fontSize: 12.5, fontWeight: 600, color: 'var(--ink-dim)',
           }}
         >
           {t.signalsBreakdown}

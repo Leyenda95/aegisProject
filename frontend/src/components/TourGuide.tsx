@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+﻿import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Lang } from '../api.ts';
 
 interface Step {
@@ -90,8 +90,8 @@ const STEPS: Step[] = [
     },
     tab: 'user', side: 'top', noScroll: true,
     note: {
-      en: '🔗 Connect your Lace wallet using the button in the top right to submit a real transaction and participate in the testnet.',
-      es: '🔗 Conecta tu billetera Lace con el botón de arriba a la derecha para enviar una transacción real y participar en el testnet.',
+      en: 'Connect your Lace wallet using the button in the top right to submit a real transaction and participate in the testnet.',
+      es: 'Conecta tu billetera Lace con el botón de arriba a la derecha para enviar una transacción real y participar en el testnet.',
     },
   },
 ];
@@ -245,14 +245,14 @@ export default function TourGuide({ lang, onClose, onSetTab }: Props) {
       <div style={{ position: 'fixed', top: sy, left: sx + sw, right: 0, height: sh, background: 'rgba(0,0,0,0.75)' }} />
       <div style={{
         position: 'fixed', top: sy, left: sx, width: sw, height: sh,
-        border: `${sw > 0 ? 2 : 0}px solid #926A45`, borderRadius: 14,
+        border: `${sw > 0 ? 2 : 0}px solid var(--bronze-deep)`, borderRadius: 14,
         boxShadow: sw > 0 ? '0 0 0 4px rgba(146,106,69,0.18)' : 'none',
       }} />
 
       {/* Tooltip */}
       <div style={{
         position: 'fixed', ...tooltipStyle,
-        background: '#141414', border: '1px solid #926A45', borderRadius: 14,
+        background: '#141414', border: '1px solid var(--bronze-deep)', borderRadius: 14,
         padding: isMobile ? '16px 18px' : '20px 22px',
         pointerEvents: visible ? 'auto' : 'none',
         boxShadow: '0 8px 40px rgba(0,0,0,0.7)',
@@ -261,7 +261,7 @@ export default function TourGuide({ lang, onClose, onSetTab }: Props) {
           {STEPS.map((_, i) => (
             <div key={i} style={{
               height: 3, flex: 1, borderRadius: 2,
-              background: i <= step ? '#926A45' : '#2A2A2A',
+              background: i <= step ? 'var(--bronze-deep)' : '#2A2A2A',
               transition: 'background 0.3s',
             }} />
           ))}
@@ -274,13 +274,13 @@ export default function TourGuide({ lang, onClose, onSetTab }: Props) {
           <span style={{ fontSize: 11, color: '#555', marginLeft: 10 }}>{step + 1} / {STEPS.length}</span>
         </div>
 
-        <div style={{ fontSize: isMobile ? 13 : 14, color: '#CCCCCC', lineHeight: 1.65, marginBottom: current.note ? 12 : 18 }}>
+        <div style={{ fontSize: isMobile ? 13 : 14, color: 'var(--ink-pale)', lineHeight: 1.65, marginBottom: current.note ? 12 : 18 }}>
           {current.desc[lang]}
         </div>
 
         {current.note && (
           <div style={{
-            background: '#1a1200', border: '1px solid #926A45', borderRadius: 8,
+            background: '#1a1200', border: '1px solid var(--bronze-deep)', borderRadius: 8,
             padding: '10px 12px', marginBottom: 18,
             fontSize: isMobile ? 12 : 13, color: '#D4A96A', lineHeight: 1.6,
           }}>
@@ -297,7 +297,7 @@ export default function TourGuide({ lang, onClose, onSetTab }: Props) {
           </button>
 
           {isManual ? (
-            <span style={{ fontSize: 13, color: '#926A45', fontWeight: 600 }}>
+            <span style={{ fontSize: 13, color: 'var(--bronze-deep)', fontWeight: 600 }}>
               {current.hint?.[lang] ?? (lang === 'es' ? 'Haz clic para continuar' : 'Click to continue')}
             </span>
           ) : (
@@ -309,7 +309,7 @@ export default function TourGuide({ lang, onClose, onSetTab }: Props) {
                 }}>←</button>
               )}
               <button onClick={goNext} style={{
-                background: '#926A45', border: 'none', color: '#FFF',
+                background: 'var(--bronze-deep)', border: 'none', color: '#FFF',
                 fontSize: 13, fontWeight: 600, padding: '7px 18px', borderRadius: 8, cursor: 'pointer',
               }}>
                 {isLast

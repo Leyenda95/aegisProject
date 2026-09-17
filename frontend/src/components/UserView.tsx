@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { SUBCATEGORY_INDEX, SUBCATEGORY_LABELS, type Lang } from '../api.ts';
 import { submitSignalViaLace, explainTxError, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
 import { decodeReceiptFromQr } from '../receiptCodec.ts';
@@ -141,15 +141,15 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
       {/* Tour frame: title + subtitle + tabs + content */}
       <div data-tour="profile-section">
         <h2 style={{ fontSize: isMobile ? 17 : 20, fontWeight: 700, marginBottom: 4, textAlign: 'center' }}>{t.userTitle}</h2>
-        <p style={{ color: '#999999', fontSize: isMobile ? 12 : 13, lineHeight: 1.6, textAlign: 'center', marginBottom: isMobile ? 16 : 24 }}>{t.userSubtitle}</p>
+        <p style={{ color: 'var(--ink-soft)', fontSize: isMobile ? 12 : 13, lineHeight: 1.6, textAlign: 'center', marginBottom: isMobile ? 16 : 24 }}>{t.userSubtitle}</p>
 
         {/* Tab switcher */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, background: 'var(--surface-2)', border: '1px solid #2A2A2A', borderRadius: 9, padding: 3, marginBottom: isMobile ? 16 : 24 }}>
           {(['contribute', 'profile'] as const).map(tab => (
             <button key={tab} data-tour={tab === 'profile' ? 'profile-tab' : 'contribute-tab'} onClick={() => setActiveTab(tab)} style={{
               background: activeTab === tab ? '#926a4520' : 'transparent',
-              color: activeTab === tab ? '#FFFFFF' : '#888888',
-              border: `1px solid ${activeTab === tab ? '#926A45' : 'transparent'}`,
+              color: activeTab === tab ? '#FFFFFF' : 'var(--ink-dim)',
+              border: `1px solid ${activeTab === tab ? 'var(--bronze-deep)' : 'transparent'}`,
               borderRadius: 6, padding: isMobile ? '9px' : '10px',
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }}>
@@ -167,7 +167,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
         }}>
         <div style={{ width: 58, height: 5, borderRadius: 3, background: 'var(--line)', margin: '2px auto 16px' }} />
         {needsLace && (
-          <div style={{ background: 'var(--surface-2)', border: '1px solid #222222', borderRadius: 8, padding: isMobile ? 12 : 14, marginBottom: 16, fontSize: isMobile ? 12 : 13, color: '#BBBBBB' }}>
+          <div style={{ background: 'var(--surface-2)', border: '1px solid #222222', borderRadius: 8, padding: isMobile ? 12 : 14, marginBottom: 16, fontSize: isMobile ? 12 : 13, color: 'var(--ink-pale)' }}>
             {t.userNeedsLace}
           </div>
         )}
@@ -178,10 +178,10 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
         )}
 
         <div style={{ marginBottom: isMobile ? 14 : 20 }}>
-          <div style={{ fontSize: 12, color: '#999999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>
             {t.scanSectionLabel}
           </div>
-          <p style={{ color: '#999999', fontSize: isMobile ? 12 : 13, lineHeight: 1.6, marginBottom: 12 }}>
+          <p style={{ color: 'var(--ink-soft)', fontSize: isMobile ? 12 : 13, lineHeight: 1.6, marginBottom: 12 }}>
             {t.scanIntro}
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
@@ -190,14 +190,14 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
                 onClick={() => { setScanError(null); setScanning(true); }}
                 disabled
                 style={{
-                  width: '100%', background: '#926a4514', border: '2px solid #926A45', color: '#E8C9A6',
+                  width: '100%', background: '#926a4514', border: '2px solid var(--bronze-deep)', color: '#E8C9A6',
                   padding: isMobile ? '14px 10px' : '18px 10px', fontSize: isMobile ? 14 : 15, fontWeight: 700, borderRadius: 12,
                   opacity: 0.3, cursor: 'not-allowed',
                 }}
               >
                 {t.scanButton}
               </button>
-              <p style={{ color: '#666666', fontSize: 11.5, marginTop: 8, lineHeight: 1.5 }}>
+              <p style={{ color: 'var(--ink-dim)', fontSize: 11.5, marginTop: 8, lineHeight: 1.5 }}>
                 {t.scanUnavailable}
               </p>
               {scanError && (
@@ -225,7 +225,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
               >
                 {t.useLastReceiptButton}
               </button>
-              <p style={{ color: lastReceipt ? '#64d1a9dc' : '#666666', fontSize: 11.5, marginTop: 8, lineHeight: 1.5, fontWeight: lastReceipt ? 600 : 400 }}>
+              <p style={{ color: lastReceipt ? '#64d1a9dc' : 'var(--ink-dim)', fontSize: 11.5, marginTop: 8, lineHeight: 1.5, fontWeight: lastReceipt ? 600 : 400 }}>
                 {lastReceipt ? t.useLastReceiptReady : t.useLastReceiptEmpty}
               </p>
             </div>
@@ -236,11 +236,11 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
         </div>
 
         <div>
-          <div style={{ fontSize: 12, color: '#999999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>
             {t.vaultLabel(vault.length)}
           </div>
           {vault.length === 0 ? (
-            <p style={{ color: '#666666', fontSize: isMobile ? 13 : 14 }}>{t.vaultEmpty}</p>
+            <p style={{ color: 'var(--ink-dim)', fontSize: isMobile ? 13 : 14 }}>{t.vaultEmpty}</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {vault.map(entry => {
@@ -259,7 +259,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
                       <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, color: '#FFFFFF' }}>
                         {summary}
                       </div>
-                      <div style={{ fontSize: 12, color: '#AAAAAA' }}>{amount} €</div>
+                      <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{amount} €</div>
                       {submitErrors[entry.id] && (
                         <div style={{ fontSize: 12, color: '#f87171', marginTop: 4 }}>{submitErrors[entry.id]}</div>
                       )}
@@ -271,7 +271,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
                         onClick={() => handleSubmit(entry)}
                         disabled={sending || !!needsLace || !!needsDeploy || !!confirmingMsg}
                         style={{
-                          background: '#926A45', color: '#FFFFFF', fontSize: 13, padding: '8px 16px',
+                          background: 'var(--bronze-deep)', color: '#FFFFFF', fontSize: 13, padding: '8px 16px',
                           borderRadius: 8, border: 'none', cursor: 'pointer', flexShrink: 0,
                           opacity: sending ? 0.5 : 1,
                         }}
@@ -287,8 +287,8 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
         </div>
 
         <div style={{ marginTop: 14, marginBottom: 16, background: 'var(--surface-2)', border: '1px solid #2A2A2A', borderRadius: 8, padding: isMobile ? 12 : 16 }}>
-          <div style={{ fontSize: isMobile ? 12 : 12, color: '#BBBBBB', lineHeight: 1.7 }}>
-            <strong style={{ color: '#DDDDDD' }}>{t.userPrivacy}</strong> {t.userPrivacyDetail}
+          <div style={{ fontSize: isMobile ? 12 : 12, color: 'var(--ink-pale)', lineHeight: 1.7 }}>
+            <strong style={{ color: 'var(--ink-pale)' }}>{t.userPrivacy}</strong> {t.userPrivacyDetail}
           </div>
         </div>
       </div>}
@@ -328,7 +328,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
               aria-label={t.explainerClose}
               style={{
                 position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none',
-                color: '#888888', fontSize: 22, width: 32, height: 32, padding: 0, lineHeight: 1,
+                color: 'var(--ink-dim)', fontSize: 22, width: 32, height: 32, padding: 0, lineHeight: 1,
               }}
             >
               ×
@@ -336,13 +336,13 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 19, color: '#FFFFFF', marginBottom: 18, paddingRight: 24 }}>
               {t.explainerTitle}
             </h3>
-            <p style={{ fontSize: 14.5, color: '#CCCCCC', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody1}</p>
-            <p style={{ fontSize: 14.5, color: '#CCCCCC', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody2}</p>
-            <p style={{ fontSize: 14.5, color: '#CCCCCC', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody3}</p>
-            <p style={{ fontSize: 14.5, color: '#CCCCCC', lineHeight: 1.7, marginBottom: 26 }}>{t.explainerBody4}</p>
+            <p style={{ fontSize: 14.5, color: 'var(--ink-pale)', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody1}</p>
+            <p style={{ fontSize: 14.5, color: 'var(--ink-pale)', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody2}</p>
+            <p style={{ fontSize: 14.5, color: 'var(--ink-pale)', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody3}</p>
+            <p style={{ fontSize: 14.5, color: 'var(--ink-pale)', lineHeight: 1.7, marginBottom: 26 }}>{t.explainerBody4}</p>
             <button
               onClick={() => setShowExplainer(false)}
-              style={{ display: 'block', margin: '12px auto 0', background: '#926A45', color: '#FFFFFF', padding: '10px 44px', fontSize: 14, fontWeight: 600 }}
+              style={{ display: 'block', margin: '12px auto 0', background: 'var(--bronze-deep)', color: '#FFFFFF', padding: '10px 44px', fontSize: 14, fontWeight: 600 }}
             >
               {t.explainerClose}
             </button>
@@ -352,7 +352,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
 
       {/* Midnight branding */}
       <div style={{ textAlign: 'center', marginTop: isMobile ? 40 : 80, padding: '24px 0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 25 }}>
-        <span style={{ fontSize: 11, color: '#8f8f8f', letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
+        <span style={{ fontSize: 11, color: 'var(--ink-dim)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
         <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" style={{ height: 28, opacity: 0.85 }} />
       </div>
     </div>

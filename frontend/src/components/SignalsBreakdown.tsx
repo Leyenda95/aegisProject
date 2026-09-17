@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import {
   CATEGORIES, CATEGORY_LABELS, CATEGORY_STATE_KEY,
   SUBCATEGORIES, SUBCATEGORY_LABELS,
@@ -41,27 +41,27 @@ export default function SignalsBreakdown({ state, lang }: Props) {
               onClick={() => setExpandedCat(isOpen ? null : cat)}
               style={{
                 width: '100%', background: isOpen ? '#926a4513' : 'var(--surface-2)',
-                border: `1px solid ${isOpen ? '#926A45' : 'var(--line)'}`,
+                border: `1px solid ${isOpen ? 'var(--bronze-deep)' : 'var(--line)'}`,
                 borderRadius: isOpen ? '10px 10px 0 0' : 10,
                 padding: isMobile ? '10px 12px' : '14px 16px', cursor: 'pointer',
                 display: 'flex', flexDirection: 'column', gap: 6,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, color: isOpen ? '#FFFFFF' : '#DDDDDD', flex: 1, textAlign: 'left' }}>
+                <span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, color: isOpen ? '#FFFFFF' : 'var(--ink-pale)', flex: 1, textAlign: 'left' }}>
                   {catLabel[cat]}
                 </span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 15 : 18, fontWeight: 500, color: '#c0956de5' }}>{catVal}</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#CCCCCC', width: 34, textAlign: 'right' }}>{catPct.toFixed(0)}%</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-pale)', width: 34, textAlign: 'right' }}>{catPct.toFixed(0)}%</span>
                 <span style={{ fontSize: 12, color: '#456D92', marginLeft: 4 }}>{isOpen ? '▲' : '▼'}</span>
               </div>
               <div style={{ background: 'var(--line)', height: 3, borderRadius: isOpen ? 0 : '0 0 4px 4px' }}>
-                <div style={{ width: `${catPct}%`, height: '100%', background: '#926A45', borderRadius: 3, transition: 'width 0.4s' }} />
+                <div style={{ width: `${catPct}%`, height: '100%', background: 'var(--bronze-deep)', borderRadius: 3, transition: 'width 0.4s' }} />
               </div>
             </button>
             {isOpen && (
               <div style={{
-                background: 'var(--ground)', border: '1px solid #926A45', borderTop: 'none',
+                background: 'var(--ground)', border: '1px solid var(--bronze-deep)', borderTop: 'none',
                 borderRadius: '0 0 10px 10px', padding: isMobile ? 10 : 16,
                 display: 'grid',
                 gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : `repeat(${Math.min(subs.length, 6)}, 1fr)`,
@@ -73,11 +73,11 @@ export default function SignalsBreakdown({ state, lang }: Props) {
                   return (
                     <div key={sub} style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 8, padding: isMobile ? '8px 4px' : '10px 8px', textAlign: 'center' }}>
                       <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 15 : 18, fontWeight: 500, color: '#FFFFFF' }}>{subVal}</div>
-                      <div style={{ fontSize: isMobile ? 10 : 11, color: '#AAAAAA', marginTop: 2 }}>{subLabel[sub]}</div>
+                      <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--ink-soft)', marginTop: 2 }}>{subLabel[sub]}</div>
                       <div style={{ marginTop: 4, background: 'var(--line)', borderRadius: 3, height: 3 }}>
-                        <div style={{ width: `${subPct}%`, height: '100%', background: '#926A45', borderRadius: 3, transition: 'width 0.4s' }} />
+                        <div style={{ width: `${subPct}%`, height: '100%', background: 'var(--bronze-deep)', borderRadius: 3, transition: 'width 0.4s' }} />
                       </div>
-                      <div style={{ fontSize: 10, color: '#AAAAAA', marginTop: 2 }}>{subPct.toFixed(0)}%</div>
+                      <div style={{ fontSize: 10, color: 'var(--ink-soft)', marginTop: 2 }}>{subPct.toFixed(0)}%</div>
                     </div>
                   );
                 })}

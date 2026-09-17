@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
 import { T } from '../i18n.ts';
 import type { Lang } from '../api.ts';
@@ -91,7 +91,7 @@ export default function QrScanner({ lang, onScan, onClose }: Props) {
       )}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       <button onClick={onClose} style={{
-        background: '#926A45', color: '#FFFFFF', padding: '10px 24px', borderRadius: 8,
+        background: 'var(--bronze-deep)', color: '#FFFFFF', padding: '10px 24px', borderRadius: 8,
         border: 'none', fontSize: 14, cursor: 'pointer',
       }}>
         {t.scannerCancel}
