@@ -54,6 +54,7 @@ const en = {
   posDeployFirst: 'Deploy the contract first.',
   posConnectFirst: 'Connect the wallet first. The store needs to sign the receipt seal.',
   posCatalogHint: 'Add products to the basket. Checkout seals the receipt on-chain and generates the QR for the customer.',
+  posFirstPurchase: 'Make your first purchase!',
   posAdd: 'Add',
   posBasket: 'Basket',
   posEmpty: 'Empty basket.',
@@ -63,6 +64,8 @@ const en = {
   posSealing: 'Sealing...',
   posNewSale: 'New sale',
   posScanHint: 'Receipt sealed. Have the customer scan this code with the app.',
+  posGoToUserCallout: 'Now go to the User view and publish the signal!',
+  posGoToUser: 'Go to User view',
 
   // UserView
   userTitle: 'User device',
@@ -87,6 +90,8 @@ const en = {
   scanReadFailed: 'Could not read the QR',
   useLastReceiptButton: '🧾 Use last receipt',
   useLastReceiptEmpty: 'No ticket yet, buy something in the Store tab first.',
+  useLastReceiptReady: 'Ticket charged, publish it here!',
+  newTicketBadge: 'New',
   publishSignal: 'Publish signal',
   publishing: 'Publishing...',
   vaultLabel: (n: number) => `Your vault (${n})`,
@@ -97,6 +102,22 @@ const en = {
   scannerCameraError: 'Could not access the camera',
   posSealError: 'Could not seal the receipt',
   errorUnknown: 'Unknown error',
+
+  // Waiting for a transaction to confirm on-chain before allowing the next one
+  confirmDeploying: 'Confirming the deployment on the network...',
+  confirmSeeding: 'Confirming the demo data on the network...',
+  confirmRegisteringStore: 'Confirming the store registration on the network...',
+  confirmSealing: 'Confirming the sealed receipt on the network...',
+  txConfirmTimeout: 'Timed out waiting for the previous transaction to confirm.',
+  txMaybeUnconfirmed: (detail: string) => `The previous transaction probably hasn't confirmed on the network yet. Wait a few seconds and try again. (${detail})`,
+
+  // Modal explicativo tras publicar una señal
+  explainerTitle: 'What just happened?',
+  explainerBody1: 'You just published an anonymous signal on the network. Only the information you chose to share was revealed.',
+  explainerBody2: 'Stores need to know what people buy to make better decisions, but getting that usually means tracking every customer: who you are, how much you spend, visit frequency.',
+  explainerBody3: "AEGIS solves this tension via Midnight. Selective privacy lets you choose what to disclose after each purchase: revealing more unlocks a more personalized experience and better rewards. But what matters is that YOU are always the one who decides.",
+  explainerBody4: 'Nobody else should make that call for you.',
+  explainerClose: 'Got it',
 
   // Profile tab
   profileTab: 'My profile',
@@ -162,6 +183,7 @@ const es: typeof en = {
   posDeployFirst: 'Despliega el contrato primero.',
   posConnectFirst: 'Conecta la billetera primero, la tienda necesita firmar el sello del recibo.',
   posCatalogHint: 'Añade productos a la cesta. Al cobrar se sella el recibo on-chain y se genera el QR para el cliente.',
+  posFirstPurchase: '¡Haz tu primera compra!',
   posAdd: 'Añadir',
   posBasket: 'Cesta',
   posEmpty: 'Cesta vacía.',
@@ -171,6 +193,8 @@ const es: typeof en = {
   posSealing: 'Sellando...',
   posNewSale: 'Nueva venta',
   posScanHint: 'Recibo sellado, que el cliente escanee este código con la app.',
+  posGoToUserCallout: '¡Ahora ve a la vista de Usuario y publica la señal!',
+  posGoToUser: 'Ir a la vista de Usuario',
 
   userTitle: 'Dispositivo de usuario',
   userSubtitle: 'Selecciona lo que has comprado. Tu señal se publica de forma anónima, nadie ve quién eres ni cuánto has gastado.',
@@ -194,6 +218,8 @@ const es: typeof en = {
   scanReadFailed: 'No se pudo leer el QR',
   useLastReceiptButton: '🧾 Usar último recibo',
   useLastReceiptEmpty: 'Todavía no hay ticket, compra algo primero en la pestaña Tienda.',
+  useLastReceiptReady: '¡Ticket cobrado, publícalo aquí!',
+  newTicketBadge: 'Nuevo',
   publishSignal: 'Publicar señal',
   publishing: 'Publicando...',
   vaultLabel: (n: number) => `Tu bóveda (${n})`,
@@ -204,6 +230,21 @@ const es: typeof en = {
   scannerCameraError: 'No se pudo acceder a la cámara',
   posSealError: 'No se pudo sellar el recibo',
   errorUnknown: 'Error desconocido',
+
+  confirmDeploying: 'Confirmando el despliegue en la red...',
+  confirmSeeding: 'Confirmando los datos de demo en la red...',
+  confirmRegisteringStore: 'Confirmando el alta de la tienda en la red...',
+  confirmSealing: 'Confirmando el sellado del recibo en la red...',
+  txConfirmTimeout: 'Se agotó el tiempo esperando a que se confirmara la transacción anterior.',
+  txMaybeUnconfirmed: (detail: string) => `Es posible que la transacción anterior todavía no se haya confirmado en la red. Espera unos segundos y vuelve a intentarlo. (${detail})`,
+
+  // Modal explicativo tras publicar una señal
+  explainerTitle: '¿Qué acaba de pasar?',
+  explainerBody1: 'Acabas de publicar una señal anónima en la red. Solo se ha revelado la información que tú has decidido compartir.',
+  explainerBody2: 'Las tiendas necesitan saber qué compra la gente para tomar mejores decisiones, pero conseguir eso normalmente implica rastrear a cada cliente: quién eres, cuánto gastas, cuándo vuelves.',
+  explainerBody3: 'AEGIS resuelve esa tensión gracias a Midnight. La privacidad selectiva te deja elegir qué compartir después de cada compra: revelar más datos te da una experiencia más personalizada y mejores recompensas. Pero lo importante es que siempre eres TÙ quien decide.',
+  explainerBody4: 'Nadie más debería tomar esa decisión por ti.',
+  explainerClose: 'Entendido',
 
   // Profile tab
   profileTab: 'Mi perfil',

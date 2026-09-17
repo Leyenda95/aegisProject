@@ -6,7 +6,7 @@ import {
   CATEGORIES, CATEGORY_LABELS, CATEGORY_STATE_KEY as CAT_KEY, SUBCATEGORY_LABELS,
   type AegisState, type Insights, type Campaign, type MatchResult, type Category, type Lang,
 } from '../api.ts';
-import { attestReceiptViaLace, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
+import { attestReceiptViaLace, explainTxError, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
 import { encodeReceiptForQr } from '../receiptCodec.ts';
 import {
   PRODUCTS, SUBCAT_TO_CATEGORY, cartLinesFrom, cartTotalCents, rollupBySubcategory, sealedLines, formatEUR,
@@ -15,6 +15,11 @@ import ProductImage from './ProductImage.tsx';
 import ReceiptTicket from './ReceiptTicket.tsx';
 import { T } from '../i18n.ts';
 import { useBreakpoint } from '../hooks/useBreakpoint.ts';
+
+// Orden de las pestañas de categoría en el POS de la demo (moda primero).
+// CATEGORIES en sí no se toca: su orden fija el de SUBCATEGORY_INDEX, que
+// tiene que coincidir con el enum Subcategory del contrato.
+const POS_CATEGORY_ORDER: Category[] = ['fashion', 'electronics', 'food', 'sports', 'home', 'other'];
 
 type Props = {
   lang: Lang;
@@ -27,9 +32,16 @@ type Props = {
   aggregateState: AegisState | null;
   /** Notifica el recibo sellado a App, para que UserView pueda usarlo sin cámara/QR. */
   onReceiptGenerated?: (receipt: ReceiptJSON) => void;
+  /** Lock global: hay una transacción de otra pestaña/acción esperando confirmación. */
+  confirmingMsg: string | null;
+  setConfirmingMsg: (msg: string | null) => void;
+  /** Cambia a la pestaña Usuario (guía el flujo cobro -> publicar señal). */
+  onGoToUser: () => void;
+  /** Nonce del último recibo ya publicado como señal (ver App). Si coincide con el ticket abierto aquí, se retira. */
+  publishedReceiptNonce: string | null;
 };
 
-export default function StoreView({ lang, lace, contractAddress, campaigns, setCampaigns, matches, setMatches, aggregateState, onReceiptGenerated }: Props) {
+export default function StoreView({ lang, lace, contractAddress, campaigns, setCampaigns, matches, setMatches, aggregateState, onReceiptGenerated, confirmingMsg, setConfirmingMsg, onGoToUser, publishedReceiptNonce }: Props) {
   const t = T[lang];
   const catLabel = CATEGORY_LABELS[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
@@ -65,7 +77,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
   const [refreshing, setRefreshing] = useState<string | null>(null);
   const [storeToolsOpen, setStoreToolsOpen] = useState(false);
 
-  const [browseCat, setBrowseCat] = useState<Category>('electronics');
+  const [browseCat, setBrowseCat] = useState<Category>('fashion');
   const [cart, setCart] = useState<Record<string, number>>({});
   const [posSelling, setPosSelling] = useState(false);
   const [posError, setPosError] = useState<string | null>(null);
@@ -100,15 +112,20 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
   }
 
   async function handleCheckout() {
-    if (!lace || cartLines.length === 0 || sealed.length === 0) return;
+    if (!lace || cartLines.length === 0 || sealed.length === 0 || confirmingMsg) return;
     setPosSelling(true);
     setPosError(null);
     try {
       // Se sellan las 8 subcategorías de mayor importe (rollup). El desglose
       // por producto viaja en el QR solo para pintar el ticket original.
+      // No resuelve hasta que attestReceipt está confirmado on-chain (ver
+      // pollUntil en lace.ts), así que al volver ya se puede publicar la
+      // señal sin el assert de "Receipt not attested by a registered store".
       const receipt = await attestReceiptViaLace(
         lace,
         sealed.map(r => ({ subcategory: r.subcategory, qty: r.qty, amount: r.amountCents })),
+        lang,
+        () => setConfirmingMsg(t.confirmSealing),
       );
       const receiptForQr: ReceiptJSON = {
         ...receipt,
@@ -118,9 +135,10 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
       setPosQr(await QRCode.toDataURL(await encodeReceiptForQr(receiptForQr), { margin: 1, width: 260 }));
       onReceiptGenerated?.(receiptForQr);
     } catch (e: any) {
-      setPosError(e?.message ?? t.posSealError);
+      setPosError(e?.message ? explainTxError(e, lang) : t.posSealError);
     } finally {
       setPosSelling(false);
+      setConfirmingMsg(null);
     }
   }
 
@@ -130,6 +148,17 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
     setPosError(null);
     setCart({});
   }
+
+  // En cuanto la señal de este mismo ticket se publica (desde la pestaña
+  // Usuario), ya no tiene sentido seguir enseñándolo como si estuviera
+  // pendiente de escanear: se retira solo, como si se hubiera dado a
+  // "Nueva venta".
+  useEffect(() => {
+    if (publishedReceiptNonce && posReceipt?.nonce === publishedReceiptNonce) {
+      handleResetPos();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publishedReceiptNonce]);
 
   async function handleRefreshMatch(id: string) {
     setRefreshing(id);
@@ -200,17 +229,28 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
               receipt={posReceipt}
               qr={posQr}
             />
-            <button onClick={handleResetPos} style={{ background: 'var(--surface-2)', border: '1px solid #222222', color: '#AAAAAA', fontSize: 13, padding: '8px 16px' }}>
-              {t.posNewSale}
-            </button>
+            <div className="aegis-hint" style={{ '--hint-accent': '#64d1a9', '--hint-glow': 'rgba(100, 209, 169, 0.45)' } as React.CSSProperties}>
+              {t.posGoToUserCallout}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={onGoToUser} style={{ background: '#926A45', color: '#FFFFFF', fontSize: 13, padding: '8px 16px', fontWeight: 600 }}>
+                {t.posGoToUser}
+              </button>
+              <button onClick={handleResetPos} style={{ background: 'var(--surface-2)', border: '1px solid #222222', color: '#AAAAAA', fontSize: 13, padding: '8px 16px' }}>
+                {t.posNewSale}
+              </button>
+            </div>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: twoCol ? '1fr 320px' : '1fr', gap: 16, alignItems: 'start' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+              {cartLines.length === 0 && (
+                <div className="aegis-hint" style={{ alignSelf: 'flex-start', marginBottom: 6 }}>{t.posFirstPurchase}</div>
+              )}
               <p style={{ color: '#888888', fontSize: 13, margin: 0 }}>{t.posCatalogHint}</p>
 
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)', gap: 8 }}>
-                {CATEGORIES.map(cat => (
+                {POS_CATEGORY_ORDER.map(cat => (
                   <button key={cat} onClick={() => setBrowseCat(cat)} style={{
                     background: browseCat === cat ? '#926a4510' : 'var(--surface-2)',
                     border: `2px solid ${browseCat === cat ? '#926A45' : 'var(--line)'}`,
@@ -279,10 +319,10 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
               {posError && <p style={{ color: '#f87171', fontSize: 13 }}>{posError}</p>}
               <button
                 onClick={handleCheckout}
-                disabled={cartLines.length === 0 || posSelling}
+                disabled={cartLines.length === 0 || posSelling || !!confirmingMsg}
                 style={{
                   background: '#926A45', color: '#fff', width: '100%', fontSize: isMobile ? 14 : undefined,
-                  opacity: (cartLines.length === 0 || posSelling) ? 0.4 : 1,
+                  opacity: (cartLines.length === 0 || posSelling || !!confirmingMsg) ? 0.4 : 1,
                 }}
               >
                 {posSelling ? t.posSealing : t.posCheckout}

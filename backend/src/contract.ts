@@ -296,12 +296,13 @@ export async function buildAttestReceiptTx(
   providers: AegisProviders,
   contractAddress: ContractAddress,
   receipt: Receipt,
-): Promise<string> {
+): Promise<{ tx: string; commitmentHex: string }> {
+  const commitment = pureCircuits.receiptCommitment(receipt);
+  const commitmentHex = Buffer.from(commitment).toString('hex');
   if (MOCK_CHAIN) {
-    return '';
+    return { tx: '', commitmentHex };
   }
   const storeKey = getStoreKey();
-  const commitment = pureCircuits.receiptCommitment(receipt);
 
   await providers.privateStateProvider.set(PRIVATE_STATE_ID, { secretKey: storeKey, receipt: null } as AegisPrivateState);
 
@@ -313,7 +314,7 @@ export async function buildAttestReceiptTx(
     privateStateId: PRIVATE_STATE_ID,
   });
   const provenTx = await providers.proofProvider.proveTx(unprovenData.private.unprovenTx);
-  return txToHex(provenTx);
+  return { tx: txToHex(provenTx), commitmentHex };
 }
 
 /** El usuario envía como señal un recibo ya sellado por una tienda (escaneado de un QR). */
@@ -321,7 +322,10 @@ export async function buildSignalTx(
   providers: AegisProviders,
   contractAddress: ContractAddress,
   receipt: Receipt,
-): Promise<string> {
+): Promise<{ tx: string; commitmentHex: string }> {
+  const commitment = pureCircuits.receiptCommitment(receipt);
+  const commitmentHex = Buffer.from(commitment).toString('hex');
+
   await providers.privateStateProvider.set(PRIVATE_STATE_ID, { secretKey: new Uint8Array(32), receipt } as AegisPrivateState);
 
   const unprovenData = await (createUnprovenCallTx as any)(providers, {
@@ -333,5 +337,24 @@ export async function buildSignalTx(
 
   const provenTx = await providers.proofProvider.proveTx(unprovenData.private.unprovenTx);
 
-  return txToHex(provenTx);
+  return { tx: txToHex(provenTx), commitmentHex };
+}
+
+/**
+ * Lectura barata (sin probar nada) de si un commitment ya está sellado
+ * (attestReceipt confirmado) y/o ya usado (submitPurchase confirmado), tal y
+ * como lo ve el backend a través del indexer. Pensado para que el frontend
+ * espere a que una transacción se confirme antes de lanzar la siguiente en
+ * vez de adivinar un tiempo fijo.
+ */
+export async function getReceiptStatus(
+  providers: AegisProviders,
+  contractAddress: ContractAddress,
+  commitmentHex: string,
+): Promise<{ sealed: boolean; used: boolean }> {
+  const commitment = new Uint8Array(Buffer.from(commitmentHex, 'hex'));
+  const state = await providers.publicDataProvider.queryContractState(contractAddress);
+  if (!state) return { sealed: false, used: false };
+  const l = ledger(state.data);
+  return { sealed: l.sealedReceipts.member(commitment), used: l.usedReceipts.member(commitment) };
 }

@@ -1,4 +1,5 @@
-import { API_BASE } from './api.ts';
+import { API_BASE, getState, type Lang } from './api.ts';
+import { T } from './i18n.ts';
 
 // Igual que ReceiptJSON en backend/src/contract.ts, el recibo tal y como
 // viaja por la red y se codifica en el QR (bigint/Uint8Array no son JSON).
@@ -65,8 +66,17 @@ export async function laceBalanceAndSubmit(
   await lace.submitTransaction(balancedHex);
 }
 
+/** No resuelve hasta que el indexer ya sirve estado para esa dirección (mismo motivo que el resto de *ViaLace). */
+async function waitForContractIndexed(lang: Lang): Promise<void> {
+  await pollUntil(async () => {
+    try { await getState(); return true; } catch { return false; }
+  }, lang);
+}
+
 export async function deployViaLace(
   lace: ConnectedAPI,
+  lang: Lang,
+  onWaiting?: () => void,
 ): Promise<string> {
   const r = await fetch(`${API_BASE}/build-tx/deploy`);
   if (!r.ok) throw new Error(`Build deploy tx failed: ${await r.text()}`);
@@ -81,6 +91,9 @@ export async function deployViaLace(
   });
   if (!r2.ok) throw new Error(`Failed to store contract address: ${await r2.text()}`);
 
+  onWaiting?.();
+  await waitForContractIndexed(lang);
+
   return contractAddress as string;
 }
 
@@ -93,7 +106,7 @@ const DEFAULT_SEED = {
   other: 63,
 };
 
-export async function seedViaLace(lace: ConnectedAPI): Promise<void> {
+export async function seedViaLace(lace: ConnectedAPI, lang: Lang, onWaiting?: () => void): Promise<void> {
   const r = await fetch(`${API_BASE}/build-tx/seed`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -105,6 +118,24 @@ export async function seedViaLace(lace: ConnectedAPI): Promise<void> {
   }
   const { tx } = await r.json();
   await laceBalanceAndSubmit(lace, tx);
+  onWaiting?.();
+  await pollUntil(async () => Number((await getState()).isSeeded ?? 0) > 0, lang);
+}
+
+// Asserts del contrato que casi siempre significan "la transacción anterior
+// todavía no se ha confirmado en la red", no que algo esté mal de verdad.
+const LIKELY_UNCONFIRMED_ASSERTS = [
+  'Not a registered store',
+  'Receipt not attested by a registered store',
+];
+
+/** Antepone una explicación en lenguaje llano cuando el error es uno de los asserts típicos de "aún no confirmado". */
+export function explainTxError(e: unknown, lang: Lang): string {
+  const msg = (e as any)?.message ?? String(e);
+  if (LIKELY_UNCONFIRMED_ASSERTS.some((s) => msg.includes(s))) {
+    return T[lang].txMaybeUnconfirmed(msg);
+  }
+  return msg;
 }
 
 export async function checkStoreRegistered(): Promise<boolean> {
@@ -115,12 +146,45 @@ export async function checkStoreRegistered(): Promise<boolean> {
 }
 
 /**
+ * Consulta barata de si un commitment ya está sellado (attestReceipt
+ * confirmado) y/o usado (submitPurchase confirmado), según lo que ve el
+ * backend por el indexer.
+ */
+export async function getReceiptStatus(commitmentHex: string): Promise<{ sealed: boolean; used: boolean }> {
+  const r = await fetch(`${API_BASE}/receipt-status?commitment=${commitmentHex}`);
+  if (!r.ok) return { sealed: false, used: false };
+  return r.json();
+}
+
+/**
+ * Reintenta `check` hasta que devuelva true o se agote `timeoutMs`. Cada
+ * transacción se prueba en el backend con el estado actual del ledger; si se
+ * lanza la siguiente antes de que el indexer refleje la anterior, el assert
+ * correspondiente falla ("Not a registered store", "Receipt not attested by
+ * a registered store", etc.). Este helper es lo que evita esa carrera: las
+ * funciones *ViaLace no resuelven hasta que su efecto es visible on-chain.
+ */
+async function pollUntil(check: () => Promise<boolean>, lang: Lang, { intervalMs = 1500, timeoutMs = 120_000 } = {}): Promise<void> {
+  const start = Date.now();
+  while (!(await check())) {
+    if (Date.now() - start > timeoutMs) throw new Error(T[lang].txConfirmTimeout);
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+}
+
+/**
  * Alta única de la tienda de demo en el árbol de tiendas registradas.
  * La wallet operadora del backend resultó poco fiable (sync de horas,
  * cortes de red que la dejaban colgada, ver operatorWallet.ts), así que
  * esto vuelve a pasar por Lace: el backend prueba, Lace balancea/firma/envía.
+ *
+ * No resuelve hasta que `store-registered` confirma el alta (ver pollUntil),
+ * para que quien llama no pueda lanzar la siguiente transacción contra un
+ * estado que el indexer todavía no ha puesto al día. `onWaiting` se llama
+ * justo al empezar esa espera, para que la UI pueda avisar de que ya se
+ * envió y solo falta la confirmación.
  */
-export async function registerStoreViaLace(lace: ConnectedAPI): Promise<void> {
+export async function registerStoreViaLace(lace: ConnectedAPI, lang: Lang, onWaiting?: () => void): Promise<void> {
   const r = await fetch(`${API_BASE}/register-store`, { method: 'POST' });
   if (!r.ok) {
     const { error } = await r.json().catch(() => ({ error: r.statusText }));
@@ -128,6 +192,8 @@ export async function registerStoreViaLace(lace: ConnectedAPI): Promise<void> {
   }
   const { tx } = await r.json();
   await laceBalanceAndSubmit(lace, tx);
+  onWaiting?.();
+  await pollUntil(() => checkStoreRegistered(), lang);
 }
 
 /** Línea del rollup que la tienda manda a sellar (subcategoría por nombre del enum, importe en céntimos). */
@@ -141,6 +207,8 @@ export type AttestLine = { subcategory: string; qty: number; amount: number };
 export async function attestReceiptViaLace(
   lace: ConnectedAPI,
   lines: AttestLine[],
+  lang: Lang,
+  onWaiting?: () => void,
 ): Promise<ReceiptJSON> {
   const r = await fetch(`${API_BASE}/attest-receipt`, {
     method: 'POST',
@@ -151,12 +219,21 @@ export async function attestReceiptViaLace(
     const { error } = await r.json().catch(() => ({ error: r.statusText }));
     throw new Error(error ?? 'Failed to build attest-receipt tx');
   }
-  const { tx, receipt } = await r.json();
+  const { tx, receipt, commitmentHex } = await r.json();
   await laceBalanceAndSubmit(lace, tx);
+  onWaiting?.();
+  await pollUntil(async () => (await getReceiptStatus(commitmentHex)).sealed, lang);
   return receipt as ReceiptJSON;
 }
 
-/** El usuario envía como señal un recibo ya sellado por una tienda (escaneado de un QR). */
+/**
+ * El usuario envía como señal un recibo ya sellado por una tienda (escaneado
+ * de un QR). A diferencia de las otras acciones, esta no espera a la
+ * confirmación on-chain: resuelve en cuanto la red acepta el envío, sin
+ * fallar. Es el último paso del flujo (no hay una acción siguiente cuyo
+ * assert dependa de este envío), así que la espera solo añadía tiempo sin
+ * evitar ningún error real.
+ */
 export async function submitSignalViaLace(
   lace: ConnectedAPI,
   receipt: ReceiptJSON,

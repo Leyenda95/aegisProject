@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SUBCATEGORY_INDEX, SUBCATEGORY_LABELS, type Lang } from '../api.ts';
-import { submitSignalViaLace, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
+import { submitSignalViaLace, explainTxError, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
 import { decodeReceiptFromQr } from '../receiptCodec.ts';
 import { listVault, addToVault, removeFromVault, type VaultEntry } from '../vault.ts';
 import QrScanner from './QrScanner.tsx';
@@ -17,6 +17,11 @@ type Props = {
   lastReceipt: ReceiptJSON | null;
   /** Se llama tras publicar la señal directamente desde `lastReceipt`, para que App lo limpie (ya no se puede reenviar, el contrato marca cada recibo como usado). */
   onReceiptConsumed?: () => void;
+  /** Lock global: hay una transacción de otra pestaña/acción esperando confirmación. */
+  confirmingMsg: string | null;
+  setConfirmingMsg: (msg: string | null) => void;
+  /** Se llama tras publicar cualquier señal (directa o desde bóveda), para que StoreView pueda retirar su ticket si es el mismo. */
+  onSignalPublished?: (receipt: ReceiptJSON) => void;
 };
 
 function isReceiptJSON(v: any): v is ReceiptJSON {
@@ -25,7 +30,7 @@ function isReceiptJSON(v: any): v is ReceiptJSON {
     && typeof v.timestamp === 'string' && typeof v.nonce === 'string';
 }
 
-export default function UserView({ lang, lace, contractAddress, lastReceipt, onReceiptConsumed }: Props) {
+export default function UserView({ lang, lace, contractAddress, lastReceipt, onReceiptConsumed, confirmingMsg, onSignalPublished }: Props) {
   const t = T[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
   const bp = useBreakpoint();
@@ -47,6 +52,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [justPublished, setJustPublished] = useState(false);
+  const [showExplainer, setShowExplainer] = useState(false);
 
   useEffect(() => {
     setVault(listVault());
@@ -78,18 +84,20 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
 
   async function handleTicketConfirm() {
     if (publishSource === 'direct') {
-      if (!lace || !scanned) return;
+      if (!lace || !scanned || confirmingMsg) return;
       setPublishing(true);
       setPublishError(null);
       try {
         await submitSignalViaLace(lace, scanned);
+        onSignalPublished?.(scanned);
         setScanned(null);
         setPublishSource(null);
         onReceiptConsumed?.();
         setJustPublished(true);
+        setShowExplainer(true);
         setTimeout(() => setJustPublished(false), 4000);
       } catch (e: any) {
-        setPublishError(e?.message ?? t.sendSignalError);
+        setPublishError(e?.message ? explainTxError(e, lang) : t.sendSignalError);
       } finally {
         setPublishing(false);
       }
@@ -110,17 +118,19 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
   }
 
   async function handleSubmit(entry: VaultEntry) {
-    if (!lace) return;
+    if (!lace || confirmingMsg) return;
     setSubmittingId(entry.id);
     setSubmitErrors(prev => { const { [entry.id]: _, ...rest } = prev; return rest; });
     try {
       await submitSignalViaLace(lace, entry.receipt);
+      onSignalPublished?.(entry.receipt);
       removeFromVault(entry.id);
       setVault(listVault());
       setJustSentId(entry.id);
+      setShowExplainer(true);
       setTimeout(() => setJustSentId(null), 4000);
     } catch (e: any) {
-      setSubmitErrors(prev => ({ ...prev, [entry.id]: e?.message ?? t.sendSignalError }));
+      setSubmitErrors(prev => ({ ...prev, [entry.id]: e?.message ? explainTxError(e, lang) : t.sendSignalError }));
     } finally {
       setSubmittingId(null);
     }
@@ -195,23 +205,29 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
               )}
             </div>
 
-            <div>
+            <div style={{ position: 'relative' }}>
+              {lastReceipt && !needsLace && !needsDeploy && (
+                <span style={{
+                  position: 'absolute', top: -9, right: 8, background: '#64d1a9dc', color: '#0a0a0a',
+                  fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, letterSpacing: 0.3,
+                }}>
+                  {t.newTicketBadge}
+                </span>
+              )}
               <button
                 onClick={useLastReceipt}
-                disabled={!lastReceipt || !!needsLace || !!needsDeploy}
+                disabled={!lastReceipt || !!needsLace || !!needsDeploy || !!confirmingMsg}
                 style={{
-                  width: '100%', background: '#456d9214', border: '2px solid #456D92', color: '#A8C2E0',
+                  width: '100%', background: '#456d9214', border: `2px solid ${lastReceipt ? '#64d1a9' : '#456D92'}`, color: '#A8C2E0',
                   padding: isMobile ? '14px 10px' : '18px 10px', fontSize: isMobile ? 14 : 15, fontWeight: 700, borderRadius: 12,
-                  opacity: (!lastReceipt || needsLace || needsDeploy) ? 0.3 : 1, cursor: (!lastReceipt || needsLace || needsDeploy) ? 'not-allowed' : 'pointer',
+                  opacity: (!lastReceipt || needsLace || needsDeploy || confirmingMsg) ? 0.3 : 1, cursor: (!lastReceipt || needsLace || needsDeploy || confirmingMsg) ? 'not-allowed' : 'pointer',
                 }}
               >
                 {t.useLastReceiptButton}
               </button>
-              {!lastReceipt && (
-                <p style={{ color: '#666666', fontSize: 11.5, marginTop: 8, lineHeight: 1.5 }}>
-                  {t.useLastReceiptEmpty}
-                </p>
-              )}
+              <p style={{ color: lastReceipt ? '#64d1a9dc' : '#666666', fontSize: 11.5, marginTop: 8, lineHeight: 1.5, fontWeight: lastReceipt ? 600 : 400 }}>
+                {lastReceipt ? t.useLastReceiptReady : t.useLastReceiptEmpty}
+              </p>
             </div>
           </div>
           {justPublished && (
@@ -253,7 +269,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
                     ) : (
                       <button
                         onClick={() => handleSubmit(entry)}
-                        disabled={sending || !!needsLace || !!needsDeploy}
+                        disabled={sending || !!needsLace || !!needsDeploy || !!confirmingMsg}
                         style={{
                           background: '#926A45', color: '#FFFFFF', fontSize: 13, padding: '8px 16px',
                           borderRadius: 8, border: 'none', cursor: 'pointer', flexShrink: 0,
@@ -288,9 +304,50 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
           onConfirm={handleTicketConfirm}
           onCancel={handleTicketCancel}
           confirmLabel={publishSource === 'direct' ? (publishing ? t.publishing : t.publishSignal) : undefined}
-          confirmDisabled={publishSource === 'direct' && publishing}
+          confirmDisabled={publishSource === 'direct' && (publishing || !!confirmingMsg)}
           error={publishSource === 'direct' ? publishError : null}
         />
+      )}
+
+      {showExplainer && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.75)', zIndex: 1000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+          }}
+        >
+          <div
+            style={{
+              position: 'relative', background: 'var(--surface)', border: '1px solid var(--line)',
+              borderRadius: 20, padding: 46, maxWidth: 580, width: '100%',
+              boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5)',
+            }}
+          >
+            <button
+              onClick={() => setShowExplainer(false)}
+              aria-label={t.explainerClose}
+              style={{
+                position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none',
+                color: '#888888', fontSize: 22, width: 32, height: 32, padding: 0, lineHeight: 1,
+              }}
+            >
+              ×
+            </button>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 19, color: '#FFFFFF', marginBottom: 18, paddingRight: 24 }}>
+              {t.explainerTitle}
+            </h3>
+            <p style={{ fontSize: 14.5, color: '#CCCCCC', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody1}</p>
+            <p style={{ fontSize: 14.5, color: '#CCCCCC', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody2}</p>
+            <p style={{ fontSize: 14.5, color: '#CCCCCC', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody3}</p>
+            <p style={{ fontSize: 14.5, color: '#CCCCCC', lineHeight: 1.7, marginBottom: 26 }}>{t.explainerBody4}</p>
+            <button
+              onClick={() => setShowExplainer(false)}
+              style={{ display: 'block', margin: '12px auto 0', background: '#926A45', color: '#FFFFFF', padding: '10px 44px', fontSize: 14, fontWeight: 600 }}
+            >
+              {t.explainerClose}
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Midnight branding */}

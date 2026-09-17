@@ -4,7 +4,7 @@ import type { ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import {
   Subcategory, registerCampaign, readState, buildDeployTx, buildSignalTx, buildSeedTx, type SeedData,
   buildRegisterStoreTx, buildAttestReceiptTx, isStoreRegistered, makeReceipt, receiptFromJSON, receiptToJSON,
-  type ReceiptJSON, type ReceiptLineInput,
+  getReceiptStatus, type ReceiptJSON, type ReceiptLineInput,
 } from './contract.js';
 import { generateInsights, matchCampaign, type Campaign } from './agent.js';
 import type { AegisProviders } from './providers.js';
@@ -139,8 +139,8 @@ async function handleRequest(
       }
       if (lines.length === 0) return json(res, 400, { error: 'Empty receipt' });
       const receipt = makeReceipt(lines);
-      const tx = await buildAttestReceiptTx(ctx.providers, ctx.contractAddress as any, receipt);
-      return json(res, 200, { tx, receipt: receiptToJSON(receipt) });
+      const { tx, commitmentHex } = await buildAttestReceiptTx(ctx.providers, ctx.contractAddress as any, receipt);
+      return json(res, 200, { tx, receipt: receiptToJSON(receipt), commitmentHex });
     }
 
     // El usuario envía como señal un recibo ya sellado (escaneado de un QR).
@@ -148,8 +148,21 @@ async function handleRequest(
       if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
       const { receipt } = await parseBody(req) as { receipt: ReceiptJSON };
       if (!receipt) return json(res, 400, { error: 'Missing receipt' });
-      const tx = await buildSignalTx(ctx.providers, ctx.contractAddress, receiptFromJSON(receipt));
-      return json(res, 200, { tx });
+      const { tx, commitmentHex } = await buildSignalTx(ctx.providers, ctx.contractAddress, receiptFromJSON(receipt));
+      return json(res, 200, { tx, commitmentHex });
+    }
+
+    // Consulta barata (sin probar nada) de si un commitment ya está sellado
+    // y/o usado on-chain, según lo que ve el backend por el indexer. El
+    // frontend la usa para esperar a que una transacción se confirme antes
+    // de dejar lanzar la siguiente, en vez de adivinar un tiempo fijo.
+    if (method === 'GET' && url?.startsWith('/receipt-status')) {
+      if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
+      const params = new URL(url, 'http://localhost').searchParams;
+      const commitmentHex = params.get('commitment');
+      if (!commitmentHex) return json(res, 400, { error: 'Missing commitment' });
+      const status = await getReceiptStatus(ctx.providers, ctx.contractAddress, commitmentHex);
+      return json(res, 200, status);
     }
 
     if (method === 'POST' && url === '/campaigns') {
@@ -236,6 +249,7 @@ async function handleRequest(
 
     json(res, 404, { error: 'Not found' });
   } catch (err: any) {
+    console.error('[DEBUG error]', url, err); // DEBUG temporal
     json(res, 500, { error: err.message });
   }
 }

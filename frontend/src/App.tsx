@@ -64,6 +64,15 @@ export default function App() {
   const [lastReceipt, setLastReceipt] = useState<ReceiptJSON | null>(null);
   const [registeringStore, setRegisteringStore] = useState(false);
   const [registerStoreError, setRegisterStoreError] = useState<string | null>(null);
+  // Mensaje neutro (no error) mientras se espera la confirmación on-chain de
+  // una transacción ya enviada, para no dejar lanzar la siguiente contra un
+  // estado que el indexer todavía no ha puesto al día (ver lace.ts pollUntil).
+  const [confirmingMsg, setConfirmingMsg] = useState<string | null>(null);
+  // Nonce del último recibo cuya señal se acaba de publicar (desde cualquier
+  // camino: directo o bóveda). StoreView lo usa para retirar su ticket/QR en
+  // cuanto ese mismo recibo queda publicado, en vez de dejarlo enseñado
+  // indefinidamente como si aún estuviera pendiente.
+  const [publishedReceiptNonce, setPublishedReceiptNonce] = useState<string | null>(null);
 
   const { state: aggregateState } = useAggregateState();
   const [breakdownOpen, setBreakdownOpen] = useState(false);
@@ -126,12 +135,13 @@ export default function App() {
     setDeployError(null);
     setDeploying(true);
     try {
-      const address = await deployViaLace(lace);
+      const address = await deployViaLace(lace, lang, () => setConfirmingMsg(t.confirmDeploying));
       setContractAddress(address);
     } catch (e: any) {
       setDeployError(briefError('deploy', e));
     } finally {
       setDeploying(false);
+      setConfirmingMsg(null);
     }
   }
 
@@ -140,12 +150,13 @@ export default function App() {
     setSeedError(null);
     setSeeding(true);
     try {
-      await seedViaLace(lace);
+      await seedViaLace(lace, lang, () => setConfirmingMsg(t.confirmSeeding));
       setSeeded(true);
     } catch (e: any) {
       setSeedError(briefError('seed', e));
     } finally {
       setSeeding(false);
+      setConfirmingMsg(null);
     }
   }
 
@@ -154,12 +165,13 @@ export default function App() {
     setRegisterStoreError(null);
     setRegisteringStore(true);
     try {
-      await registerStoreViaLace(lace);
+      await registerStoreViaLace(lace, lang, () => setConfirmingMsg(t.confirmRegisteringStore));
       setStoreRegistered(true);
     } catch (e: any) {
       setRegisterStoreError(briefError('register-store', e));
     } finally {
       setRegisteringStore(false);
+      setConfirmingMsg(null);
     }
   }
 
@@ -237,7 +249,7 @@ export default function App() {
             </div>
           ) : !contractAddress ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-              <button onClick={handleDeploy} disabled={deploying} style={{
+              <button onClick={handleDeploy} disabled={deploying || !!confirmingMsg} style={{
                 ...btnBase,
                 background: '#926A45', color: '#FFFFFF',
                 padding: '10px 24px', fontSize: 14,
@@ -252,7 +264,7 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {!storeRegistered && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                  <button onClick={handleRegisterStore} disabled={registeringStore} style={{
+                  <button onClick={handleRegisterStore} disabled={registeringStore || !!confirmingMsg} style={{
                     ...btnBase,
                     background: 'transparent', color: '#926A45',
                     border: '1px solid #926A45',
@@ -268,7 +280,7 @@ export default function App() {
               {/* Datos de demo: visible tras desplegar, se oculta cuando ya se ha sembrado (flag local o isSeeded on-chain, que se resetea al redesplegar). */}
               {!seeded && Number(aggregateState?.isSeeded ?? 0) === 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                  <button onClick={handleSeed} disabled={seeding} style={{
+                  <button onClick={handleSeed} disabled={seeding || !!confirmingMsg} style={{
                     ...btnBase,
                     background: 'transparent', color: '#926A45',
                     border: '1px solid #926A45',
@@ -289,6 +301,18 @@ export default function App() {
           )}
         </div>
       </header>
+
+      {/* Aviso global: una transacción ya se envió y se está esperando su confirmación on-chain antes de permitir la siguiente. */}
+      {confirmingMsg && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          fontSize: 12, color: '#c9a468', background: 'var(--surface)',
+          borderBottom: '1px solid var(--line)', padding: '6px 12px',
+        }}>
+          <span className="aegis-spinner" />
+          {confirmingMsg}
+        </div>
+      )}
 
       {landed && (
         <StatsRibbon
@@ -324,10 +348,16 @@ export default function App() {
         </div>
       )}
 
+      {/* Las dos vistas se quedan montadas siempre (solo se oculta la que no toca), para
+          que una acción en curso en una pestaña (p. ej. esperando la confirmación de un
+          checkout) no se pierda si cambias a la otra antes de que termine. */}
       <main className={styles.main}>
-        {tab === 'store'
-          ? <StoreView lang={lang} lace={lace} contractAddress={contractAddress} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} aggregateState={aggregateState} onReceiptGenerated={setLastReceipt} />
-          : <UserView lang={lang} lace={lace} contractAddress={contractAddress} lastReceipt={lastReceipt} onReceiptConsumed={() => setLastReceipt(null)} />}
+        <div style={{ display: tab === 'store' ? 'block' : 'none' }}>
+          <StoreView lang={lang} lace={lace} contractAddress={contractAddress} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} aggregateState={aggregateState} onReceiptGenerated={setLastReceipt} confirmingMsg={confirmingMsg} setConfirmingMsg={setConfirmingMsg} onGoToUser={() => setTab('user')} publishedReceiptNonce={publishedReceiptNonce} />
+        </div>
+        <div style={{ display: tab === 'user' ? 'block' : 'none' }}>
+          <UserView lang={lang} lace={lace} contractAddress={contractAddress} lastReceipt={lastReceipt} onReceiptConsumed={() => setLastReceipt(null)} confirmingMsg={confirmingMsg} setConfirmingMsg={setConfirmingMsg} onSignalPublished={(receipt) => setPublishedReceiptNonce(receipt.nonce)} />
+        </div>
       </main>
 
     </div>
