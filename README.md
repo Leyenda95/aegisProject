@@ -28,59 +28,62 @@ Everything below runs against Midnight's **Preprod** testnet. No shared deployme
 - A Midnight proof server reachable at `http://127.0.0.1:6300` (assumed already set up)
 - The Compact CLI (`compact`) installed and on your `PATH`, to compile the contract
 - A Midnight wallet extension (Lace or 1AM) with some Preprod NIGHT/DUST
-- An `ANTHROPIC_API_KEY` — optional, only needed for the market intelligence (insights) endpoints; the purchase/signal flow works without it
+- An `ANTHROPIC_API_KEY` (optional), only needed for the market intelligence (insights) endpoints; the purchase/signal flow works without it
 
 **Steps**
+
+```bash
+git clone https://github.com/Leyenda95/aegisProject.git
+cd aegisProject
+npm install                # installs contract, backend and frontend workspaces
+cd contract
+npm run compact            # compiles the contract, generates ZK keys -> managed/aegis/
+cd ..
+cd backend
+npm run start:preprod      # starts the API against Preprod; no contract deployed yet, that happens from the browser
+```
 
 1. Install dependencies: `npm install` at the repo root (npm workspaces cover `contract`, `backend`, and `frontend`).
 2. Compile the contract: `cd contract && npm run compact` (generates the ZK keys under `contract/managed/`).
 3. Start the backend against Preprod: `cd backend && MIDNIGHT_NETWORK=preprod npm run start:preprod` (set `ANTHROPIC_API_KEY` in `backend/.env` first if you want insights). No contract is deployed yet at this point, that happens from the browser next.
-4. Start the frontend: `cd frontend && npm run dev`, then open the printed URL.
+4. Open the frontend. Two options, same backend either way:
+   - Use the hosted version at **[aegis-midnight.vercel.app](https://aegis-midnight.vercel.app/)**.
+   - Or run it locally: `cd frontend && npm run dev`, then open the printed URL.
 5. In the browser: **Connect Wallet** (Lace or 1AM, Preprod network) → **Deploy contract** (this deploys a fresh instance and makes your wallet its store admin) → **Register demo store** → **Load demo data** (seeds baseline counters so the store insights have something to talk about).
 6. Try the actual flow: in the **Store** tab, add a couple of products to the cart and check out, this seals a signed receipt and shows it as a QR. Switch to the **User** tab and click **Use last receipt** (skips the camera, grabs the receipt you just sealed in this same session), pick what you'd preview-share, and publish the signal. Watch the category counter bump in the stats ribbon.
 
-Camera/QR scanning is temporarily disabled in the UI (it's the same code path once wired to a second device, just not the focus of this demo) — "Use last receipt" replaces it since store and customer are the same session here.
+Camera/QR scanning is temporarily disabled in the UI (it's the same code path once wired to a second device, just not the focus of this demo). "Use last receipt" replaces it since store and customer are the same session here.
 
 ## Architecture
 
 ```mermaid
-flowchart LR
-    subgraph Client["Frontend (React)"]
-        UV[User view]
-        SV[Store view]
-    end
+sequenceDiagram
+    participant FE as Frontend (React)
+    participant W as Wallet (Lace / 1AM)
+    participant BE as Backend (Node.js)
+    participant MN as Midnight Node
+    participant IX as Indexer
+    participant AI as Claude (Anthropic API)
 
-    subgraph Wallet["Lace / 1AM"]
-        W[DApp Connector API]
-    end
+    Note over FE,BE: 1. Store checkout -> attestReceipt
+    FE->>BE: build attestReceipt tx
+    BE-->>FE: proven, unsigned tx
+    FE->>W: connect + sign + submit
+    W->>MN: submitted tx
 
-    subgraph Server["Backend (Node.js)"]
-        TX[Tx builder + prover]
-        AI[Market intelligence agent]
-    end
+    Note over FE,BE: 2. Customer publishes the anonymous signal
+    FE->>BE: build submitPurchase tx
+    BE-->>FE: proven, unsigned tx
+    FE->>W: connect + sign + submit
+    W->>MN: submitted tx
 
-    subgraph Midnight["Midnight Network"]
-        Node[Node]
-        Indexer[Indexer]
-        Contract[Aegis contract]
-    end
+    Note over BE,IX: 3. Public aggregate read (no wallet needed)
+    BE->>IX: query contract state
+    IX-->>BE: aggregate counters
 
-    Claude[(Claude / Anthropic API)]
-
-    UV -- "1. build unproven tx" --> TX
-    TX -- "2. proven, unsigned tx" --> UV
-    UV -- "3. connect + sign + submit" --> W
-    W -- "4. submitted tx" --> Node
-    Node --> Contract
-
-    Contract -- "aggregate state" --> Indexer
-    Indexer -- "5. public read (no wallet needed)" --> TX
-    TX --> UV
-    TX --> SV
-
-    SV -- "6. request insights" --> AI
-    AI -- "aggregate counters only" --> Claude
-    Claude -- "trends + recommendations" --> SV
+    Note over BE,AI: 4. Market intelligence
+    BE->>AI: aggregate counters only
+    AI-->>BE: trends + recommendations
 ```
 
 **Flow:**
@@ -112,45 +115,3 @@ flowchart LR
 - [x] Backend: transaction builder/prover + market intelligence agent
 - [x] Frontend: store and user views, wallet integration (Lace/1AM), selective-disclosure preview before publishing a signal
 - [ ] Optional age/spend disclosure tied to a pseudonym: previewed in the UI, not wired into the contract yet. `submitPurchase` today only ever reveals subcategory and quantity, regardless of what's toggled in the preview.
-
-## Local devnet (optional)
-
-For fully offline development, `docker-compose.yml` spins up a local node + indexer + proof server:
-
-```bash
-npm run env:up      # starts the local devnet
-MIDNIGHT_NETWORK=local npm run start --workspace backend   # or: cd backend && npm start
-npm run env:down    # stops it
-```
-
-## Per-package reference
-
-```bash
-cd contract
-npm run compact       # compile with ZK key generation -> managed/aegis/
-npm run compact:fast  # compile without ZK keys, faster iteration
-npm run demo           # end-to-end example transaction in the simulator
-npm test                # contract tests
-```
-
-Exported circuits:
-
-| Circuit | What it does |
-|---|---|
-| `registerStore(storePk)` | Admin-only: adds a store's public key to the registered-stores tree. |
-| `attestReceipt(commitment)` | A registered store seals a receipt's commitment, proving membership without revealing which store. |
-| `submitPurchase()` | Purchase signal: reveals the subcategory and quantity of an already-attested receipt, increments its aggregate counters. |
-| `seed(...)` | Loads demo baseline counters. Re-runnable, does not reset existing counts. |
-| `registerCampaign()` | Registers a campaign and returns its incremental id. |
-
-```bash
-cd backend
-npm start            # local devnet (MIDNIGHT_NETWORK=local)
-npm run start:preprod
-npm run start:preview
-```
-
-```bash
-cd frontend
-npm run dev
-```
