@@ -25,8 +25,38 @@ export type ConnectedAPI = {
   submitTransaction: (txHex: string) => Promise<void>;
 };
 
-function isWalletUnavailable(e: any): boolean {
-  return e?.code === 'InternalError' && e?.reason === 'Wallet is unavailable';
+// PermissionRejected/Rejected son decisiones reales del usuario en el popup
+// de la wallet, nunca hay que reintentarlas solos (reabriría el popup sin que
+// lo haya pedido). Todo lo demás (InternalError, Disconnected, InvalidRequest,
+// o incluso un error que no siga el shape de la spec, como un "request failed"
+// suelto) se trata como transitorio.
+function isDeliberateWalletRejection(e: any): boolean {
+  return e?.code === 'PermissionRejected' || e?.code === 'Rejected';
+}
+
+/**
+ * La extensión corre su propio service worker (Manifest V3) y, si lleva un
+ * rato inactivo, la primera llamada lo despierta pero el mensaje se pierde
+ * antes de recibir respuesta: la promesa rechaza aunque la wallet esté bien.
+ * El texto/código exacto del error varía por wallet (Lace lo llama
+ * InternalError/"Wallet is unavailable", otras pueden dar solo "request
+ * failed"), así que no filtramos por ese texto: reintentamos cualquier fallo
+ * que no sea un rechazo deliberado del usuario. Un segundo intento casi
+ * siempre funciona porque el worker ya está despierto, pero esa ventana es
+ * corta (se vuelve a dormir en pocos segundos), así que el reintento es
+ * automático e inmediato en vez de esperar a que el usuario pulse otra vez.
+ */
+async function withWalletUnavailableRetry<T>(fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (e: any) {
+      if (isDeliberateWalletRejection(e) || attempt === maxAttempts) throw e;
+      console.warn(`Wallet call failed (attempt ${attempt}/${maxAttempts}), retrying`, e);
+      await new Promise(resolve => setTimeout(resolve, 300 * attempt));
+    }
+  }
+  throw new Error('unreachable');
 }
 
 export type WalletInfo = { key: string; name: string; icon: string; rdns: string; apiVersion: string };
@@ -46,24 +76,15 @@ export async function connectWallet(walletKey: string, networkId: string): Promi
   const api = midnight?.[walletKey];
   if (!api) throw new Error('Wallet extension not found. Please install Lace or 1AM.');
 
-  const maxAttempts = 3;
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      return await api.connect(networkId);
-    } catch (e: any) {
-      if (!isWalletUnavailable(e) || attempt === maxAttempts) throw e;
-      await new Promise(resolve => setTimeout(resolve, 500 * attempt));
-    }
-  }
-  throw new Error('unreachable');
+  return withWalletUnavailableRetry(() => api.connect(networkId));
 }
 
 export async function laceBalanceAndSubmit(
   lace: ConnectedAPI,
   txHex: string,
 ): Promise<void> {
-  const { tx: balancedHex } = await lace.balanceUnsealedTransaction(txHex);
-  await lace.submitTransaction(balancedHex);
+  const { tx: balancedHex } = await withWalletUnavailableRetry(() => lace.balanceUnsealedTransaction(txHex));
+  await withWalletUnavailableRetry(() => lace.submitTransaction(balancedHex));
 }
 
 /** No resuelve hasta que el indexer ya sirve estado para esa dirección (mismo motivo que el resto de *ViaLace). */

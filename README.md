@@ -40,12 +40,12 @@ cd contract
 npm run compact            # compiles the contract, generates ZK keys -> managed/aegis/
 cd ..
 cd backend
-npm run start:preprod      # starts the API against Preprod; no contract deployed yet, that happens from the browser
+npm run start:preprod      # starts the API against Preprod. No contract deployed yet
 ```
 
 1. Install dependencies: `npm install` at the repo root (npm workspaces cover `contract`, `backend`, and `frontend`).
 2. Compile the contract: `cd contract && npm run compact` (generates the ZK keys under `contract/managed/`).
-3. Start the backend against Preprod: `cd backend && MIDNIGHT_NETWORK=preprod npm run start:preprod` (set `ANTHROPIC_API_KEY` in `backend/.env` first if you want insights). No contract is deployed yet at this point, that happens from the browser next.
+3. Start the backend against Preprod: `cd backend && npm run start:preprod` (set `ANTHROPIC_API_KEY` in `backend/.env` first if you want insights). No contract is deployed yet at this point, that happens from the browser next.
 4. Open the frontend. Two options, same backend either way:
    - Use the hosted version at **[aegis-midnight.vercel.app](https://aegis-midnight.vercel.app/)**.
    - Or run it locally: `cd frontend && npm run dev`, then open the printed URL.
