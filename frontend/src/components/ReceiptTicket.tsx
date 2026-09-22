@@ -4,16 +4,11 @@ import type { ReceiptJSON } from '../lace.ts';
 import styles from './ReceiptTicket.module.css';
 
 export type TicketLine = { name: string; qty: number; unitCents: number };
-export type SealedLine = { label: string; qty: number; amountCents: number };
 
 type Props = {
   lang: Lang;
   lines: TicketLine[];
   totalCents: number;
-  /** Rollup por subcategoría que sí se sella y se señala (máx 8). */
-  sealedLines: SealedLine[];
-  /** Subcategorías que se quedaron fuera del sello (>8). */
-  overflowCount: number;
   receipt: ReceiptJSON;
   qr: string | null;
 };
@@ -26,10 +21,8 @@ const L = {
     vat: 'IVA (21%) incl.',
     total: 'TOTAL',
     sealed: 'SELLADO EN MIDNIGHT',
-    sealedAmount: 'Importe sellado',
-    overflow: (n: number) => `+${n} subcategoría${n === 1 ? '' : 's'} fuera del sello`,
-    proof: 'Prueba anti-doble-gasto',
-    note: 'On-chain solo se registran las subcategorías y sus unidades. Ni identidad, ni tienda, ni importe, ni el detalle de artículos.',
+    proof: 'Prueba anti doble gasto',
+    note: 'On-chain solo se registran las categorías y subcategorías. El resto de información publicada la decides tú!',
     scan: 'Escanéalo con tu app Aegis',
     thanks: '¡GRACIAS POR SU COMPRA!',
     locale: 'es-ES',
@@ -41,10 +34,8 @@ const L = {
     vat: 'VAT (21%) incl.',
     total: 'TOTAL',
     sealed: 'SEALED ON MIDNIGHT',
-    sealedAmount: 'Sealed amount',
-    overflow: (n: number) => `+${n} subcategor${n === 1 ? 'y' : 'ies'} left out of the seal`,
-    proof: 'Double-spend proof',
-    note: 'On-chain only the subcategories and their unit counts are recorded. No identity, no store, no amount, no itemised detail.',
+    proof: 'Double spend proof',
+    note: 'On-chain only categories and subcategories are recorded. You decide what else gets published!',
     scan: 'Scan it with your Aegis app',
     thanks: 'THANK YOU FOR YOUR PURCHASE!',
     locale: 'en-GB',
@@ -52,7 +43,7 @@ const L = {
 } as const;
 
 /** Recibo de caja con estética de ticket real, lo enseña la tienda al cobrar. */
-export default function ReceiptTicket({ lang, lines, totalCents, sealedLines, overflowCount, receipt, qr }: Props) {
+export default function ReceiptTicket({ lang, lines, totalCents, receipt, qr }: Props) {
   const tt = L[lang];
   const when = new Date(Number(receipt.timestamp));
   const dateStr = when.toLocaleDateString(tt.locale);
@@ -60,7 +51,6 @@ export default function ReceiptTicket({ lang, lines, totalCents, sealedLines, ov
   const ticketNo = receipt.nonce.slice(0, 8).toUpperCase();
   const base = Math.round(totalCents / 1.21);
   const vat = totalCents - base;
-  const sealedTotal = sealedLines.reduce((s, l) => s + l.amountCents, 0);
   const bars = receipt.nonce.slice(0, 34).split('').map(ch => (parseInt(ch, 16) % 4) + 1);
 
   return (
@@ -89,14 +79,6 @@ export default function ReceiptTicket({ lang, lines, totalCents, sealedLines, ov
         <hr className={styles.rule} />
         <div className={styles.seal}>
           <div className={styles.sealHead}>◆ {tt.sealed} ◆</div>
-          {sealedLines.map((l, i) => (
-            <div className={styles.row} key={i}>
-              <span className={styles.item}>{l.label} ×{l.qty}</span>
-              <span>{formatEUR(l.amountCents, lang)}</span>
-            </div>
-          ))}
-          <div className={styles.row}><span className={styles.dim}>{tt.sealedAmount}</span><span className={styles.dim}>{formatEUR(sealedTotal, lang)}</span></div>
-          {overflowCount > 0 && <div className={styles.note}>{tt.overflow(overflowCount)}</div>}
           <div className={styles.note}>{tt.proof}: {ticketNo}...</div>
           <div className={styles.note}>{tt.note}</div>
         </div>

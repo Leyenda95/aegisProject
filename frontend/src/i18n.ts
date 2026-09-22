@@ -5,6 +5,8 @@ const en = {
   tagline: 'Private market intelligence',
   tabStore: 'Store',
   tabUser: 'User',
+  lightMode: 'Switch to light mode',
+  darkMode: 'Switch to dark mode',
   connectLace: 'Connect Wallet',
   connecting: 'Connecting...',
   laceConnected: 'Wallet connected',
@@ -35,6 +37,7 @@ const en = {
 
   // StoreView, campaign
   campaignTitle: 'Create campaign',
+  campaignSoon: 'Soon',
   campaignTargetLabel: 'Target category',
   campaignMinLabel: 'Minimum signals required',
   campaignMessageLabel: 'Campaign message',
@@ -138,6 +141,8 @@ const es: typeof en = {
   tagline: 'Inteligencia de mercado privada',
   tabStore: 'Tienda',
   tabUser: 'Usuario',
+  lightMode: 'Cambiar a modo claro',
+  darkMode: 'Cambiar a modo oscuro',
   connectLace: 'Conectar Billetera',
   connecting: 'Conectando...',
   laceConnected: 'Billetera conectada',
@@ -165,6 +170,7 @@ const es: typeof en = {
   insightsRecommendations: 'RECOMENDACIONES',
 
   campaignTitle: 'Crear campaña',
+  campaignSoon: 'Próximamente',
   campaignTargetLabel: 'Categoría objetivo',
   campaignMinLabel: 'Señales mínimas requeridas',
   campaignMessageLabel: 'Mensaje de campaña',

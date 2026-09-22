@@ -149,8 +149,8 @@
 .sideMenu {
   width: 100%;
   max-width: 260px;
-  background: #141414;
-  border: 1px solid #262626;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 16px;
   padding: 16px;
   display: flex;
@@ -210,7 +210,7 @@
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: #eeeeee;
+  color: var(--ink-bright);
   cursor: pointer;
   overflow-wrap: anywhere;
 }
@@ -226,7 +226,7 @@
 .avgValue {
   margin-top: 6px;
   font-size: 12px;
-  color: #c0956de5;
+  color: var(--price);
 }
 
 .panel {
@@ -237,9 +237,9 @@
   width: 100%;
   max-width: 344px;
   /* Bisel de móvil: la reconstrucción del ticket ocurre "en el teléfono". */
-  border: 11px solid #232120;
+  border: 11px solid var(--raised);
   border-radius: 34px;
-  background: #0c0c0d;
+  background: var(--ground);
   padding: 20px 16px 22px;
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.6);
 }
@@ -249,7 +249,7 @@
   width: 58px;
   height: 5px;
   border-radius: 3px;
-  background: #2b2825;
+  background: var(--line);
   margin-bottom: 2px;
 }
 
@@ -347,25 +347,25 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid #333333;
-  background: #111111;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
   color: var(--ink-dim);
 }
 
 .modeBtnOn {
   border-color: var(--bronze-deep);
   background: rgba(146, 106, 69, 0.15);
-  color: #ffffff;
+  color: var(--ink-bright);
 }
 
 .caption {
-  color: #e0e0e0;
+  color: var(--ink-pale);
   font-size: 13px;
   line-height: 1.6;
   text-align: center;
 }
 
-.caption strong { color: #c0956de5; }
+.caption strong { color: var(--price); }
 
 .actions {
   display: flex;

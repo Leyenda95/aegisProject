@@ -48,12 +48,12 @@ export default function SignalsBreakdown({ state, lang }: Props) {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, color: isOpen ? '#FFFFFF' : 'var(--ink-pale)', flex: 1, textAlign: 'left' }}>
+                <span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500, color: isOpen ? 'var(--ink-bright)' : 'var(--ink)', flex: 1, textAlign: 'left' }}>
                   {catLabel[cat]}
                 </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 15 : 18, fontWeight: 500, color: '#c0956de5' }}>{catVal}</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-pale)', width: 34, textAlign: 'right' }}>{catPct.toFixed(0)}%</span>
-                <span style={{ fontSize: 12, color: '#456D92', marginLeft: 4 }}>{isOpen ? '▲' : '▼'}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 15 : 18, fontWeight: 500, color: 'var(--price)' }}>{catVal}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 500, color: isOpen ? 'var(--ink-bright)' : 'var(--ink)', width: 34, textAlign: 'right' }}>{catPct.toFixed(0)}%</span>
+                <span style={{ fontSize: 12, color: 'var(--accent-blue)', marginLeft: 4 }}>{isOpen ? '▲' : '▼'}</span>
               </div>
               <div style={{ background: 'var(--line)', height: 3, borderRadius: isOpen ? 0 : '0 0 4px 4px' }}>
                 <div style={{ width: `${catPct}%`, height: '100%', background: 'var(--bronze-deep)', borderRadius: 3, transition: 'width 0.4s' }} />
@@ -72,12 +72,12 @@ export default function SignalsBreakdown({ state, lang }: Props) {
                   const subPct = catVal > 0 ? (subVal / catVal) * 100 : 0;
                   return (
                     <div key={sub} style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 8, padding: isMobile ? '8px 4px' : '10px 8px', textAlign: 'center' }}>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 15 : 18, fontWeight: 500, color: '#FFFFFF' }}>{subVal}</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 15 : 18, fontWeight: 500, color: 'var(--ink-bright)' }}>{subVal}</div>
                       <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--ink-soft)', marginTop: 2 }}>{subLabel[sub]}</div>
                       <div style={{ marginTop: 4, background: 'var(--line)', borderRadius: 3, height: 3 }}>
                         <div style={{ width: `${subPct}%`, height: '100%', background: 'var(--bronze-deep)', borderRadius: 3, transition: 'width 0.4s' }} />
                       </div>
-                      <div style={{ fontSize: 10, color: 'var(--ink-soft)', marginTop: 2 }}>{subPct.toFixed(0)}%</div>
+                      <div style={{ fontSize: 10, fontWeight: 500, color: 'var(--ink-soft)', marginTop: 2 }}>{subPct.toFixed(0)}%</div>
                     </div>
                   );
                 })}

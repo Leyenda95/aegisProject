@@ -119,6 +119,43 @@ function detectSector(profile: string): string | null {
   return null;
 }
 
+const CATEGORY_STATE_KEY: Record<string, keyof AegisState> = {
+  electronics: 'signalsElectronics', fashion: 'signalsFashion', food: 'signalsFood',
+  sports: 'signalsSports', home: 'signalsHome',
+};
+
+function subcategoryStateMap(state: AegisState): Record<string, bigint> {
+  return {
+    shoes: state.signalsShoes, tops: state.signalsTops, bottoms: state.signalsBottoms,
+    accessories: state.signalsAccessories, outerwear: state.signalsOuterwear,
+    mobile: state.signalsMobile, tablet: state.signalsTablet, computer: state.signalsComputer,
+    camera: state.signalsCamera, audio: state.signalsAudio, gaming: state.signalsGaming,
+    groceries: state.signalsGroceries, restaurant: state.signalsRestaurant,
+    cafes: state.signalsCafes, fastfood: state.signalsFastfood, localshops: state.signalsLocalshops,
+    equipment: state.signalsEquipment, clothing: state.signalsClothing,
+    footwear: state.signalsFootwear, supplements: state.signalsSupplements,
+    furniture: state.signalsFurniture, appliances: state.signalsAppliances,
+    decor: state.signalsDecor, tools: state.signalsTools,
+  };
+}
+
+/**
+ * Igual que buildStateDescription pero recortada a la categoría del sector
+ * detectado y sus subcategorías. Al modelo no le llegan las demás categorías
+ * en absoluto, así que no puede hablar de ellas aunque se lo pidan, no basta
+ * con instruirle a ignorarlas.
+ */
+function buildSectorStateDescription(state: AegisState, lang: string, sector: string): string {
+  const l = LABELS[lang as keyof typeof LABELS] ?? LABELS.en;
+  const s = (n: bigint) => n.toString();
+  const stateMap = subcategoryStateMap(state);
+  const rows = SECTOR_SUBCATS[sector].subcats
+    .map(k => `  ${l[k as keyof typeof l]}: ${s(stateMap[k] ?? 0n)}`)
+    .join('\n');
+  const categoryTotal = state[CATEGORY_STATE_KEY[sector] as keyof AegisState];
+  return `${(l[sector as keyof typeof l] as string).toUpperCase()} (${s(categoryTotal)} ${l.signals}):\n${rows}`;
+}
+
 function getSeasonContext(lang: string): string {
   const date = new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   return lang === 'es'
@@ -131,46 +168,41 @@ export async function generateInsights(state: AegisState, storeProfile?: string,
   const l = LABELS[lang as keyof typeof LABELS] ?? LABELS.en;
 
   const storeContext = storeProfile
-    ? `This analysis is for a store that describes itself as: "${storeProfile}".`
+    ? `This analysis is for a store that describes itself as: "${storeProfile}". Use this only to tailor which recommendations are relevant to them.`
     : null;
 
-  let trendingData = '';
   let trendingRule = '';
+  let stateDescription: string;
+  let scopeRule = '';
+
   if (sector && SECTOR_SUBCATS[sector]) {
     const subkeys = SECTOR_SUBCATS[sector].subcats;
-    const stateMap: Record<string, bigint> = {
-      shoes: state.signalsShoes, tops: state.signalsTops, bottoms: state.signalsBottoms,
-      accessories: state.signalsAccessories, outerwear: state.signalsOuterwear,
-      mobile: state.signalsMobile, tablet: state.signalsTablet, computer: state.signalsComputer,
-      camera: state.signalsCamera, audio: state.signalsAudio, gaming: state.signalsGaming,
-      groceries: state.signalsGroceries, restaurant: state.signalsRestaurant,
-      cafes: state.signalsCafes, fastfood: state.signalsFastfood, localshops: state.signalsLocalshops,
-      equipment: state.signalsEquipment, clothing: state.signalsClothing,
-      footwear: state.signalsFootwear, supplements: state.signalsSupplements,
-      furniture: state.signalsFurniture, appliances: state.signalsAppliances,
-      decor: state.signalsDecor, tools: state.signalsTools,
-    };
+    const stateMap = subcategoryStateMap(state);
     const sorted = subkeys
       .map(k => ({ name: l[k as keyof typeof l] as string, count: Number(stateMap[k] ?? 0n) }))
       .sort((a, b) => b.count - a.count);
-    trendingData = sorted.map(e => `${e.name}: ${e.count}`).join('\n');
+    const trendingData = sorted.map(e => `${e.name}: ${e.count}`).join('\n');
     trendingRule = `trending: use EXACTLY these entries in this exact order (already sorted for you):\n${trendingData}\nCopy them verbatim into the JSON array. Do NOT add or remove entries.`;
+    stateDescription = buildSectorStateDescription(state, lang, sector);
+    scopeRule = `\n- This store only sells ${l[sector as keyof typeof l]}. The data above is the only category you have, do not mention or compare it against other product categories.`;
   } else {
     trendingRule = `trending: list the top 6 subcategories by signal count (highest first). Format: "Name: N".`;
+    stateDescription = buildStateDescription(state, lang);
   }
 
   const system = `You are Aegis, a market intelligence agent for retail stores.
 You work with ZK aggregated purchase signals from Midnight, fully anonymous, no individual data visible.
 Always respond ONLY with valid JSON matching exactly: { "summary": string, "trending": string[], "recommendations": string[] }`;
 
-  const user = `${storeContext ? storeContext + '\n\n' : ''}Analyze this market data and generate intelligence:
+  const user = `${storeContext ? storeContext + '\n\n' : ''}The numbers below are anonymous, aggregated purchase-intent signals from shoppers across the whole Aegis network, not this store's own sales or transactions, this store has no data of its own here, only what the network shows. Analyze this market data and generate intelligence for the store:
 
-${buildStateDescription(state, lang)}
+${stateDescription}
 
 Rules:
 - summary: 2-3 sentences focused on what matters most to this store. Be specific, not generic.
 - ${trendingRule}
-- recommendations: 4-5 concrete, actionable recommendations tailored to this store's product range. Reference actual numbers from the data. Take into account the current season and upcoming seasonal trends: ${getSeasonContext(lang)}
+- recommendations: 4-5 concrete, actionable recommendations tailored to this store's product range. Reference actual numbers from the data. Take into account the current season and upcoming seasonal trends: ${getSeasonContext(lang)}${scopeRule}
+- Never phrase the data as this store's own sales or activity (e.g. "your store registers/has/sold X signals"). Attribute the numbers to the market/shoppers/demand, e.g. "shoppers in this category generated X signals" or "demand for X reached Y signals", never to the store itself.
 - Respond entirely in ${lang === 'es' ? 'Spanish. Do not use English words for category or product names.' : 'English.'}.
 - Do not include any text outside the JSON.`;
 

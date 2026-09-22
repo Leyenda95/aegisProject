@@ -47,15 +47,15 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
       display: 'flex', alignItems: 'center', gap: isMobile ? 14 : 24,
       padding: isMobile ? '10px 14px' : '12px 24px',
       borderBottom: '1px solid var(--line)',
-      background: 'linear-gradient(180deg, #151412, #111)',
+      background: 'var(--surface)',
       overflowX: 'auto',
       opacity: state ? 1 : 0.55,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0 }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', fontSize: isMobile ? 20 : 24, fontWeight: 500, color: '#FFFFFF', lineHeight: 1 }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', fontSize: isMobile ? 20 : 24, fontWeight: 500, color: 'var(--ink-bright)', lineHeight: 1 }}>
           {fmt(total)}
         </span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--ink-faint)', lineHeight: 1 }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--ink-dim)', lineHeight: 1 }}>
           {t.signalsUnit}
         </span>
       </div>
@@ -75,10 +75,10 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
               fontFamily: 'var(--font-mono)', fontSize: 11.5, whiteSpace: 'nowrap',
               border: `1px solid ${isBump ? 'var(--bronze)' : 'var(--line)'}`,
               background: isBump ? 'var(--bronze-wash)' : 'transparent',
-              borderRadius: 999, padding: '4px 11px', color: 'var(--ink-dim)',
+              borderRadius: 999, padding: '4px 11px', color: 'var(--ink-soft)',
               transition: 'border-color 0.3s ease, background 0.3s ease',
             }}>
-              {catLabel[cat]}<b style={{ color: isBump ? '#C79A5E' : '#c0956de5', marginLeft: 6 }}>{fmt(state?.[CATEGORY_STATE_KEY[cat]])}</b>
+              {catLabel[cat]}<b style={{ color: isBump ? '#C79A5E' : 'var(--price)', marginLeft: 6 }}>{fmt(state?.[CATEGORY_STATE_KEY[cat]])}</b>
             </span>
           );
         })}
@@ -90,16 +90,16 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
           aria-expanded={breakdownOpen}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 7,
-            background: breakdownOpen ? 'var(--bronze-wash)' : 'transparent',
+            background: 'var(--bronze-wash)',
             border: `1px solid ${breakdownOpen ? 'var(--bronze-deep)' : 'var(--line)'}`,
             borderRadius: 999, padding: '5px 12px', cursor: 'pointer',
-            fontFamily: 'var(--font-body)', fontSize: 12.5, fontWeight: 600, color: 'var(--ink-dim)',
+            fontFamily: 'var(--font-body)', fontSize: 12.5, fontWeight: 500, color: 'var(--ink-soft)',
           }}
         >
           {t.signalsBreakdown}
-          <span style={{ display: 'inline-block', transition: 'transform 0.2s', transform: breakdownOpen ? 'rotate(180deg)' : 'none', color: '#456D92' }}>▼</span>
+          <span style={{ display: 'inline-block', transition: 'transform 0.2s', transform: breakdownOpen ? 'rotate(180deg)' : 'none', color: 'var(--accent-blue)' }}>▼</span>
         </button>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-faint)', opacity: 0.75, whiteSpace: 'nowrap' }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-dim)', whiteSpace: 'nowrap' }}>
           {t.signalsRefresh}
         </span>
       </div>

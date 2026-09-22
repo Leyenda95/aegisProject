@@ -3,7 +3,8 @@
   display: flex;
   align-items: center;
   gap: 28px;
-  background: linear-gradient(180deg, #131211, #0f0e0d);
+  /* Degradado vía .aegis-fade-gradient en App.tsx (crossfade de dos capas),
+     no un linear-gradient directo aquí: ver esa clase en index.css. */
   border-bottom: 1px solid rgba(176, 129, 63, 0.4);
   position: sticky;
   top: 0;

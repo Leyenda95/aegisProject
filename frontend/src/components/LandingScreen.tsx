@@ -24,6 +24,8 @@ export default function LandingScreen({ onEnter }: { onEnter: () => void }) {
       <div className={styles.footer}>
         <div style={{ textAlign: 'center', padding: '24px 0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 25 }}>
           <span style={{ fontSize: 11, color: 'var(--ink-dim)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
+          {/* Fondo siempre oscuro (ver LandingScreen.module.css .root), no lleva la clase
+              midnight-logo: el logo debe seguir en blanco pase lo que pase con el tema. */}
           <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" style={{ height: 28, opacity: 0.85 }} />
         </div>
       </div>

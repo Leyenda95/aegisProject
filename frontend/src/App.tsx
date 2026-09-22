@@ -12,12 +12,15 @@ import SignalsBreakdown from './components/SignalsBreakdown.tsx';
 import styles from './App.module.css';
 
 type Tab = 'store' | 'user';
+type Theme = 'dark' | 'light';
+
+const THEME_KEY = 'aegis-theme';
 
 // Tutorial guiado desactivado de momento. Poner a true para reactivarlo.
 const TOUR_ENABLED = false;
 
 const btnBase: React.CSSProperties = {
-  padding: '10px 22px', fontSize: 14, fontWeight: 600, borderRadius: 8, cursor: 'pointer', border: 'none',
+  padding: '10px 22px', fontSize: 14, fontWeight: 600, letterSpacing: '0.3px', borderRadius: 8, cursor: 'pointer', border: 'none',
 };
 
 const pill: React.CSSProperties = {
@@ -46,6 +49,7 @@ export default function App() {
   const [contractAddress, setContractAddress] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>('en');
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(THEME_KEY) as Theme | null) ?? 'dark');
   const [laceLoading, setLaceLoading] = useState(false);
   const [laceError, setLaceError] = useState<string | null>(null);
   const [laceSlow, setLaceSlow] = useState(false);
@@ -83,6 +87,11 @@ export default function App() {
       return () => clearTimeout(t);
     }
   }, [landed]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem(THEME_KEY, theme);
+  }, [theme]);
 
   const t = T[lang];
 
@@ -182,12 +191,12 @@ export default function App() {
         <TourGuide lang={lang} onClose={() => setTourActive(false)} onSetTab={setTab} />
       )}
 
-      <header className={styles.header}>
+      <header className={`${styles.header} aegis-fade-gradient`}>
         {/* Logo + nombre */}
         <div className={styles.brand}>
           <img src="/images/Aegis_logo_original.png" alt="Aegis" style={{ width: 95, height: 40, objectFit: 'contain' }} />
           <div>
-            <h1 style={{ fontSize: 19, fontWeight: 600, color: '#FFFFFF', letterSpacing: 2.6, lineHeight: 1.1 }}>AEGIS</h1>
+            <h1 style={{ fontSize: 19, fontWeight: 600, color: 'var(--ink-bright)', letterSpacing: 2.6, lineHeight: 1.1 }}>AEGIS</h1>
             <p className={styles.brandTagline} style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 3 }}>{t.tagline}</p>
           </div>
         </div>
@@ -202,11 +211,22 @@ export default function App() {
 
         {/* Controls */}
         <div className={styles.controls}>
+          <button
+            onClick={() => setTheme(th => th === 'dark' ? 'light' : 'dark')}
+            title={theme === 'dark' ? t.lightMode : t.darkMode}
+            style={{
+              background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--ink-dim)',
+              width: 34, height: 34, borderRadius: 8, padding: 0, fontSize: 15, lineHeight: 1,
+            }}
+          >
+            {theme === 'dark' ? '☀' : '☾'}
+          </button>
+
           <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: 8, padding: 3, border: '1px solid var(--line)' }}>
             {(['es', 'en'] as Lang[]).map(l => (
               <button key={l} onClick={() => setLang(l)} style={{
                 background: lang === l ? 'var(--bronze-wash)' : 'transparent',
-                color: lang === l ? '#FFFFFF' : 'var(--ink-dim)',
+                color: lang === l ? 'var(--ink-bright)' : 'var(--ink-dim)',
                 border: `1px solid ${lang === l ? 'var(--bronze-deep)' : 'transparent'}`,
                 padding: '5px 14px', fontSize: 12, fontWeight: 700, borderRadius: 6,
               }}>
@@ -216,7 +236,7 @@ export default function App() {
           </div>
 
           {laceError && (
-            <span style={{ fontSize: 13, color: '#f87171', maxWidth: 220 }}>{laceError}</span>
+            <span style={{ fontSize: 13, color: 'var(--danger)', maxWidth: 220 }}>{laceError}</span>
           )}
 
           {!lace && availableWallets.length > 1 ? (
@@ -224,8 +244,8 @@ export default function App() {
               {availableWallets.map(w => (
                 <button key={w.key} onClick={() => handleConnectWallet(w.key)} disabled={laceLoading} style={{
                   ...btnBase,
-                  background: 'var(--bronze-deep)', color: '#FFFFFF',
-                  padding: '10px 18px', fontSize: 13,
+                  background: 'var(--bronze-deep)', color: 'var(--on-bronze)',
+                  padding: '7px 13px', fontSize: 13,
                   textTransform: 'capitalize',
                 }}>
                   {w.name}
@@ -236,8 +256,8 @@ export default function App() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
               <button onClick={() => handleConnectWallet()} disabled={laceLoading} style={{
                 ...btnBase,
-                background: 'var(--bronze-deep)', color: '#FFFFFF',
-                padding: '10px 24px', fontSize: 14,
+                background: 'var(--bronze-deep)', color: 'var(--on-bronze)',
+                padding: '7px 17px', fontSize: 14,
               }}>
                 {laceLoading ? t.connecting : t.connectLace}
               </button>
@@ -251,13 +271,13 @@ export default function App() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
               <button onClick={handleDeploy} disabled={deploying || !!confirmingMsg} style={{
                 ...btnBase,
-                background: 'var(--bronze-deep)', color: '#FFFFFF',
-                padding: '10px 24px', fontSize: 14,
+                background: 'var(--bronze-deep)', color: 'var(--on-bronze)',
+                padding: '7px 17px', fontSize: 14,
               }}>
                 {deploying ? t.deploying : t.deployContract}
               </button>
               {deployError && (
-                <span style={{ fontSize: 11, color: '#f87171', maxWidth: 220, textAlign: 'right' }}>{deployError}</span>
+                <span style={{ fontSize: 11, color: 'var(--danger)', maxWidth: 220, textAlign: 'right' }}>{deployError}</span>
               )}
             </div>
           ) : (
@@ -273,7 +293,7 @@ export default function App() {
                     {registeringStore ? t.registeringStore : t.registerStore}
                   </button>
                   {registerStoreError && (
-                    <span style={{ fontSize: 11, color: '#f87171', maxWidth: 220, textAlign: 'right' }}>{registerStoreError}</span>
+                    <span style={{ fontSize: 11, color: 'var(--danger)', maxWidth: 220, textAlign: 'right' }}>{registerStoreError}</span>
                   )}
                 </div>
               )}
@@ -289,7 +309,7 @@ export default function App() {
                     {seeding ? t.seeding : t.seedData}
                   </button>
                   {seedError && (
-                    <span style={{ fontSize: 12, color: '#f87171', maxWidth: 240, textAlign: 'right', lineHeight: 1.4 }}>{seedError}</span>
+                    <span style={{ fontSize: 12, color: 'var(--danger)', maxWidth: 240, textAlign: 'right', lineHeight: 1.4 }}>{seedError}</span>
                   )}
                 </div>
               )}
@@ -336,7 +356,7 @@ export default function App() {
             {(['store', 'user'] as Tab[]).map(id => (
               <button key={id} data-tour={id === 'user' ? 'tab-user' : undefined} onClick={() => setTab(id)} style={{
                 background: tab === id ? 'var(--bronze-wash)' : 'transparent',
-                color: tab === id ? '#FFFFFF' : 'var(--ink-dim)',
+                color: tab === id ? 'var(--ink-bright)' : 'var(--ink-dim)',
                 border: `1px solid ${tab === id ? 'var(--bronze-deep)' : 'transparent'}`,
                 borderRadius: 7, padding: '8px 28px', fontSize: 13, fontWeight: 600,
                 fontFamily: 'var(--font-display)', cursor: 'pointer',

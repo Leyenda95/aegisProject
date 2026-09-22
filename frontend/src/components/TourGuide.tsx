@@ -261,17 +261,17 @@ export default function TourGuide({ lang, onClose, onSetTab }: Props) {
           {STEPS.map((_, i) => (
             <div key={i} style={{
               height: 3, flex: 1, borderRadius: 2,
-              background: i <= step ? 'var(--bronze-deep)' : '#2A2A2A',
+              background: i <= step ? 'var(--bronze-deep)' : 'var(--gray-800)',
               transition: 'background 0.3s',
             }} />
           ))}
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-          <span style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: '#FFF' }}>
+          <span style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: 'var(--ink-bright)' }}>
             {current.title[lang]}
           </span>
-          <span style={{ fontSize: 11, color: '#555', marginLeft: 10 }}>{step + 1} / {STEPS.length}</span>
+          <span style={{ fontSize: 11, color: 'var(--gray-600)', marginLeft: 10 }}>{step + 1} / {STEPS.length}</span>
         </div>
 
         <div style={{ fontSize: isMobile ? 13 : 14, color: 'var(--ink-pale)', lineHeight: 1.65, marginBottom: current.note ? 12 : 18 }}>
@@ -290,7 +290,7 @@ export default function TourGuide({ lang, onClose, onSetTab }: Props) {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <button onClick={onClose} style={{
-            background: 'transparent', border: 'none', color: '#555',
+            background: 'transparent', border: 'none', color: 'var(--gray-600)',
             fontSize: 13, cursor: 'pointer', padding: 0,
           }}>
             {lang === 'es' ? 'Saltar' : 'Skip'}
@@ -304,12 +304,12 @@ export default function TourGuide({ lang, onClose, onSetTab }: Props) {
             <div style={{ display: 'flex', gap: 8 }}>
               {step > 0 && (
                 <button onClick={goPrev} style={{
-                  background: '#1A1A1A', border: '1px solid #333', color: '#AAA',
+                  background: 'var(--gray-900)', border: '1px solid #333', color: '#AAA',
                   fontSize: 13, padding: '7px 14px', borderRadius: 8, cursor: 'pointer',
                 }}>←</button>
               )}
               <button onClick={goNext} style={{
-                background: 'var(--bronze-deep)', border: 'none', color: '#FFF',
+                background: 'var(--bronze-deep)', border: 'none', color: 'var(--on-bronze)',
                 fontSize: 13, fontWeight: 600, padding: '7px 18px', borderRadius: 8, cursor: 'pointer',
               }}>
                 {isLast

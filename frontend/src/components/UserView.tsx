@@ -144,11 +144,11 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
         <p style={{ color: 'var(--ink-soft)', fontSize: isMobile ? 12 : 13, lineHeight: 1.6, textAlign: 'center', marginBottom: isMobile ? 16 : 24 }}>{t.userSubtitle}</p>
 
         {/* Tab switcher */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, background: 'var(--surface-2)', border: '1px solid #2A2A2A', borderRadius: 9, padding: 3, marginBottom: isMobile ? 16 : 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, background: 'var(--surface-2)', border: '1px solid var(--gray-800)', borderRadius: 9, padding: 3, marginBottom: isMobile ? 16 : 24 }}>
           {(['contribute', 'profile'] as const).map(tab => (
             <button key={tab} data-tour={tab === 'profile' ? 'profile-tab' : 'contribute-tab'} onClick={() => setActiveTab(tab)} style={{
               background: activeTab === tab ? '#926a4520' : 'transparent',
-              color: activeTab === tab ? '#FFFFFF' : 'var(--ink-dim)',
+              color: activeTab === tab ? 'var(--ink-bright)' : 'var(--ink-dim)',
               border: `1px solid ${activeTab === tab ? 'var(--bronze-deep)' : 'transparent'}`,
               borderRadius: 6, padding: isMobile ? '9px' : '10px',
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
@@ -167,7 +167,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
         }}>
         <div style={{ width: 58, height: 5, borderRadius: 3, background: 'var(--line)', margin: '2px auto 16px' }} />
         {needsLace && (
-          <div style={{ background: 'var(--surface-2)', border: '1px solid #222222', borderRadius: 8, padding: isMobile ? 12 : 14, marginBottom: 16, fontSize: isMobile ? 12 : 13, color: 'var(--ink-pale)' }}>
+          <div style={{ background: 'var(--surface-2)', border: '1px solid var(--gray-850)', borderRadius: 8, padding: isMobile ? 12 : 14, marginBottom: 16, fontSize: isMobile ? 12 : 13, color: 'var(--ink-pale)' }}>
             {t.userNeedsLace}
           </div>
         )}
@@ -190,7 +190,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
                 onClick={() => { setScanError(null); setScanning(true); }}
                 disabled
                 style={{
-                  width: '100%', background: '#926a4514', border: '2px solid var(--bronze-deep)', color: '#E8C9A6',
+                  width: '100%', background: '#926a4514', border: '2px solid var(--bronze-deep)', color: 'var(--bronze-deep)',
                   padding: isMobile ? '14px 10px' : '18px 10px', fontSize: isMobile ? 14 : 15, fontWeight: 700, borderRadius: 12,
                   opacity: 0.3, cursor: 'not-allowed',
                 }}
@@ -201,14 +201,14 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
                 {t.scanUnavailable}
               </p>
               {scanError && (
-                <p style={{ color: '#f87171', fontSize: 12, marginTop: 8 }}>{scanError}</p>
+                <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 8 }}>{scanError}</p>
               )}
             </div>
 
             <div style={{ position: 'relative' }}>
               {lastReceipt && !needsLace && !needsDeploy && (
                 <span style={{
-                  position: 'absolute', top: -9, right: 8, background: '#64d1a9dc', color: '#0a0a0a',
+                  position: 'absolute', top: -9, right: 8, background: 'var(--success-strong)', color: '#0a0a0a',
                   fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, letterSpacing: 0.3,
                 }}>
                   {t.newTicketBadge}
@@ -218,20 +218,22 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
                 onClick={useLastReceipt}
                 disabled={!lastReceipt || !!needsLace || !!needsDeploy || !!confirmingMsg}
                 style={{
-                  width: '100%', background: '#456d9214', border: `2px solid ${lastReceipt ? '#64d1a9' : '#456D92'}`, color: '#A8C2E0',
+                  width: '100%',
+                  background: lastReceipt ? 'color-mix(in srgb, var(--success) 18%, transparent)' : '#456d9226',
+                  border: `2px solid ${lastReceipt ? 'var(--success)' : 'var(--accent-blue)'}`, color: lastReceipt ? 'var(--success)' : 'var(--accent-blue)',
                   padding: isMobile ? '14px 10px' : '18px 10px', fontSize: isMobile ? 14 : 15, fontWeight: 700, borderRadius: 12,
                   opacity: (!lastReceipt || needsLace || needsDeploy || confirmingMsg) ? 0.3 : 1, cursor: (!lastReceipt || needsLace || needsDeploy || confirmingMsg) ? 'not-allowed' : 'pointer',
                 }}
               >
                 {t.useLastReceiptButton}
               </button>
-              <p style={{ color: lastReceipt ? '#64d1a9dc' : 'var(--ink-dim)', fontSize: 11.5, marginTop: 8, lineHeight: 1.5, fontWeight: lastReceipt ? 600 : 400 }}>
+              <p style={{ color: lastReceipt ? 'var(--success)' : 'var(--ink-dim)', fontSize: 11.5, marginTop: 8, lineHeight: 1.5, fontWeight: lastReceipt ? 600 : 400 }}>
                 {lastReceipt ? t.useLastReceiptReady : t.useLastReceiptEmpty}
               </p>
             </div>
           </div>
           {justPublished && (
-            <p style={{ color: '#64d1a9dc', fontSize: 13, fontWeight: 600, marginTop: 10 }}>{t.userSentTitle} ✓</p>
+            <p style={{ color: 'var(--success-strong)', fontSize: 13, fontWeight: 600, marginTop: 10 }}>{t.userSentTitle} ✓</p>
           )}
         </div>
 
@@ -252,26 +254,26 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
                 const sending = submittingId === entry.id;
                 return (
                   <div key={entry.id} style={{
-                    background: 'var(--surface-2)', border: '1px solid #1A1A1A', borderRadius: 10,
+                    background: 'var(--surface-2)', border: '1px solid var(--gray-900)', borderRadius: 10,
                     padding: isMobile ? 12 : 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
                   }}>
                     <div>
-                      <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, color: '#FFFFFF' }}>
+                      <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, color: 'var(--ink-bright)' }}>
                         {summary}
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{amount} €</div>
                       {submitErrors[entry.id] && (
-                        <div style={{ fontSize: 12, color: '#f87171', marginTop: 4 }}>{submitErrors[entry.id]}</div>
+                        <div style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4 }}>{submitErrors[entry.id]}</div>
                       )}
                     </div>
                     {justSentId === entry.id ? (
-                      <span style={{ fontSize: 13, color: '#64d1a9dc', fontWeight: 600 }}>{t.userSentTitle} ✓</span>
+                      <span style={{ fontSize: 13, color: 'var(--success-strong)', fontWeight: 600 }}>{t.userSentTitle} ✓</span>
                     ) : (
                       <button
                         onClick={() => handleSubmit(entry)}
                         disabled={sending || !!needsLace || !!needsDeploy || !!confirmingMsg}
                         style={{
-                          background: 'var(--bronze-deep)', color: '#FFFFFF', fontSize: 13, padding: '8px 16px',
+                          background: 'var(--bronze-deep)', color: 'var(--on-bronze)', fontSize: 13, padding: '8px 16px',
                           borderRadius: 8, border: 'none', cursor: 'pointer', flexShrink: 0,
                           opacity: sending ? 0.5 : 1,
                         }}
@@ -286,7 +288,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
           )}
         </div>
 
-        <div style={{ marginTop: 14, marginBottom: 16, background: 'var(--surface-2)', border: '1px solid #2A2A2A', borderRadius: 8, padding: isMobile ? 12 : 16 }}>
+        <div style={{ marginTop: 14, marginBottom: 16, background: 'var(--surface-2)', border: '1px solid var(--gray-800)', borderRadius: 8, padding: isMobile ? 12 : 16 }}>
           <div style={{ fontSize: isMobile ? 12 : 12, color: 'var(--ink-pale)', lineHeight: 1.7 }}>
             <strong style={{ color: 'var(--ink-pale)' }}>{t.userPrivacy}</strong> {t.userPrivacyDetail}
           </div>
@@ -333,7 +335,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
             >
               ×
             </button>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 19, color: '#FFFFFF', marginBottom: 18, paddingRight: 24 }}>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 19, color: 'var(--ink-bright)', marginBottom: 18, paddingRight: 24 }}>
               {t.explainerTitle}
             </h3>
             <p style={{ fontSize: 14.5, color: 'var(--ink-pale)', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody1}</p>
@@ -342,7 +344,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
             <p style={{ fontSize: 14.5, color: 'var(--ink-pale)', lineHeight: 1.7, marginBottom: 26 }}>{t.explainerBody4}</p>
             <button
               onClick={() => setShowExplainer(false)}
-              style={{ display: 'block', margin: '12px auto 0', background: 'var(--bronze-deep)', color: '#FFFFFF', padding: '10px 44px', fontSize: 14, fontWeight: 600 }}
+              style={{ display: 'block', margin: '12px auto 0', background: 'var(--bronze-deep)', color: 'var(--on-bronze)', padding: '10px 44px', fontSize: 14, fontWeight: 600 }}
             >
               {t.explainerClose}
             </button>
@@ -353,7 +355,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
       {/* Midnight branding */}
       <div style={{ textAlign: 'center', marginTop: isMobile ? 40 : 80, padding: '24px 0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 25 }}>
         <span style={{ fontSize: 11, color: 'var(--ink-dim)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
-        <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" style={{ height: 28, opacity: 0.85 }} />
+        <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" className="midnight-logo" style={{ height: 28, opacity: 0.85 }} />
       </div>
     </div>
   );

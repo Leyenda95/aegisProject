@@ -8,7 +8,7 @@
 .summary {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border: 1px solid #141414;
+  border: 1px solid var(--line-soft);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -18,13 +18,13 @@
 }
 
 .summaryCell + .summaryCell {
-  border-left: 1px solid #141414;
+  border-left: 1px solid var(--line-soft);
 }
 
 .summaryValue {
   font-size: 28px;
   font-weight: 700;
-  color: #fff;
+  color: var(--ink-bright);
   letter-spacing: -1px;
   line-height: 1;
   margin-bottom: 6px;
@@ -32,7 +32,7 @@
 
 .summaryLabel {
   font-size: 11px;
-  color: #333;
+  color: var(--ink-faint);
   text-transform: uppercase;
   letter-spacing: 0.8px;
 }
@@ -40,12 +40,12 @@
 /* Section label */
 .sectionLabel {
   font-size: 10px;
-  color: #666;
+  color: var(--ink-dim);
   text-transform: uppercase;
   letter-spacing: 1.2px;
   margin-bottom: 10px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #141414;
+  border-bottom: 1px solid var(--line-soft);
 }
 
 /* Category list */
@@ -54,7 +54,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 11px 0;
-  border-bottom: 1px solid #0d0d0d;
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .catRow:last-child {
@@ -63,13 +63,13 @@
 
 .catName {
   font-size: 14px;
-  color: #bbb;
+  color: var(--ink-soft);
 }
 
 .catAmount {
   font-size: 14px;
   font-weight: 600;
-  color: #ddd;
+  color: var(--ink-pale);
   font-variant-numeric: tabular-nums;
 }
 
@@ -80,7 +80,7 @@
   align-items: center;
   column-gap: 10px;
   padding: 10px 0;
-  border-bottom: 1px solid #0d0d0d;
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .receiptRow:last-child {
@@ -94,20 +94,20 @@
 
 .receiptStore {
   font-size: 13px;
-  color: #999;
+  color: var(--ink-dim);
   /* font-weight: 500; */
 }
 
 .receiptDate {
   font-size: 11px;
-  color: #424242;
+  color: var(--ink-faint);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .receiptAmount {
   font-size: 13px;
-  color: #999;
+  color: var(--ink-dim);
   font-variant-numeric: tabular-nums;
   text-align: right;
   white-space: nowrap;

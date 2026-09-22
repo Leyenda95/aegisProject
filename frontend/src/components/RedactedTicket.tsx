@@ -287,10 +287,10 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
         </div>
 
         <div className={styles.actions}>
-          <button onClick={onConfirm} disabled={confirmDisabled} style={{ flex: 1, background: 'var(--bronze-deep)', color: '#fff', opacity: confirmDisabled ? 0.6 : 1, cursor: confirmDisabled ? 'not-allowed' : 'pointer' }}>{confirmLabel ?? tt.add}</button>
-          <button onClick={onCancel} disabled={confirmDisabled} style={{ flex: 1, background: '#111111', border: '1px solid #333333', color: 'var(--ink-soft)', opacity: confirmDisabled ? 0.6 : 1 }}>{tt.discard}</button>
+          <button onClick={onConfirm} disabled={confirmDisabled} style={{ flex: 1, background: 'var(--bronze-deep)', color: 'var(--on-bronze)', padding: '7px 16px', fontWeight: 600, letterSpacing: '0.3px', opacity: confirmDisabled ? 0.6 : 1, cursor: confirmDisabled ? 'not-allowed' : 'pointer' }}>{confirmLabel ?? tt.add}</button>
+          <button onClick={onCancel} disabled={confirmDisabled} style={{ flex: 1, background: '#111111', border: '1px solid #333333', color: '#FFFFFF', padding: '7px 16px', fontWeight: 600, letterSpacing: '0.3px', opacity: confirmDisabled ? 0.6 : 1 }}>{tt.discard}</button>
         </div>
-        {error && <p style={{ color: '#f87171', fontSize: 12.5, marginTop: 10, textAlign: 'center' }}>{error}</p>}
+        {error && <p style={{ color: 'var(--danger)', fontSize: 12.5, marginTop: 10, textAlign: 'center' }}>{error}</p>}
       </div>
 
       <div className={styles.sideMenu}>

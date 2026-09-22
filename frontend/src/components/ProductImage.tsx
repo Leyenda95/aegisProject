@@ -10,8 +10,8 @@ const EXTS = ['.jpg', '.jpeg', '.webp', '.png'];
  * luego una foto de stock temporal, y por último un emoji de la subcategoría.
  *
  * La imagen se muestra entera dentro de un recuadro cuadrado (object-fit:
- * contain), sin recortar ni deformar, sobre un fondo gris oscuro. Así da
- * igual el tamaño o la proporción del fichero que se suba.
+ * contain), sin recortar ni deformar, sobre un fondo neutro. Así da igual
+ * el tamaño o la proporción del fichero que se suba.
  */
 export default function ProductImage({ product, size = 96 }: { product: Product; size?: number }) {
   const candidates = [...EXTS.map(ext => product.image + ext), stockImageUrl(product)];
@@ -22,7 +22,7 @@ export default function ProductImage({ product, size = 96 }: { product: Product;
     width: size,
     height: size,
     borderRadius: 10,
-    background: '#242424b4',
+    background: 'var(--surface-2)',
     flexShrink: 0,
   } as const;
 

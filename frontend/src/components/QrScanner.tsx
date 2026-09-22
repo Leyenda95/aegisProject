@@ -85,13 +85,13 @@ export default function QrScanner({ lang, onScan, onClose }: Props) {
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 16,
     }}>
       {error ? (
-        <div style={{ color: '#f87171', maxWidth: 320, textAlign: 'center', fontSize: 14 }}>{error}</div>
+        <div style={{ color: 'var(--danger)', maxWidth: 320, textAlign: 'center', fontSize: 14 }}>{error}</div>
       ) : (
         <video ref={videoRef} style={{ maxWidth: '90vw', maxHeight: '70vh', borderRadius: 12 }} playsInline muted />
       )}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       <button onClick={onClose} style={{
-        background: 'var(--bronze-deep)', color: '#FFFFFF', padding: '10px 24px', borderRadius: 8,
+        background: 'var(--bronze-deep)', color: 'var(--on-bronze)', padding: '10px 24px', borderRadius: 8,
         border: 'none', fontSize: 14, cursor: 'pointer',
       }}>
         {t.scannerCancel}
