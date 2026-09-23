@@ -9,6 +9,7 @@ import { T } from './i18n.ts';
 import { useAggregateState } from './hooks/useAggregateState.ts';
 import StatsRibbon from './components/StatsRibbon.tsx';
 import SignalsBreakdown from './components/SignalsBreakdown.tsx';
+import { useBreakpoint } from './hooks/useBreakpoint.ts';
 import styles from './App.module.css';
 
 type Tab = 'store' | 'user';
@@ -44,6 +45,7 @@ export default function App() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [matches, setMatches] = useState<Record<string, MatchResult>>({});
 
+  const isMobile = useBreakpoint() === 'mobile';
   const [landed, setLanded] = useState(false);
   const [lace, setLace] = useState<ConnectedAPI | null>(null);
   const [contractAddress, setContractAddress] = useState<string | null>(null);
@@ -77,6 +79,13 @@ export default function App() {
   // cuanto ese mismo recibo queda publicado, en vez de dejarlo enseñado
   // indefinidamente como si aún estuviera pendiente.
   const [publishedReceiptNonce, setPublishedReceiptNonce] = useState<string | null>(null);
+
+  // Se incrementa cada vez que se pulsa "Go to User View" desde la tienda:
+  // UserView mantiene su pestaña interna (Contribute/My Profile) aunque se
+  // oculte al cambiar de tab (ver `display:none` más abajo, no se desmonta),
+  // así que sin esta señal explícita podía quedarse en My Profile si el
+  // usuario la había abierto antes.
+  const [goToContributeSignal, setGoToContributeSignal] = useState(0);
 
   const { state: aggregateState } = useAggregateState();
   const [breakdownOpen, setBreakdownOpen] = useState(false);
@@ -245,10 +254,6 @@ export default function App() {
           </div>
 
           <div className={styles.controlsWallet}>
-          {laceError && (
-            <span style={{ fontSize: 13, color: 'var(--danger)', flexBasis: '100%', textAlign: 'right', lineHeight: 1.4 }}>{laceError}</span>
-          )}
-
           {!lace && availableWallets.length > 1 ? (
             <div style={{ display: 'flex', gap: 6 }}>
               {availableWallets.map(w => (
@@ -325,11 +330,23 @@ export default function App() {
               )}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={pill}>Wallet · {walletAddress ? `…${walletAddress.slice(-6)}` : 'connected'}</span>
-                <span style={pill}>{t.contractPrefix} 0x…{contractAddress.slice(-4)}</span>
+                {/* Solo en desktop/tablet: en móvil la pareja wallet+contrato
+                    no cabe bien y descuadra el bloque de controles. */}
+                {!isMobile && (
+                  <span style={pill}>{t.contractPrefix} 0x…{contractAddress.slice(-4)}</span>
+                )}
               </div>
             </div>
           )}
           </div>
+
+          {/* Debajo de idioma/tema, no de wallet: si el error apareciera junto
+              al botón desbordaba la fila en pantallas estrechas. Ancho
+              limitado al del propio botón de Connect Wallet en vez de a todo
+              el bloque de controles. */}
+          {laceError && (
+            <span className={styles.controlsError} style={{ fontSize: 12, color: 'var(--danger)', textAlign: 'right', lineHeight: 1.4 }}>{laceError}</span>
+          )}
         </div>
       </header>
 
@@ -384,10 +401,10 @@ export default function App() {
           checkout) no se pierda si cambias a la otra antes de que termine. */}
       <main className={styles.main}>
         <div style={{ display: tab === 'store' ? 'block' : 'none' }}>
-          <StoreView lang={lang} lace={lace} contractAddress={contractAddress} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} aggregateState={aggregateState} onReceiptGenerated={setLastReceipt} confirmingMsg={confirmingMsg} setConfirmingMsg={setConfirmingMsg} onGoToUser={() => setTab('user')} publishedReceiptNonce={publishedReceiptNonce} />
+          <StoreView lang={lang} lace={lace} contractAddress={contractAddress} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} aggregateState={aggregateState} onReceiptGenerated={setLastReceipt} confirmingMsg={confirmingMsg} setConfirmingMsg={setConfirmingMsg} onGoToUser={() => { setTab('user'); setGoToContributeSignal(n => n + 1); window.scrollTo({ top: 0 }); }} publishedReceiptNonce={publishedReceiptNonce} />
         </div>
         <div style={{ display: tab === 'user' ? 'block' : 'none' }}>
-          <UserView lang={lang} lace={lace} contractAddress={contractAddress} lastReceipt={lastReceipt} onReceiptConsumed={() => setLastReceipt(null)} confirmingMsg={confirmingMsg} setConfirmingMsg={setConfirmingMsg} onSignalPublished={(receipt) => setPublishedReceiptNonce(receipt.nonce)} />
+          <UserView lang={lang} lace={lace} contractAddress={contractAddress} lastReceipt={lastReceipt} onReceiptConsumed={() => setLastReceipt(null)} confirmingMsg={confirmingMsg} setConfirmingMsg={setConfirmingMsg} onSignalPublished={(receipt) => setPublishedReceiptNonce(receipt.nonce)} goToContributeSignal={goToContributeSignal} />
         </div>
       </main>
 

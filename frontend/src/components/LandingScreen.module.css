@@ -194,12 +194,15 @@
 @media (max-width: 680px) {
   .heroWrap {
     flex-direction: column;
-    justify-content: center;
+    /* flex-start + padding-top en vez de center: con center sobraba hueco
+       arriba (el conjunto logo+texto no llena los 100vh, así que quedaba
+       centrado más abajo de lo que se ve bien). */
+    justify-content: flex-start;
     align-items: center;
     width: 100%;
     min-height: 100vh;
     bottom: 0;
-    padding: 0 28px;
+    padding: 20vh 28px 0;
     box-sizing: border-box;
     gap: 8px;
   }

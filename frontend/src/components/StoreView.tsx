@@ -238,7 +238,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
           <div style={{ display: 'grid', gridTemplateColumns: twoCol ? '1fr 320px' : '1fr', gap: 16, alignItems: 'start' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
               {cartLines.length === 0 && (
-                <div className="aegis-hint" style={{ alignSelf: 'flex-start', marginBottom: 6 }}>{t.posFirstPurchase}</div>
+                <div className="aegis-hint" style={{ alignSelf: isMobile ? 'center' : 'flex-start', marginBottom: 6 }}>{t.posFirstPurchase}</div>
               )}
               <p style={{ color: 'var(--ink-dim)', fontSize: 13, margin: 0 }}>{t.posCatalogHint}</p>
 
@@ -396,13 +396,14 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
               )}
             </div>
 
-            {/* Crear campaña: desactivado por ahora, ver campaignSoon. Solo el
-                formulario se atenúa (opacity en el <form>, no en el
-                contenedor): así la insignia "Soon" se ve nítida en vez de
-                lavada al 50% junto con el resto. */}
-            <div style={tool} data-tour="campaign-section">
+            {/* Crear campaña: desactivado por ahora, ver campaignSoon. Sin
+                opacity en el contenedor (afectaría a todo el subárbol,
+                incluida la insignia "Soon"): el título y el formulario
+                llevan su propia opacity para verse apagados, y "Soon" no
+                lleva ninguna, así que siempre se ve nítida. */}
+            <div style={{ ...tool, background: 'var(--ground)', border: '1px solid var(--line-soft)' }} data-tour="campaign-section">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <h3 style={{ ...toolTitle, margin: 0 }}>{t.campaignTitle}</h3>
+                <h3 style={{ ...toolTitle, margin: 0, opacity: 0.3 }}>{t.campaignTitle}</h3>
                 <span style={{
                   fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px',
                   color: 'var(--bronze-deep)', background: 'var(--bronze-wash)', border: '1px solid var(--bronze-deep)', borderRadius: 999, padding: '2px 8px',
@@ -410,7 +411,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
                   {t.campaignSoon}
                 </span>
               </div>
-              <form onSubmit={handleCreateCampaign} style={{ opacity: 0.5 }}>
+              <form onSubmit={handleCreateCampaign} style={{ opacity: 0.3 }}>
               <fieldset disabled style={{ border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14, cursor: 'not-allowed' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
                   <div>

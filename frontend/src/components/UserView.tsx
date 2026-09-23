@@ -22,6 +22,8 @@ type Props = {
   setConfirmingMsg: (msg: string | null) => void;
   /** Se llama tras publicar cualquier señal (directa o desde bóveda), para que StoreView pueda retirar su ticket si es el mismo. */
   onSignalPublished?: (receipt: ReceiptJSON) => void;
+  /** Se incrementa cada vez que se navega aquí desde "Go to User View" en la tienda: fuerza la pestaña Contribute aunque My Profile estuviera abierta. */
+  goToContributeSignal?: number;
 };
 
 function isReceiptJSON(v: any): v is ReceiptJSON {
@@ -30,12 +32,16 @@ function isReceiptJSON(v: any): v is ReceiptJSON {
     && typeof v.timestamp === 'string' && typeof v.nonce === 'string';
 }
 
-export default function UserView({ lang, lace, contractAddress, lastReceipt, onReceiptConsumed, confirmingMsg, onSignalPublished }: Props) {
+export default function UserView({ lang, lace, contractAddress, lastReceipt, onReceiptConsumed, confirmingMsg, onSignalPublished, goToContributeSignal }: Props) {
   const t = T[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
   const bp = useBreakpoint();
   const isMobile = bp === 'mobile';
   const [activeTab, setActiveTab] = useState<'contribute' | 'profile'>('contribute');
+
+  useEffect(() => {
+    if (goToContributeSignal) setActiveTab('contribute');
+  }, [goToContributeSignal]);
 
   const [vault, setVault] = useState<VaultEntry[]>([]);
   const [scanning, setScanning] = useState(false);

@@ -67,6 +67,11 @@
   gap: 12px;
 }
 
+.controlsError {
+  display: block;
+  max-width: 160px;
+}
+
 .main {
   flex: 1;
   padding: 40px;
@@ -162,6 +167,10 @@
   .controlsSecondary {
     order: 1;
     gap: 8px;
+  }
+
+  .controlsError {
+    order: 2;
   }
 
   /* Tabs en segunda fila, ancho completo */
