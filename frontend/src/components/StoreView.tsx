@@ -335,7 +335,10 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
             marginBottom: storeToolsOpen ? (isMobile ? 14 : 20) : 0,
           }}
         >
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600, color: 'var(--ink-dim)' }}>⚙ {t.storeTools}</span>
+          {/* ︎ fuerza presentación de texto plano: sin él, iOS renderiza
+              este carácter con el emoji 3D de Apple Color Emoji en vez del
+              glifo monocromo que usan Android/desktop. */}
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600, color: 'var(--ink-dim)' }}>{'⚙︎'} {t.storeTools}</span>
           <span style={{ fontSize: 16, color: 'var(--accent-blue)', transition: 'transform 0.2s', display: 'inline-block', transform: storeToolsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
         </button>
 

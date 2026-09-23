@@ -49,7 +49,7 @@ export default function App() {
   const [contractAddress, setContractAddress] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>('en');
-  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(THEME_KEY) as Theme | null) ?? 'dark');
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(THEME_KEY) as Theme | null) ?? 'light');
   const [laceLoading, setLaceLoading] = useState(false);
   const [laceError, setLaceError] = useState<string | null>(null);
   const [laceSlow, setLaceSlow] = useState(false);
@@ -192,49 +192,59 @@ export default function App() {
       )}
 
       <header className={`${styles.header} aegis-fade-gradient`}>
-        {/* Logo + nombre */}
-        <div className={styles.brand}>
-          <img src="/images/Aegis_logo_original.png" alt="Aegis" style={{ width: 95, height: 40, objectFit: 'contain' }} />
-          <div>
-            <h1 style={{ fontSize: 19, fontWeight: 600, color: 'var(--ink-bright)', letterSpacing: 2.6, lineHeight: 1.1 }}>AEGIS</h1>
-            <p className={styles.brandTagline} style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 3 }}>{t.tagline}</p>
+        {/* Logo + nombre + red: agrupados para poder apilar la píldora de red
+            bajo el logo solo en móvil (ver .brandGroup en App.module.css) */}
+        <div className={styles.brandGroup}>
+          <div className={styles.brand}>
+            <img className={styles.logo} src="/images/Aegis_logo_original.png" alt="Aegis" style={{ objectFit: 'contain' }} />
+            {/* Móvil: wordmark con "AEGIS" integrado en vez de marca + <h1>
+                por separado, una variante por tema (ver .logo/.logoMobileWordmark
+                en el media query de móvil). */}
+            <img className={styles.logoMobileWordmarkLight} src="/images/AEGIS_logo_movil_black.png" alt="Aegis" style={{ objectFit: 'contain' }} />
+            <img className={styles.logoMobileWordmarkDark} src="/images/AEGIS_logo_movil_white.png" alt="Aegis" style={{ objectFit: 'contain' }} />
+            <div className={styles.brandText}>
+              <h1 className={styles.brandName} style={{ fontWeight: 600, color: 'var(--ink-bright)', letterSpacing: 2.6, lineHeight: 1.1 }}>AEGIS</h1>
+              <p className={styles.brandTagline} style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 3 }}>{t.tagline}</p>
+            </div>
           </div>
-        </div>
 
-        {/* Red */}
-        {landed && (
-          <span style={pill}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: lace ? '#63B98A' : '#8a6440' }} />
-            {networkId}
-          </span>
-        )}
+          {landed && (
+            <span style={pill}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: lace ? '#63B98A' : '#8a6440' }} />
+              {networkId}
+            </span>
+          )}
+        </div>
 
         {/* Controls */}
         <div className={styles.controls}>
-          <button
-            onClick={() => setTheme(th => th === 'dark' ? 'light' : 'dark')}
-            title={theme === 'dark' ? t.lightMode : t.darkMode}
-            style={{
-              background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--ink-dim)',
-              width: 34, height: 34, borderRadius: 8, padding: 0, fontSize: 15, lineHeight: 1,
-            }}
-          >
-            {theme === 'dark' ? '☀' : '☾'}
-          </button>
+          <div className={styles.controlsSecondary}>
+            <button
+              onClick={() => setTheme(th => th === 'dark' ? 'light' : 'dark')}
+              title={theme === 'dark' ? t.lightMode : t.darkMode}
+              style={{
+                background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--ink-dim)',
+                width: 34, height: 34, borderRadius: 8, padding: 0, fontSize: 15, lineHeight: 1,
+              }}
+            >
+              {theme === 'dark' ? '☀' : '☾'}
+            </button>
 
-          <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: 8, padding: 3, border: '1px solid var(--line)' }}>
-            {(['es', 'en'] as Lang[]).map(l => (
-              <button key={l} onClick={() => setLang(l)} style={{
-                background: lang === l ? 'var(--bronze-wash)' : 'transparent',
-                color: lang === l ? 'var(--ink-bright)' : 'var(--ink-dim)',
-                border: `1px solid ${lang === l ? 'var(--bronze-deep)' : 'transparent'}`,
-                padding: '5px 14px', fontSize: 12, fontWeight: 700, borderRadius: 6,
-              }}>
-                {l.toUpperCase()}
-              </button>
-            ))}
+            <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: 8, padding: 3, border: '1px solid var(--line)' }}>
+              {(['es', 'en'] as Lang[]).map(l => (
+                <button key={l} onClick={() => setLang(l)} style={{
+                  background: lang === l ? 'var(--bronze-wash)' : 'transparent',
+                  color: lang === l ? 'var(--ink-bright)' : 'var(--ink-dim)',
+                  border: `1px solid ${lang === l ? 'var(--bronze-deep)' : 'transparent'}`,
+                  padding: '5px 14px', fontSize: 12, fontWeight: 700, borderRadius: 6,
+                }}>
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
           </div>
 
+          <div className={styles.controlsWallet}>
           {laceError && (
             <span style={{ fontSize: 13, color: 'var(--danger)', maxWidth: 220 }}>{laceError}</span>
           )}
@@ -319,6 +329,7 @@ export default function App() {
               </div>
             </div>
           )}
+          </div>
         </div>
       </header>
 

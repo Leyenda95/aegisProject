@@ -4,21 +4,32 @@
   gap: 28px;
 }
 
+/* Card: mismo lenguaje visual que el resto de la app (StoreView, etc.):
+   fondo --surface + borde --line, en vez de flotar sin fondo directamente
+   sobre --ground con un borde --line-soft casi invisible. */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
 /* Summary */
 .summary {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border: 1px solid var(--line-soft);
-  border-radius: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
   overflow: hidden;
 }
 
 .summaryCell {
   padding: 20px 22px;
+  background: var(--surface);
 }
 
 .summaryCell + .summaryCell {
-  border-left: 1px solid var(--line-soft);
+  border-left: 1px solid var(--line);
 }
 
 .summaryValue {
@@ -45,7 +56,7 @@
   letter-spacing: 1.2px;
   margin-bottom: 10px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line);
 }
 
 /* Category list */
@@ -54,7 +65,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 11px 0;
-  border-bottom: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line);
 }
 
 .catRow:last-child {
@@ -80,7 +91,7 @@
   align-items: center;
   column-gap: 10px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line);
 }
 
 .receiptRow:last-child {

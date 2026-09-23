@@ -11,6 +11,13 @@
   z-index: 10;
 }
 
+.brandGroup {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-shrink: 0;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -24,6 +31,20 @@
   margin-top: 3px;
 }
 
+.brandName {
+  font-size: 19px;
+}
+
+.logo {
+  width: 95px;
+  height: 40px;
+}
+
+.logoMobileWordmarkLight,
+.logoMobileWordmarkDark {
+  display: none;
+}
+
 .nav {
   display: flex;
   gap: 6px;
@@ -35,6 +56,13 @@
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
+}
+
+.controlsSecondary,
+.controlsWallet {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .main {
@@ -52,6 +80,9 @@
     padding: 12px 24px;
     gap: 20px;
   }
+  .brandGroup {
+    gap: 20px;
+  }
   .main {
     padding: 28px;
   }
@@ -64,24 +95,70 @@
     gap: 10px;
     row-gap: 8px;
     flex-wrap: wrap;
-    align-items: center;
+    /* flex-start, no center: .controls ahora mide dos filas de alto (wallet
+       + idioma/tema) y con center el logo quedaba flotando a media altura
+       en vez de alinear su parte superior con la fila de Connect Wallet. */
+    align-items: flex-start;
+    justify-content: space-between;
   }
 
-  /* Solo el logo, sin texto AEGIS ni tagline */
+  /* Preprod bajo el logo en vez de al lado, centrada bajo él */
+  .brandGroup {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Wordmark único con "AEGIS" integrado en vez de marca + texto por
+     separado, mismo alto (40px) que el logo de siempre. Una variante por
+     tema: texto negro en claro, blanco en oscuro. */
   .brand {
     flex: 0;
-    gap: 0;
+    gap: 8px;
   }
 
-  .brand h1,
-  .brandTagline {
+  .logo {
     display: none;
   }
 
-  /* Controls justo al lado del logo */
+  .logoMobileWordmarkLight {
+    display: block;
+    height: 40px;
+    width: auto;
+  }
+
+  :root[data-theme="dark"] .logoMobileWordmarkLight {
+    display: none;
+  }
+
+  :root[data-theme="dark"] .logoMobileWordmarkDark {
+    display: block;
+    height: 40px;
+    width: auto;
+  }
+
+  .brandText {
+    display: none;
+  }
+
+  /* Controls en su propia fila, alineados a la derecha bajo el botón de
+     wallet: wallet arriba, idioma+tema debajo (orden invertido respecto al
+     DOM, que en desktop pone idioma+tema primero). */
   .controls {
     order: 2;
-    margin-left: 0;
+    margin-left: auto;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  .controlsWallet {
+    order: 0;
+    gap: 8px;
+  }
+
+  .controlsSecondary {
+    order: 1;
     gap: 8px;
   }
 

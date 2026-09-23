@@ -56,7 +56,7 @@ export default function ProfileSection({ lang }: { lang: Lang }) {
       </div>
 
       {/* Category list */}
-      <div>
+      <div className={styles.card}>
         <div className={styles.sectionLabel}>{t.profileBreakdown}</div>
         {sorted.map(([cat, amount]) => (
           <div key={cat} className={styles.catRow}>
@@ -67,7 +67,7 @@ export default function ProfileSection({ lang }: { lang: Lang }) {
       </div>
 
       {/* Receipt list */}
-      <div>
+      <div className={styles.card}>
         <div className={styles.sectionLabel}>{t.profileReceipts}</div>
         {MOCK_RECEIPTS.map((r, i) => (
           <div key={i} className={styles.receiptRow}>

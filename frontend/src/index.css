@@ -1,21 +1,27 @@
 :root {
-  /* Aegis — paleta oscura (dirección B) */
-  --ground: #0C0C0D;
-  --surface: #141414;
-  --surface-2: #1C1B18;
-  --raised: #232120;
-  --line: #2B2825;
-  --line-soft: #201E1C;
+  /* Aegis — paleta clara (predeterminada). --bronze*, --on-bronze, --blue,
+     --gray-600, --success* y --accent-blue no varían entre temas (ya tienen
+     contraste suficiente en ambos fondos); el resto sí, y se redefine para
+     modo oscuro en el bloque [data-theme="dark"] de abajo. */
+  --ground: #F6F2EA;
+  --surface: #FFFFFF;
+  --surface-2: #F1EAE0;
+  --raised: #FFFFFF;
+  --line: #E3D9C8;
+  --line-soft: #EDE5D8;
   --bronze: #B0813F;
   --bronze-deep: #926A45;
   --bronze-wash: rgba(176, 129, 63, 0.12);
   --blue: #5586B4;
-  --ink: #ECE7DE;
-  --ink-pale: #C7BFB2;
-  --ink-soft: #ACA396;
-  --ink-dim: #968E82;
-  --ink-faint: #968d80;
-  --ink-bright: #FFFFFF;
+  --ink: #2A2520;
+  --ink-pale: #4A433B;
+  --ink-soft: #6B6255;
+  /* Un poco más oscuros que el resto de la escala para que se lean bien en
+     texto real y pequeño (etiquetas de la cinta de estadísticas sin abrir
+     el desglose, p. ej.), sin el color bronce que se probó y no convenció. */
+  --ink-dim: #766B5C;
+  --ink-faint: #8B8172;
+  --ink-bright: #16120D;
   /* Texto sobre --bronze-deep sólido (botones rellenos): ese fondo no cambia
      entre temas, así que este token tampoco, a diferencia de --ink-bright. */
   --on-bronze: #FFFFFF;
@@ -23,19 +29,19 @@
   /* Grises neutros para chrome secundario (bordes/fondos de tarjetas,
      pastillas, badges), aparte de la escala --line/--surface que es más
      cálida. Extraídos de valores que se repetían igual en varios sitios. */
-  --gray-900: #1A1A1A;
-  --gray-850: #222222;
-  --gray-800: #2A2A2A;
+  --gray-900: #EDE6D9;
+  --gray-850: #E2DAC9;
+  --gray-800: #D8CFBB;
   --gray-600: #555555;
 
-  --danger: #f87171;
-  --success: #64d1a9;
+  --danger: #DC2626;
+  --success: #0E8A63;
   --success-strong: #64d1a9dc;
   --accent-blue: #456D92;
-  --price: #c0956de5;
+  --price: #9C6B2E;
 
   /* Degradados fijos (uno por tema, siempre los dos disponibles aquí en
-     :root, no dentro del bloque [data-theme="light"]) para el crossfade de
+     :root, no dentro del bloque [data-theme="dark"]) para el crossfade de
      .aegis-fade-gradient más abajo. No usar var(--surface)/var(--ground)
      dentro de un linear-gradient: la transición de tema no interpola bien
      un degradado con paradas en variables, se nota como un salto en vez de
@@ -48,44 +54,40 @@
   --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-/* Modo claro: mismo sistema de tokens, con los tonos "cálido oscuro"
-   invertidos a "papel cálido claro". --bronze*, --on-bronze, --blue,
-   --gray-600, --success* y --accent-blue se quedan igual (ya tienen
-   contraste suficiente en ambos fondos), solo se redefine lo que de verdad
-   depende de si el fondo es oscuro o claro. */
-:root[data-theme="light"] {
-  --ground: #F6F2EA;
-  --surface: #FFFFFF;
-  --surface-2: #F1EAE0;
-  --raised: #FFFFFF;
-  --line: #E3D9C8;
-  --line-soft: #EDE5D8;
+/* Modo oscuro: mismo sistema de tokens, con los tonos "papel cálido claro"
+   invertidos a "cálido oscuro". Solo se redefine lo que de verdad depende
+   de si el fondo es oscuro o claro (ver comentario del bloque :root). */
+:root[data-theme="dark"] {
+  --ground: #0C0C0D;
+  --surface: #141414;
+  --surface-2: #1C1B18;
+  --raised: #232120;
+  --line: #2B2825;
+  --line-soft: #201E1C;
 
-  --ink: #2A2520;
-  --ink-pale: #4A433B;
-  --ink-soft: #6B6255;
-  /* Un poco más oscuros que el resto de la escala para que se lean bien en
-     texto real y pequeño (etiquetas de la cinta de estadísticas sin abrir
-     el desglose, p. ej.), sin el color bronce que se probó y no convenció. */
-  --ink-dim: #766B5C;
-  --ink-faint: #8B8172;
-  --ink-bright: #16120D;
+  --ink: #ECE7DE;
+  --ink-pale: #C7BFB2;
+  --ink-soft: #ACA396;
+  --ink-dim: #968E82;
+  --ink-faint: #968d80;
+  --ink-bright: #FFFFFF;
 
-  --gray-900: #EDE6D9;
-  --gray-850: #E2DAC9;
-  --gray-800: #D8CFBB;
+  --gray-900: #1A1A1A;
+  --gray-850: #222222;
+  --gray-800: #2A2A2A;
 
-  --danger: #DC2626;
-  --price: #9C6B2E;
-  /* El verde pastel original (#64d1a9) se pensó para texto sobre fondo
-     oscuro, en claro queda muy lavado (poco contraste como texto/borde).
-     --success-strong no se toca aparte: además de texto también es fondo de
-     una insignia con letra oscura fija encima, necesita seguir siendo claro. */
-  --success: #0E8A63;
+  --danger: #f87171;
+  --price: #c0956de5;
+  /* El verde fuerte de modo claro (#0E8A63) se pensó para texto sobre fondo
+     claro, en oscuro queda muy apagado; aquí se usa el pastel original,
+     pensado para fondo oscuro. --success-strong no se toca aparte: además de
+     texto también es fondo de una insignia con letra oscura fija encima,
+     necesita seguir siendo claro en ambos temas. */
+  --success: #64d1a9;
 }
 
 .midnight-logo { transition: filter 0.2s; }
-:root[data-theme="light"] .midnight-logo { filter: invert(1); }
+:root:not([data-theme="dark"]) .midnight-logo { filter: invert(1); }
 
 /* Fondo con degradado que sí se sincroniza con el resto al cambiar de tema:
    dos capas fijas (oscura/clara) superpuestas, se cruza su opacidad en vez
@@ -104,10 +106,10 @@
   z-index: -1;
   transition: opacity 0.25s ease;
 }
-.aegis-fade-gradient::before { background: var(--gradient-dark); opacity: 1; }
-.aegis-fade-gradient::after { background: var(--gradient-light); opacity: 0; }
-:root[data-theme="light"] .aegis-fade-gradient::before { opacity: 0; }
-:root[data-theme="light"] .aegis-fade-gradient::after { opacity: 1; }
+.aegis-fade-gradient::before { background: var(--gradient-dark); opacity: 0; }
+.aegis-fade-gradient::after { background: var(--gradient-light); opacity: 1; }
+:root[data-theme="dark"] .aegis-fade-gradient::before { opacity: 1; }
+:root[data-theme="dark"] .aegis-fade-gradient::after { opacity: 0; }
 
 *, *::before, *::after {
   box-sizing: border-box; margin: 0; padding: 0;
