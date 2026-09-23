@@ -111,7 +111,7 @@ export default function App() {
     setLaceError(null);
     if (!walletKey) {
       const wallets = listWallets();
-      if (wallets.length === 0) { setLaceError('No se encontró ninguna wallet de Midnight instalada (Lace o 1AM).'); return; }
+      if (wallets.length === 0) { setLaceError(t.noWalletFound); return; }
       if (wallets.length > 1) { setAvailableWallets(wallets); return; }
       walletKey = wallets[0].key;
     }
@@ -127,9 +127,9 @@ export default function App() {
     catch (e: any) {
       const msg: string = e.message ?? '';
       if (msg.includes('shutdown') || msg.includes('can no longer be used')) {
-        setLaceError('Conexión con la wallet perdida. Recarga la página e inténtalo de nuevo.');
+        setLaceError(t.walletConnectionLost);
       } else {
-        setLaceError(msg || 'Connection failed');
+        setLaceError(msg || t.connectionFailed);
       }
     }
     finally {
@@ -246,7 +246,7 @@ export default function App() {
 
           <div className={styles.controlsWallet}>
           {laceError && (
-            <span style={{ fontSize: 13, color: 'var(--danger)', maxWidth: 220 }}>{laceError}</span>
+            <span style={{ fontSize: 13, color: 'var(--danger)', flexBasis: '100%', textAlign: 'right', lineHeight: 1.4 }}>{laceError}</span>
           )}
 
           {!lace && availableWallets.length > 1 ? (
@@ -273,7 +273,7 @@ export default function App() {
               </button>
               {laceSlow && (
                 <span style={{ fontSize: 11, color: '#888', maxWidth: 200, textAlign: 'right', lineHeight: 1.4 }}>
-                  La wallet está iniciando, el popup de autorización aparecerá en breve
+                  {t.laceSlowHint}
                 </span>
               )}
             </div>
