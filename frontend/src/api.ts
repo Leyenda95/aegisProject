@@ -107,10 +107,6 @@ async function handleJson<T>(r: Response): Promise<T> {
   return r.json() as Promise<T>;
 }
 
-export async function getState(): Promise<AegisState> {
-  return handleJson<AegisState>(await fetch(`${API_BASE}/state`));
-}
-
 export async function getInsights(storeProfile?: string, lang: Lang = 'en'): Promise<Insights> {
   const params = new URLSearchParams({ lang });
   if (storeProfile) params.set('store', storeProfile);

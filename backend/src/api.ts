@@ -61,14 +61,6 @@ async function handleRequest(
   }
 
   try {
-    if (method === 'GET' && url === '/network') {
-      return json(res, 200, { networkId: ctx.networkId });
-    }
-
-    if (method === 'GET' && url === '/contract-address') {
-      return json(res, 200, { address: ctx.contractAddress ?? null });
-    }
-
     // El frontend manda aquí la dirección tras desplegar con la wallet conectada
     if (method === 'POST' && url === '/contract-address') {
       const { address } = await parseBody(req);
@@ -193,58 +185,6 @@ async function handleRequest(
       const state = await readState(ctx.providers, ctx.contractAddress);
       const result = await matchCampaign(campaign, state);
       return json(res, 200, result);
-    }
-
-    if (method === 'GET' && url === '/state') {
-      const zero = () => '0';
-      if (!ctx.contractAddress) return json(res, 200, {
-        signalsElectronics: zero(), signalsFashion: zero(), signalsFood: zero(),
-        signalsSports: zero(), signalsHome: zero(), signalsOther: zero(),
-        signalsMobile: zero(), signalsTablet: zero(), signalsComputer: zero(),
-        signalsCamera: zero(), signalsAudio: zero(), signalsGaming: zero(),
-        signalsShoes: zero(), signalsTops: zero(), signalsBottoms: zero(),
-        signalsAccessories: zero(), signalsOuterwear: zero(),
-        signalsGroceries: zero(), signalsRestaurant: zero(), signalsCafes: zero(), signalsFastfood: zero(), signalsLocalshops: zero(),
-        signalsEquipment: zero(), signalsClothing: zero(), signalsFootwear: zero(), signalsSupplements: zero(),
-        signalsFurniture: zero(), signalsAppliances: zero(), signalsDecor: zero(), signalsTools: zero(),
-        totalSignals: zero(), campaignCount: zero(), isSeeded: zero(),
-      });
-      const s = await readState(ctx.providers, ctx.contractAddress);
-      return json(res, 200, {
-        signalsElectronics: s.signalsElectronics.toString(),
-        signalsFashion: s.signalsFashion.toString(),
-        signalsFood: s.signalsFood.toString(),
-        signalsSports: s.signalsSports.toString(),
-        signalsHome: s.signalsHome.toString(),
-        signalsOther: s.signalsOther.toString(),
-        signalsMobile: s.signalsMobile.toString(),
-        signalsTablet: s.signalsTablet.toString(),
-        signalsComputer: s.signalsComputer.toString(),
-        signalsCamera: s.signalsCamera.toString(),
-        signalsAudio: s.signalsAudio.toString(),
-        signalsGaming: s.signalsGaming.toString(),
-        signalsShoes: s.signalsShoes.toString(),
-        signalsTops: s.signalsTops.toString(),
-        signalsBottoms: s.signalsBottoms.toString(),
-        signalsAccessories: s.signalsAccessories.toString(),
-        signalsOuterwear: s.signalsOuterwear.toString(),
-        signalsGroceries: s.signalsGroceries.toString(),
-        signalsRestaurant: s.signalsRestaurant.toString(),
-        signalsCafes: s.signalsCafes.toString(),
-        signalsFastfood: s.signalsFastfood.toString(),
-        signalsLocalshops: s.signalsLocalshops.toString(),
-        signalsEquipment: s.signalsEquipment.toString(),
-        signalsClothing: s.signalsClothing.toString(),
-        signalsFootwear: s.signalsFootwear.toString(),
-        signalsSupplements: s.signalsSupplements.toString(),
-        signalsFurniture: s.signalsFurniture.toString(),
-        signalsAppliances: s.signalsAppliances.toString(),
-        signalsDecor: s.signalsDecor.toString(),
-        signalsTools: s.signalsTools.toString(),
-        totalSignals: s.totalSignals.toString(),
-        campaignCount: s.campaignCount.toString(),
-        isSeeded: s.isSeeded.toString(),
-      });
     }
 
     json(res, 404, { error: 'Not found' });

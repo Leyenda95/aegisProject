@@ -1,4 +1,4 @@
-import { API_BASE, getState, type Lang } from './api.ts';
+import { API_BASE, type Lang } from './api.ts';
 import { T } from './i18n.ts';
 
 // Igual que ReceiptJSON en backend/src/contract.ts, el recibo tal y como
@@ -88,9 +88,10 @@ export async function laceBalanceAndSubmit(
 }
 
 /** No resuelve hasta que el indexer ya sirve estado para esa dirección (mismo motivo que el resto de *ViaLace). */
-async function waitForContractIndexed(lang: Lang): Promise<void> {
+async function waitForContractIndexed(contractAddress: string, lang: Lang): Promise<void> {
+  const { readChainState } = await import('./chainState.ts');
   await pollUntil(async () => {
-    try { await getState(); return true; } catch { return false; }
+    try { await readChainState(contractAddress); return true; } catch { return false; }
   }, lang);
 }
 
@@ -113,7 +114,7 @@ export async function deployViaLace(
   if (!r2.ok) throw new Error(`Failed to store contract address: ${await r2.text()}`);
 
   onWaiting?.();
-  await waitForContractIndexed(lang);
+  await waitForContractIndexed(contractAddress, lang);
 
   return contractAddress as string;
 }
@@ -127,7 +128,7 @@ const DEFAULT_SEED = {
   other: 63,
 };
 
-export async function seedViaLace(lace: ConnectedAPI, lang: Lang, onWaiting?: () => void): Promise<void> {
+export async function seedViaLace(lace: ConnectedAPI, contractAddress: string, lang: Lang, onWaiting?: () => void): Promise<void> {
   const r = await fetch(`${API_BASE}/build-tx/seed`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -140,7 +141,8 @@ export async function seedViaLace(lace: ConnectedAPI, lang: Lang, onWaiting?: ()
   const { tx } = await r.json();
   await laceBalanceAndSubmit(lace, tx);
   onWaiting?.();
-  await pollUntil(async () => Number((await getState()).isSeeded ?? 0) > 0, lang);
+  const { readChainState } = await import('./chainState.ts');
+  await pollUntil(async () => Number((await readChainState(contractAddress)).isSeeded ?? 0) > 0, lang);
 }
 
 // Asserts del contrato que casi siempre significan "la transacción anterior

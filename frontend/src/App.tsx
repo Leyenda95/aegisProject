@@ -3,10 +3,11 @@ import StoreView from './components/StoreView.tsx';
 import UserView from './components/UserView.tsx';
 import LandingScreen from './components/LandingScreen.tsx';
 import TourGuide from './components/TourGuide.tsx';
-import { API_BASE, type Campaign, type MatchResult, type Lang } from './api.ts';
+import { type Campaign, type MatchResult, type Lang } from './api.ts';
 import { type ConnectedAPI, type WalletInfo, type ReceiptJSON, listWallets, connectWallet, deployViaLace, seedViaLace, registerStoreViaLace, checkStoreRegistered } from './lace.ts';
 import { T } from './i18n.ts';
 import { useAggregateState } from './hooks/useAggregateState.ts';
+import { CONTRACT_ADDRESS, NETWORK_ID } from './chainConfig.ts';
 import StatsRibbon from './components/StatsRibbon.tsx';
 import SignalsBreakdown from './components/SignalsBreakdown.tsx';
 import { useBreakpoint } from './hooks/useBreakpoint.ts';
@@ -56,7 +57,7 @@ export default function App() {
   const [laceError, setLaceError] = useState<string | null>(null);
   const [laceSlow, setLaceSlow] = useState(false);
   const [tourActive, setTourActive] = useState(false);
-  const [networkId, setNetworkId] = useState('preprod');
+  const networkId = NETWORK_ID;
   const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
   const [deploying, setDeploying] = useState(false);
   const [deployError, setDeployError] = useState<string | null>(null);
@@ -87,7 +88,7 @@ export default function App() {
   // usuario la había abierto antes.
   const [goToContributeSignal, setGoToContributeSignal] = useState(0);
 
-  const { state: aggregateState } = useAggregateState();
+  const { state: aggregateState } = useAggregateState(contractAddress);
   const [breakdownOpen, setBreakdownOpen] = useState(false);
 
   useEffect(() => {
@@ -105,15 +106,10 @@ export default function App() {
   const t = T[lang];
 
   useEffect(() => {
-    fetch(`${API_BASE}/contract-address`)
-      .then(r => r.json())
-      .then(({ address }) => { if (address) setContractAddress(address); })
-      .catch(() => {});
-    fetch(`${API_BASE}/network`)
-      .then(r => r.json())
-      .then(({ networkId }) => { if (networkId) setNetworkId(networkId); })
-      .catch(() => {});
-    checkStoreRegistered().then(registered => { if (registered) setStoreRegistered(true); });
+    // Dirección de contrato y red: datos públicos y fijos (ver chainState.ts),
+    // ya no hace falta pedírselos al backend.
+    setContractAddress(CONTRACT_ADDRESS);
+    checkStoreRegistered().then(registered => { if (registered) setStoreRegistered(true); }).catch(() => {});
   }, []);
 
   async function handleConnectWallet(walletKey?: string) {
@@ -164,11 +160,11 @@ export default function App() {
   }
 
   async function handleSeed() {
-    if (!lace) return;
+    if (!lace || !contractAddress) return;
     setSeedError(null);
     setSeeding(true);
     try {
-      await seedViaLace(lace, lang, () => setConfirmingMsg(t.confirmSeeding));
+      await seedViaLace(lace, contractAddress, lang, () => setConfirmingMsg(t.confirmSeeding));
       setSeeded(true);
     } catch (e: any) {
       setSeedError(briefError('seed', e));
