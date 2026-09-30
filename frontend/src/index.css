@@ -89,6 +89,13 @@
 .midnight-logo { transition: filter 0.2s; }
 :root:not([data-theme="dark"]) .midnight-logo { filter: invert(1); }
 
+/* Etiqueta "Built on" junto al logo de Midnight (StoreView, UserView): en
+   claro se queda con --ink-dim (tono cálido oscuro, se lee bien), pero en
+   oscuro ese mismo tono queda anaranjado contra el fondo casi negro, así
+   que ahí se fuerza blanco. */
+.builtOnLabel { color: var(--ink-bright); }
+:root[data-theme="dark"] .builtOnLabel { color: rgba(245,242,235,0.7); }
+
 /* Fondo con degradado que sí se sincroniza con el resto al cambiar de tema:
    dos capas fijas (oscura/clara) superpuestas, se cruza su opacidad en vez
    de intentar interpolar el degradado en sí (eso es lo que iba desacompasado). */
@@ -206,6 +213,15 @@ label { font-size: 13px; color: var(--ink-dim); margin-bottom: 6px; display: blo
   border-radius: 50%;
   background: var(--hint-accent, var(--bronze));
   animation: aegis-dot-pulse 1.4s ease-in-out infinite;
+}
+
+/* Chevrones de "hay más contenido, desliza" (StatsRibbon en móvil): un
+   ligero desplazamiento a la derecha justo cuando cada uno brilla más, el
+   `animation-delay` escalonado entre los dos hace que se note como una ola
+   avanzando, no solo iluminándose. */
+@keyframes aegis-chevron-flow {
+  0%, 100% { opacity: 0.25; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(1.5px); }
 }
 
 /* Pequeño spinner para "esperando confirmación en la red", en vez de un emoji fijo. */

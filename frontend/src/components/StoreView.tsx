@@ -481,7 +481,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
 
       {/* Midnight branding */}
       <div style={{ marginTop: isMobile ? 24 : 80, padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 25, width: '100%' }}>
-        <span style={{ fontSize: 11, color: 'var(--ink-dim)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
+        <span className="builtOnLabel" style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
         <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" className="midnight-logo" style={{ height: 28, opacity: 0.85 }} />
       </div>
     </>

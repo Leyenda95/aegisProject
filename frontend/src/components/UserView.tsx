@@ -360,7 +360,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
 
       {/* Midnight branding */}
       <div style={{ textAlign: 'center', marginTop: isMobile ? 40 : 80, padding: '24px 0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 25 }}>
-        <span style={{ fontSize: 11, color: 'var(--ink-dim)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
+        <span className="builtOnLabel" style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
         <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" className="midnight-logo" style={{ height: 28, opacity: 0.85 }} />
       </div>
     </div>

@@ -28,6 +28,7 @@ const en = {
   signalsTotal: (n: number) => `${n} total`,
   signalsRefresh: 'updates every 10s',
   signalsUnit: 'signals on Midnight',
+  signalsUnitShort: 'signals',
   signalsBreakdown: 'Full breakdown',
 
   // StoreView, insights
@@ -167,6 +168,7 @@ const es: typeof en = {
   signalsTotal: (n: number) => `${n} en total`,
   signalsRefresh: 'se actualiza cada 10s',
   signalsUnit: 'señales en Midnight',
+  signalsUnitShort: 'señales',
   signalsBreakdown: 'Desglose completo',
 
   insightsTitle: 'Inteligencia de mercado',

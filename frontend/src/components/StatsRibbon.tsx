@@ -43,6 +43,7 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
   useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
   return (
+    <div style={{ position: 'relative' }}>
     <div style={{
       display: 'flex', alignItems: 'center', gap: isMobile ? 14 : 24,
       padding: isMobile ? '10px 14px' : '12px 24px',
@@ -56,7 +57,7 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
           {fmt(total)}
         </span>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--ink-dim)', lineHeight: 1 }}>
-          {t.signalsUnit}
+          {isMobile ? t.signalsUnitShort : t.signalsUnit}
         </span>
       </div>
 
@@ -103,8 +104,31 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
           {t.signalsRefresh}
         </span>
       </div>
+    </div>
 
-      {toast && (
+    {/* Indica que la cinta se puede desplazar en horizontal: fuera del div
+        con overflowX, para que se quede fija en el borde en vez de
+        desplazarse con el resto del contenido. */}
+    {isMobile && (
+      <div style={{
+        position: 'absolute', top: 0, right: 0, bottom: 0, width: 34,
+        display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 6,
+        background: 'linear-gradient(to right, transparent, var(--surface) 65%)',
+        pointerEvents: 'none',
+      }}>
+        {/* Dos chevrones que se mueven a la vez, en sincronía. */}
+        <div style={{ display: 'flex', gap: 1 }}>
+          {[0, 1].map(i => (
+            <svg key={i} width="9" height="16" viewBox="0 0 12 24" fill="none" stroke="var(--bronze-deep)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+              style={{ animation: 'aegis-chevron-flow 1.8s ease-in-out infinite' }}>
+              <path d="M3 5 L9 12 L3 19" />
+            </svg>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {toast && (
         <div style={{
           position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 60,
           background: 'var(--surface-2)', border: '1px solid var(--bronze-deep)', borderRadius: 10,
