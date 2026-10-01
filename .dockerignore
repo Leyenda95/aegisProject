@@ -1,0 +1,14 @@
+**/node_modules
+.git
+.claude
+
+# Del frontend solo hace falta el package.json (ver backend/Dockerfile)
+frontend/*
+!frontend/package.json
+
+# Secretos y estado local, nunca dentro de la imagen
+**/.env
+**/.contract-address-*
+**/.admin-key-*
+**/.store-key-*
+**/.operator-wallet-*

@@ -1,0 +1,934 @@
+{
+  "compiler-version": "0.31.1",
+  "language-version": "0.23.0",
+  "runtime-version": "0.16.0",
+  "circuits": [
+    {
+      "name": "storePublicKey",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "sk",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "receiptCommitment",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "r",
+          "type": {
+            "type-name": "Struct",
+            "name": "Receipt",
+            "elements": [
+              {
+                "name": "lines",
+                "type": {
+                  "type-name": "Vector",
+                  "length": 8,
+                  "type": {
+                    "type-name": "Struct",
+                    "name": "SubcatLine",
+                    "elements": [
+                      {
+                        "name": "subcategory",
+                        "type": {
+                          "type-name": "Enum",
+                          "name": "Subcategory",
+                          "elements": [
+                            "mobile",
+                            "tablet",
+                            "computer",
+                            "camera",
+                            "audio",
+                            "gaming",
+                            "shoes",
+                            "tops",
+                            "bottoms",
+                            "accessories",
+                            "outerwear",
+                            "groceries",
+                            "restaurant",
+                            "cafes",
+                            "fastfood",
+                            "localshops",
+                            "equipment",
+                            "clothing",
+                            "footwear",
+                            "supplements",
+                            "furniture",
+                            "appliances",
+                            "decor",
+                            "tools",
+                            "other"
+                          ]
+                        }
+                      },
+                      {
+                        "name": "qty",
+                        "type": {
+                          "type-name": "Uint",
+                          "maxval": 65535
+                        }
+                      },
+                      {
+                        "name": "amount",
+                        "type": {
+                          "type-name": "Uint",
+                          "maxval": 18446744073709551615
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "name": "lineCount",
+                "type": {
+                  "type-name": "Uint",
+                  "maxval": 255
+                }
+              },
+              {
+                "name": "timestamp",
+                "type": {
+                  "type-name": "Uint",
+                  "maxval": 18446744073709551615
+                }
+              },
+              {
+                "name": "nonce",
+                "type": {
+                  "type-name": "Bytes",
+                  "length": 32
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "registerStore",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "storePk",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "attestReceipt",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "commitment",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "submitPurchase",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "seed",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "initMobile",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initTablet",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initComputer",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initCamera",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initAudio",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initGaming",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initShoes",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initTops",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initBottoms",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initAccessories",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initOuterwear",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initGroceries",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initRestaurant",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initCafes",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initFastfood",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initLocalshops",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initEquipment",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initClothing",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initFootwear",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initSupplements",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initFurniture",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initAppliances",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initDecor",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initTools",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "initOther",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "totalElectronics",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "totalFashion",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "totalFood",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "totalSports",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "totalHome",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        },
+        {
+          "name": "grandTotal",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "registerCampaign",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+      ],
+      "result-type": {
+        "type-name": "Uint",
+        "maxval": 18446744073709551615
+      }
+    }
+  ],
+  "witnesses": [
+    {
+      "name": "local_secret_key",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "getStorePath",
+      "arguments": [
+        {
+          "name": "pk",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result type": {
+        "type-name": "Struct",
+        "name": "MerkleTreePath",
+        "elements": [
+          {
+            "name": "leaf",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "path",
+            "type": {
+              "type-name": "Vector",
+              "length": 10,
+              "type": {
+                "type-name": "Struct",
+                "name": "MerkleTreePathEntry",
+                "elements": [
+                  {
+                    "name": "sibling",
+                    "type": {
+                      "type-name": "Struct",
+                      "name": "MerkleTreeDigest",
+                      "elements": [
+                        {
+                          "name": "field",
+                          "type": {
+                            "type-name": "Field"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "goes_left",
+                    "type": {
+                      "type-name": "Boolean"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "getReceipt",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Struct",
+        "name": "Receipt",
+        "elements": [
+          {
+            "name": "lines",
+            "type": {
+              "type-name": "Vector",
+              "length": 8,
+              "type": {
+                "type-name": "Struct",
+                "name": "SubcatLine",
+                "elements": [
+                  {
+                    "name": "subcategory",
+                    "type": {
+                      "type-name": "Enum",
+                      "name": "Subcategory",
+                      "elements": [
+                        "mobile",
+                        "tablet",
+                        "computer",
+                        "camera",
+                        "audio",
+                        "gaming",
+                        "shoes",
+                        "tops",
+                        "bottoms",
+                        "accessories",
+                        "outerwear",
+                        "groceries",
+                        "restaurant",
+                        "cafes",
+                        "fastfood",
+                        "localshops",
+                        "equipment",
+                        "clothing",
+                        "footwear",
+                        "supplements",
+                        "furniture",
+                        "appliances",
+                        "decor",
+                        "tools",
+                        "other"
+                      ]
+                    }
+                  },
+                  {
+                    "name": "qty",
+                    "type": {
+                      "type-name": "Uint",
+                      "maxval": 65535
+                    }
+                  },
+                  {
+                    "name": "amount",
+                    "type": {
+                      "type-name": "Uint",
+                      "maxval": 18446744073709551615
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "lineCount",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 255
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 18446744073709551615
+            }
+          },
+          {
+            "name": "nonce",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "contracts": [
+  ],
+  "ledger": [
+    {
+      "name": "signalsElectronics",
+      "index": [
+        0,
+        0
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsFashion",
+      "index": [
+        0,
+        1
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsFood",
+      "index": [
+        0,
+        2
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsSports",
+      "index": [
+        0,
+        3
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsHome",
+      "index": [
+        0,
+        4
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsOther",
+      "index": [
+        0,
+        5
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsMobile",
+      "index": [
+        0,
+        6
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsTablet",
+      "index": [
+        1,
+        0
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsComputer",
+      "index": [
+        1,
+        1
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsCamera",
+      "index": [
+        1,
+        2
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsAudio",
+      "index": [
+        1,
+        3
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsGaming",
+      "index": [
+        1,
+        4
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsShoes",
+      "index": [
+        1,
+        5
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsTops",
+      "index": [
+        1,
+        6
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsBottoms",
+      "index": [
+        1,
+        7
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsAccessories",
+      "index": [
+        1,
+        8
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsOuterwear",
+      "index": [
+        1,
+        9
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsGroceries",
+      "index": [
+        1,
+        10
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsRestaurant",
+      "index": [
+        1,
+        11
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsCafes",
+      "index": [
+        1,
+        12
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsFastfood",
+      "index": [
+        1,
+        13
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsLocalshops",
+      "index": [
+        1,
+        14
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsEquipment",
+      "index": [
+        2,
+        0
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsClothing",
+      "index": [
+        2,
+        1
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsFootwear",
+      "index": [
+        2,
+        2
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsSupplements",
+      "index": [
+        2,
+        3
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsFurniture",
+      "index": [
+        2,
+        4
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsAppliances",
+      "index": [
+        2,
+        5
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsDecor",
+      "index": [
+        2,
+        6
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "signalsTools",
+      "index": [
+        2,
+        7
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "totalSignals",
+      "index": [
+        2,
+        8
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "campaignCount",
+      "index": [
+        2,
+        9
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "isSeeded",
+      "index": [
+        2,
+        10
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "admin",
+      "index": [
+        2,
+        11
+      ],
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "registeredStores",
+      "index": [
+        2,
+        12
+      ],
+      "exported": true,
+      "storage": "HistoricMerkleTree",
+      "depth": 10,
+      "type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "sealedReceipts",
+      "index": [
+        2,
+        13
+      ],
+      "exported": true,
+      "storage": "Set",
+      "type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "usedReceipts",
+      "index": [
+        2,
+        14
+      ],
+      "exported": true,
+      "storage": "Set",
+      "type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    }
+  ]
+}

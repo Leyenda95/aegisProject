@@ -31,10 +31,21 @@ export const PREVIEW_CONFIG: NetworkConfig = {
   relayURL: 'wss://rpc.preview.midnight.network',
 };
 
-export function getConfig(): NetworkConfig {
+function getNetworkConfig(): NetworkConfig {
   const network = process.env['MIDNIGHT_NETWORK'] ?? 'local';
   if (network === 'local') return LOCAL_CONFIG;
   if (network === 'preprod') return PREPROD_CONFIG;
   if (network === 'preview') return PREVIEW_CONFIG;
   throw new Error(`Unknown network: ${network}. Supported: 'local', 'preprod', 'preview'.`);
+}
+
+/**
+ * PROOF_SERVER_URL solo hace falta en el despliegue en Railway, donde el
+ * proof server es otro servicio y no 127.0.0.1. En local no se define y
+ * se usa el de siempre.
+ */
+export function getConfig(): NetworkConfig {
+  const config = getNetworkConfig();
+  const proofServer = process.env['PROOF_SERVER_URL'];
+  return proofServer ? { ...config, proofServer } : config;
 }

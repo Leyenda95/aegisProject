@@ -1,15 +1,14 @@
 node_modules/
-# El frontend importa el contrato compilado (ledger(), tipos) por ruta
-# relativa para leer el estado sin pasar por el backend (ver
-# frontend/src/chainState.ts), así que esa subcarpeta sí va en git (~400KB,
-# JS/d.ts puro). keys/, zkir/ y compiler/ (~25MB, material de prueba ZK que
-# solo usa el backend para probar transacciones) se quedan ignorados: cada
-# nivel usa /* (no recursivo) + un "!" al hijo que sí se quiere, porque git
-# no evalúa reglas dentro de un directorio ya excluido de forma recursiva.
+# contract/managed/aegis/ entero va en git: el frontend importa contract/
+# (ledger(), tipos) para leer el estado sin pasar por el backend (ver
+# frontend/src/chainState.ts), y keys/, zkir/ y compiler/ (~25MB, material
+# de prueba ZK) los necesita el backend desplegado en Railway, que construye
+# la imagen desde GitHub. Tienen que ser los mismos con los que se desplegó
+# el contrato, así que solo se actualizan al recompilar y redesplegar.
+# Se usa /* + "!" porque git no evalúa reglas dentro de un directorio ya
+# excluido de forma recursiva.
 contract/managed/*
 !contract/managed/aegis/
-contract/managed/aegis/*
-!contract/managed/aegis/contract/
 dist/
 logs/
 midnight-level-db/
