@@ -371,9 +371,8 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
                 <p style={{ color: 'var(--danger)', fontSize: 14 }}>Error: {insightsError}</p>
               ) : insights ? (
                 <>
-                  <p style={{ color: '#E0E0E0', lineHeight: 1.6, marginBottom: 16, fontSize: isMobile ? 14 : undefined }}>{insights.summary}</p>
                   {(insights.trending ?? []).length > 0 && (
-                    <div style={{ marginBottom: 16 }}>
+                    <div style={{ marginBottom: 24 }}>
                       <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>{t.insightsTrending}</div>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         {insights.trending.map((item, i) => (
@@ -382,13 +381,24 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
                       </div>
                     </div>
                   )}
+                  <p style={{ color: 'var(--ink-pale)', fontSize: isMobile ? 13 : 14, lineHeight: 1.55, margin: '0 0 24px' }}>{insights.summary}</p>
                   <div>
                     <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>{t.insightsRecommendations}</div>
-                    <ul style={{ paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {(insights.recommendations ?? []).map((r, i) => (
-                        <li key={i} style={{ color: 'var(--ink-pale)', fontSize: isMobile ? 13 : 14, lineHeight: 1.5 }}>{r}</li>
-                      ))}
-                    </ul>
+                    <ol style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                      {(insights.recommendations ?? []).map((r, i) => {
+                        const title = typeof r === 'string' ? null : r.title;
+                        const detail = typeof r === 'string' ? r : r.detail;
+                        return (
+                          <li key={i} style={{ display: 'flex', gap: 10, padding: '8px 0', borderTop: i === 0 ? 'none' : '1px solid var(--gray-850)' }}>
+                            <span style={{ flexShrink: 0, fontSize: isMobile ? 13 : 14, color: 'var(--bronze)', lineHeight: 1.4, minWidth: 12 }}>{i + 1}</span>
+                            <div>
+                              {title && <div style={{ color: 'var(--ink)', fontWeight: 500, fontSize: isMobile ? 13 : 14, lineHeight: 1.4 }}>{title}</div>}
+                              <div style={{ color: 'var(--ink-soft)', fontSize: isMobile ? 12 : 13, lineHeight: 1.5, marginTop: title ? 2 : 0 }}>{detail}</div>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ol>
                   </div>
                 </>
               ) : (

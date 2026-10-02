@@ -12,10 +12,12 @@ export type AegisState = {
   isSeeded?: string;
 };
 
+// Las recomendaciones en texto plano (string) son el formato antiguo del
+// backend: se siguen aceptando por si Vercel y Railway no se despliegan a la vez.
 export type Insights = {
   summary: string;
   trending: string[];
-  recommendations: string[];
+  recommendations: ({ title: string; detail: string } | string)[];
 };
 
 export type Campaign = {

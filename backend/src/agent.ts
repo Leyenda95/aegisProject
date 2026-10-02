@@ -1,7 +1,7 @@
 import type { AegisState } from './contract.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL = 'claude-sonnet-4-6';
+const MODEL = 'claude-sonnet-5-5';
 
 export type Campaign = {
   id: string;
@@ -10,10 +10,15 @@ export type Campaign = {
   message: string;
 };
 
+export type Recommendation = {
+  title: string;
+  detail: string;
+};
+
 export type MarketInsights = {
   summary: string;
   trending: string[];
-  recommendations: string[];
+  recommendations: Recommendation[];
 };
 
 export type CampaignMatch = {
@@ -85,10 +90,19 @@ async function callClaude(systemPrompt: string, userMessage: string): Promise<st
       'Content-Type': 'application/json',
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
+      // Si el modelo rechaza la petición por sus filtros de seguridad, la
+      // API la reintenta sola con otro modelo dentro de la misma llamada.
+      'anthropic-beta': 'server-side-fallback-2026-07-01',
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 1024,
+      // Sonnet 5.5 piensa antes de responder y ese razonamiento cuenta para
+      // max_tokens: con 1024 podía cortarse el JSON a medias.
+      max_tokens: 4000,
+      // Esfuerzo bajo: piensa lo justo para elegir buenos consejos sin
+      // disparar el coste ni el tiempo de respuesta.
+      output_config: { effort: 'low' },
+      fallbacks: 'default',
       system: systemPrompt,
       messages: [{ role: 'user', content: userMessage }],
     }),
@@ -99,7 +113,12 @@ async function callClaude(systemPrompt: string, userMessage: string): Promise<st
   }
 
   const data = await response.json() as any;
-  const text = data.content[0].text as string;
+  if (data.stop_reason === 'refusal') throw new Error('The model declined to answer');
+  // Con el razonamiento activo, content[0] ya no es el texto (llegan antes
+  // bloques "thinking"), así que hay que buscar el bloque de texto.
+  const textBlock = (data.content as any[]).find(b => b.type === 'text');
+  if (!textBlock) throw new Error('Empty response from model');
+  const text = textBlock.text as string;
   return text.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
 }
 
@@ -190,20 +209,30 @@ export async function generateInsights(state: AegisState, storeProfile?: string,
     stateDescription = buildStateDescription(state, lang);
   }
 
-  const system = `You are Aegis, a market intelligence agent for retail stores.
-You work with ZK aggregated purchase signals from Midnight, fully anonymous, no individual data visible.
-Always respond ONLY with valid JSON matching exactly: { "summary": string, "trending": string[], "recommendations": string[] }`;
+  const system = `You are Aegis, an experienced retail advisor talking face to face with a shop owner.
+You read anonymous, aggregated data about what shoppers are buying and turn it into a few sharp, useful tips.
+Always respond ONLY with valid JSON matching exactly: { "summary": string, "trending": string[], "recommendations": [{ "title": string, "detail": string }] }`;
 
-  const user = `${storeContext ? storeContext + '\n\n' : ''}The numbers below are anonymous, aggregated purchase-intent signals from shoppers across the whole Aegis network, not this store's own sales or transactions, this store has no data of its own here, only what the network shows. Analyze this market data and generate intelligence for the store:
+  const user = `${storeContext ? storeContext + '\n\n' : ''}The numbers below show how many shoppers across the whole Aegis network recently bought in each category. They are not this store's own sales, the store has no data of its own here. Look at them and tell the owner what is worth doing:
 
 ${stateDescription}
 
-Rules:
-- summary: 2-3 sentences focused on what matters most to this store. Be specific, not generic.
+Content rules:
+- summary: TWO or THREE short sentences, max 60 words in total. Start with the most important takeaway for this store, said plainly. Then add the context that explains it: what is pulling the demand, what is falling behind, or what is coming with the season.
 - ${trendingRule}
-- recommendations: 4-5 concrete, actionable recommendations tailored to this store's product range. Reference actual numbers from the data. Take into account the current season and upcoming seasonal trends: ${getSeasonContext(lang)}${scopeRule}
-- Never phrase the data as this store's own sales or activity (e.g. "your store registers/has/sold X signals"). Attribute the numbers to the market/shoppers/demand, e.g. "shoppers in this category generated X signals" or "demand for X reached Y signals", never to the store itself.
-- Respond entirely in ${lang === 'es' ? 'Spanish. Do not use English words for category or product names.' : 'English.'}.
+- recommendations: exactly 3 tips, the ones with the most impact. Each one has:
+  - title: a short action, 3 to 7 words, starting with a verb (e.g. "Pon las zapatillas a la vista").
+  - detail: ONE sentence, max 25 words, saying why or how. Use a number from the data only if it really helps.
+- Take into account the time of year and what is coming next: ${getSeasonContext(lang)}${scopeRule}
+- Never describe the numbers as this store's own sales or activity. They are what shoppers in general are buying.
+
+Style rules (very important):
+- Write like a person who knows retail talking to a friend who owns a shop: natural, direct, everyday words. Use "tú" in Spanish.
+- No jargon or technical terms: never say "signals", "señales", "data", "ZK", "network", "blockchain", "KPI", "engagement", "insight", "segment", "conversion", "omnichannel".
+- No corporate filler words like "optimize", "leverage", "boost", "strategy", "synergy", "potenciar", "aprovechar", "optimizar", "estrategia", "capitalizar", "impulsar".
+- No slashes, no dashes of any kind, no parentheses, no semicolons, no colons inside sentences, no emojis, no bold or markdown.
+- No vague advice. Every tip must be something the owner could do this week.
+- Respond entirely in ${lang === 'es' ? 'Spanish from Spain. Do not use English words for category or product names.' : 'English.'}
 - Do not include any text outside the JSON.`;
 
   const text = await callClaude(system, user);
