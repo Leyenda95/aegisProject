@@ -4,8 +4,10 @@ import QRCode from 'qrcode';
 import {
   getInsights, postCampaign, getMatch,
   CATEGORIES, CATEGORY_LABELS, CATEGORY_STATE_KEY as CAT_KEY, SUBCATEGORY_LABELS,
-  type AegisState, type Insights, type Campaign, type MatchResult, type Category, type Lang,
+  type AegisState, type Insights, type Campaign, type MatchResult, type Category, type Lang, type TimeRange,
 } from '../api.ts';
+
+const TIME_RANGES: TimeRange[] = ['7d', '30d', '90d', '365d'];
 import { attestReceiptViaLace, explainTxError, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
 import { encodeReceiptForQr } from '../receiptCodec.ts';
 import {
@@ -72,6 +74,10 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
   const [storeProfile, setStoreProfile] = useState('');
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [insightsError, setInsightsError] = useState<string | null>(null);
+  const [insightsRange, setInsightsRange] = useState<TimeRange>('7d');
+  // Periodo del informe que se está mostrando, que puede no coincidir con el
+  // seleccionado mientras se genera el nuevo.
+  const [shownRange, setShownRange] = useState<TimeRange>('7d');
   const [form, setForm] = useState({ targetCategory: 'electronics', minSignals: 2, message: '' });
   const [creating, setCreating] = useState(false);
   const [refreshing, setRefreshing] = useState<string | null>(null);
@@ -179,10 +185,13 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
     });
   }, [state, campaigns, setMatches]);
 
-  async function handleInsights() {
+  async function handleInsights(range = insightsRange) {
     setLoadingInsights(true);
     setInsightsError(null);
-    try { setInsights(await getInsights(storeProfile || undefined, lang)); }
+    try {
+      setInsights(await getInsights(storeProfile || undefined, lang, range));
+      setShownRange(range);
+    }
     catch (e: any) { setInsightsError(e?.message ?? t.errorUnknown); }
     finally { setLoadingInsights(false); }
   }
@@ -353,7 +362,25 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
 
             {/* Market intelligence */}
             <div style={tool} data-tour="insights-section">
-              <h3 style={toolTitle}>{t.insightsTitle}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                <h3 style={{ ...toolTitle, margin: 0 }}>{t.insightsTitle}</h3>
+                {/* Periodo que analizará el próximo informe. Cambiarlo no genera
+                    nada por sí solo: hay que pulsar el botón. */}
+                <div style={{ display: 'flex', gap: 2, border: '1px solid var(--line)', borderRadius: 8, padding: 2 }}>
+                  {TIME_RANGES.map(r => (
+                    <button key={r} disabled={loadingInsights}
+                      onClick={() => setInsightsRange(r)}
+                      style={{
+                        background: insightsRange === r ? 'var(--surface)' : 'transparent',
+                        color: insightsRange === r ? 'var(--ink)' : 'var(--ink-dim)',
+                        fontSize: 12, fontWeight: insightsRange === r ? 600 : 500,
+                        padding: '3px 9px', borderRadius: 6,
+                      }}>
+                      {t.insightsRanges[r]}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 10, marginBottom: 16 }}>
                 <input
                   type="text"
@@ -362,7 +389,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
                   onChange={e => setStoreProfile(e.target.value)}
                   style={{ flex: 1 }}
                 />
-                <button onClick={handleInsights} disabled={loadingInsights}
+                <button onClick={() => handleInsights()} disabled={loadingInsights}
                   style={{ background: 'var(--bronze-deep)', color: 'var(--on-bronze)', whiteSpace: 'nowrap', fontSize: isMobile ? 14 : undefined }}>
                   {loadingInsights ? t.insightsGenerating : t.insightsGenerate}
                 </button>
@@ -373,7 +400,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
                 <>
                   {(insights.trending ?? []).length > 0 && (
                     <div style={{ marginBottom: 24 }}>
-                      <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>{t.insightsTrending}</div>
+                      <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>{t.insightsTrending} · {t.insightsRangeNames[shownRange].toUpperCase()}</div>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         {insights.trending.map((item, i) => (
                           <span key={i} style={{ background: 'var(--ground)', border: '1px solid var(--bronze-deep)', borderRadius: 20, padding: '4px 12px', fontSize: 13 }}>{item}</span>

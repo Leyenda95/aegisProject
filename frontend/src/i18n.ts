@@ -38,6 +38,8 @@ const en = {
   insightsGenerating: 'Analyzing...',
   insightsEmpty: 'Describe your store and click the button to let the agent analyze the current market.',
   insightsTrending: 'TRENDING',
+  insightsRanges: { '7d': '1W', '30d': '1M', '90d': '3M', '365d': '1Y' },
+  insightsRangeNames: { '7d': 'last week', '30d': 'last month', '90d': 'last 3 months', '365d': 'last year' },
   insightsRecommendations: 'RECOMMENDATIONS',
 
   // StoreView, campaign
@@ -177,6 +179,8 @@ const es: typeof en = {
   insightsGenerating: 'Analizando...',
   insightsEmpty: 'Describe tu tienda y pulsa el botón para que el agente analice el estado actual del mercado.',
   insightsTrending: 'TENDENCIAS',
+  insightsRanges: { '7d': '1S', '30d': '1M', '90d': '3M', '365d': '1A' },
+  insightsRangeNames: { '7d': 'última semana', '30d': 'último mes', '90d': 'últimos 3 meses', '365d': 'último año' },
   insightsRecommendations: 'RECOMENDACIONES',
 
   campaignTitle: 'Crear campaña',

@@ -109,8 +109,10 @@ async function handleJson<T>(r: Response): Promise<T> {
   return r.json() as Promise<T>;
 }
 
-export async function getInsights(storeProfile?: string, lang: Lang = 'en'): Promise<Insights> {
-  const params = new URLSearchParams({ lang });
+export type TimeRange = '7d' | '30d' | '90d' | '365d';
+
+export async function getInsights(storeProfile?: string, lang: Lang = 'en', range: TimeRange = '7d'): Promise<Insights> {
+  const params = new URLSearchParams({ lang, range });
   if (storeProfile) params.set('store', storeProfile);
   return handleJson<Insights>(await fetch(`${API_BASE}/insights?${params}`));
 }

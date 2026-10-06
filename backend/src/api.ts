@@ -7,6 +7,7 @@ import {
   getReceiptStatus, type ReceiptJSON, type ReceiptLineInput,
 } from './contract.js';
 import { generateInsights, matchCampaign, type Campaign } from './agent.js';
+import { parseRange, readPeriodStates, trackContractHistory } from './history.js';
 import type { AegisProviders } from './providers.js';
 import type { NetworkConfig } from './config.js';
 
@@ -67,6 +68,7 @@ async function handleRequest(
       if (!address || typeof address !== 'string') return json(res, 400, { error: 'Missing address' });
       ctx.contractAddress = address as ContractAddress;
       writeFileSync(ADDRESS_FILE, address);
+      void trackContractHistory(ctx.config.indexerWS, ctx.contractAddress);
       return json(res, 200, { ok: true });
     }
 
@@ -172,8 +174,8 @@ async function handleRequest(
       const params = new URL(url, 'http://localhost').searchParams;
       const storeProfile = params.get('store') ?? undefined;
       const lang = params.get('lang') ?? 'en';
-      const state = await readState(ctx.providers, ctx.contractAddress);
-      const insights = await generateInsights(state, storeProfile, lang);
+      const period = await readPeriodStates(ctx.config.indexerWS, ctx.contractAddress, parseRange(params.get('range')));
+      const insights = await generateInsights(period, storeProfile, lang);
       return json(res, 200, insights);
     }
 
@@ -196,6 +198,9 @@ async function handleRequest(
 
 export function createServer(ctx: AppContext, port = 3001): http.Server {
   ctx.contractAddress = ctx.contractAddress ?? null;
+  // Empieza a cargar el historial del contrato ya al arrancar, para que el
+  // primer informe por periodos no tenga que esperarlo.
+  if (ctx.contractAddress) void trackContractHistory(ctx.config.indexerWS, ctx.contractAddress);
   const server = http.createServer((req, res) => handleRequest(req, res, ctx));
   server.listen(port, () => {
     console.log(`Aegis API running on http://localhost:${port}`);

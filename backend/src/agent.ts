@@ -1,4 +1,5 @@
 import type { AegisState } from './contract.js';
+import type { PeriodStates, TimeRange } from './history.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL = 'claude-sonnet-5-5';
@@ -182,9 +183,18 @@ function getSeasonContext(lang: string): string {
     : `Current date: ${date}.`;
 }
 
-export async function generateInsights(state: AegisState, storeProfile?: string, lang = 'en'): Promise<MarketInsights> {
+const RANGE_LABELS: Record<TimeRange, { en: string; es: string }> = {
+  '7d': { en: 'the last 7 days', es: 'los últimos 7 días' },
+  '30d': { en: 'the last 30 days', es: 'los últimos 30 días' },
+  '90d': { en: 'the last 3 months', es: 'los últimos 3 meses' },
+  '365d': { en: 'the last 12 months', es: 'los últimos 12 meses' },
+};
+
+export async function generateInsights(period: PeriodStates, storeProfile?: string, lang = 'en'): Promise<MarketInsights> {
+  const state = period.current;
   const sector = storeProfile ? detectSector(storeProfile) : null;
   const l = LABELS[lang as keyof typeof LABELS] ?? LABELS.en;
+  const rangeLabel = RANGE_LABELS[period.range].en;
 
   const storeContext = storeProfile
     ? `This analysis is for a store that describes itself as: "${storeProfile}". Use this only to tailor which recommendations are relevant to them.`
@@ -192,6 +202,7 @@ export async function generateInsights(state: AegisState, storeProfile?: string,
 
   let trendingRule = '';
   let stateDescription: string;
+  let previousDescription: string;
   let scopeRule = '';
 
   if (sector && SECTOR_SUBCATS[sector]) {
@@ -203,22 +214,32 @@ export async function generateInsights(state: AegisState, storeProfile?: string,
     const trendingData = sorted.map(e => `${e.name}: ${e.count}`).join('\n');
     trendingRule = `trending: use EXACTLY these entries in this exact order (already sorted for you):\n${trendingData}\nCopy them verbatim into the JSON array. Do NOT add or remove entries.`;
     stateDescription = buildSectorStateDescription(state, lang, sector);
+    previousDescription = buildSectorStateDescription(period.previous, lang, sector);
     scopeRule = `\n- This store only sells ${l[sector as keyof typeof l]}. The data above is the only category you have, do not mention or compare it against other product categories.`;
   } else {
     trendingRule = `trending: list the top 6 subcategories by signal count (highest first). Format: "Name: N".`;
     stateDescription = buildStateDescription(state, lang);
+    previousDescription = buildStateDescription(period.previous, lang);
   }
+
+  // Sin compras en el periodo anterior no hay con qué comparar (pasa, por
+  // ejemplo, con "último año" si el contrato es más nuevo): mejor no darle
+  // un periodo vacío que la IA podría leer como un crecimiento enorme.
+  const comparison = period.previous.totalSignals > 0n
+    ? `\n\nFor comparison, the same numbers in the period just before it (same length):\n${previousDescription}`
+    : '';
 
   const system = `You are Aegis, an experienced retail advisor talking face to face with a shop owner.
 You read anonymous, aggregated data about what shoppers are buying and turn it into a few sharp, useful tips.
 Always respond ONLY with valid JSON matching exactly: { "summary": string, "trending": string[], "recommendations": [{ "title": string, "detail": string }] }`;
 
-  const user = `${storeContext ? storeContext + '\n\n' : ''}The numbers below show how many shoppers across the whole Aegis network recently bought in each category. They are not this store's own sales, the store has no data of its own here. Look at them and tell the owner what is worth doing:
+  const user = `${storeContext ? storeContext + '\n\n' : ''}The numbers below show how many purchases shoppers across the whole Aegis network made in each category during ${rangeLabel}. They are not this store's own sales, the store has no data of its own here. Look at them and tell the owner what is worth doing:
 
-${stateDescription}
+${stateDescription}${comparison}
 
 Content rules:
-- summary: TWO or THREE short sentences, max 60 words in total. Start with the most important takeaway for this store, said plainly. Then add the context that explains it: what is pulling the demand, what is falling behind, or what is coming with the season.
+- summary: TWO or THREE short sentences, max 60 words in total. Start with the most important takeaway for this store, said plainly. Then add the context that explains it: what is pulling the demand, what is falling behind, or what is coming with the season. Talk about this period in plain words (for example "${RANGE_LABELS[period.range].es}" in Spanish), and if there is a comparison, say what is growing or dropping.
+- If there were very few or no purchases in this period, say so honestly and base the tips on the time of year instead of inventing trends.
 - ${trendingRule}
 - recommendations: exactly 3 tips, the ones with the most impact. Each one has:
   - title: a short action, 3 to 7 words, starting with a verb (e.g. "Pon las zapatillas a la vista").
