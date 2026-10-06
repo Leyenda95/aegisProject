@@ -48,6 +48,40 @@ const SUBSCRIPTION = `
     }
   }`;
 
+const COUNTER_FIELDS = [
+  'signalsElectronics', 'signalsFashion', 'signalsFood', 'signalsSports', 'signalsHome', 'signalsOther',
+  'signalsMobile', 'signalsTablet', 'signalsComputer', 'signalsCamera', 'signalsAudio', 'signalsGaming',
+  'signalsShoes', 'signalsTops', 'signalsBottoms', 'signalsAccessories', 'signalsOuterwear',
+  'signalsGroceries', 'signalsRestaurant', 'signalsCafes', 'signalsFastfood', 'signalsLocalshops',
+  'signalsEquipment', 'signalsClothing', 'signalsFootwear', 'signalsSupplements',
+  'signalsFurniture', 'signalsAppliances', 'signalsDecor', 'signalsTools',
+  'totalSignals', 'campaignCount', 'isSeeded',
+] as const satisfies readonly (keyof AegisState)[];
+
+/**
+ * Lee los contadores de un estado del contrato y libera enseguida la
+ * memoria del estado. ContractState vive en WebAssembly, fuera del heap de
+ * JavaScript: el recolector de basura no ve lo que ocupa y casi nunca lo
+ * libera por su cuenta. Sin el free(), cada transacción del historial
+ * dejaba su estado completo en memoria y con unas mil transacciones el
+ * proceso pasaba de 1 GB (Railway lo mataba por falta de memoria).
+ */
+function readCounters(stateHex: string): AegisState {
+  const contractState = ContractState.deserialize(Buffer.from(stateHex, 'hex'));
+  const chargedState = contractState.data;
+  try {
+    const l = ledger(chargedState) as unknown as Record<string, bigint>;
+    const counters: Record<string, bigint> = {};
+    for (const field of COUNTER_FIELDS) counters[field] = l[field]!;
+    return counters as AegisState;
+  } finally {
+    // free() existe en tiempo de ejecución (lo genera wasm-bindgen), pero no
+    // aparece en los tipos del paquete.
+    (chargedState as unknown as { free?: () => void }).free?.();
+    (contractState as unknown as { free?: () => void }).free?.();
+  }
+}
+
 type ActionMessage = {
   contractActions: { state: string; transaction: { block: { height: number; timestamp: number } } };
 };
@@ -91,11 +125,7 @@ export function trackContractHistory(indexerWS: string, contractAddress: Contrac
             const key = `${block.height}:${createHash('sha256').update(state).digest('hex')}`;
             if (seen.has(key)) return;
             seen.add(key);
-            snapshots.push({
-              height: block.height,
-              timestamp: block.timestamp,
-              state: ledger(ContractState.deserialize(Buffer.from(state, 'hex')).data) as AegisState,
-            });
+            snapshots.push({ height: block.height, timestamp: block.timestamp, state: readCounters(state) });
             restartQuietTimer();
           },
           error: (err) => {
