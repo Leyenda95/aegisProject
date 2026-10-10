@@ -1,8 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
-import { SUBCATEGORY_INDEX, SUBCATEGORY_LABELS, type Lang } from '../api.ts';
+import { type Lang } from '../api.ts';
 import { submitSignal, explainTxError, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
 import { decodeReceiptFromQr } from '../receiptCodec.ts';
-import { listVault, addToVault, removeFromVault, type VaultEntry } from '../vault.ts';
 import QrScanner from './QrScanner.tsx';
 import RedactedTicket from './RedactedTicket.tsx';
 import { T } from '../i18n.ts';
@@ -22,7 +21,7 @@ type Props = {
   /** Lock global: hay una transacción de otra pestaña/acción esperando confirmación. */
   confirmingMsg: string | null;
   setConfirmingMsg: (msg: string | null) => void;
-  /** Se llama tras publicar cualquier señal (directa o desde bóveda), para que StoreView pueda retirar su ticket si es el mismo. */
+  /** Se llama tras publicar cualquier señal (escaneada o el último recibo), para que StoreView pueda retirar su ticket si es el mismo. */
   onSignalPublished?: (receipt: ReceiptJSON) => void;
   /** Se incrementa cada vez que se navega aquí desde "Go to User View" en la tienda: fuerza la pestaña Contribute aunque My Profile estuviera abierta. */
   goToContributeSignal?: number;
@@ -36,7 +35,6 @@ function isReceiptJSON(v: any): v is ReceiptJSON {
 
 export default function UserView({ lang, lace, sponsored, contractAddress, lastReceipt, onReceiptConsumed, confirmingMsg, onSignalPublished, goToContributeSignal }: Props) {
   const t = T[lang];
-  const subLabel = SUBCATEGORY_LABELS[lang];
   const bp = useBreakpoint();
   const isMobile = bp === 'mobile';
   const [activeTab, setActiveTab] = useState<'contribute' | 'profile'>('contribute');
@@ -45,31 +43,20 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
     if (goToContributeSignal) setActiveTab('contribute');
   }, [goToContributeSignal]);
 
-  const [vault, setVault] = useState<VaultEntry[]>([]);
   const [scanning, setScanning] = useState(false);
+  // Recibo abierto en RedactedTicket (escaneado o el último sellado), a la
+  // espera de elegir qué revelar y publicarlo.
   const [scanned, setScanned] = useState<ReceiptJSON | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
-  const [submittingId, setSubmittingId] = useState<string | null>(null);
-  const [submitErrors, setSubmitErrors] = useState<Record<string, string>>({});
-  const [justSentId, setJustSentId] = useState<string | null>(null);
-  // Fuente del ticket abierto en RedactedTicket: 'scan' sigue el flujo de
-  // siempre (confirmar -> bóveda -> "Enviar señal" aparte); 'direct' es el
-  // atajo con `lastReceipt` (confirmar publica la señal ahí mismo, sin pasar
-  // por la bóveda).
-  const [publishSource, setPublishSource] = useState<'scan' | 'direct' | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [justPublished, setJustPublished] = useState(false);
   // Error de una publicación que falló después de haber cerrado ya el ticket
-  // (ver el cierre adelantado en handleTicketConfirm).
+  // (ver el cierre a los 5 s en handleTicketConfirm).
   const [backgroundError, setBackgroundError] = useState<string | null>(null);
   // Si la última señal publicada la pagó el patrocinio (para decirlo en el mensaje de éxito).
   const [lastSponsored, setLastSponsored] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);
-
-  useEffect(() => {
-    setVault(listVault());
-  }, []);
 
   const needsLace = !lace && !sponsored;
   const needsDeploy = !needsLace && !contractAddress;
@@ -80,11 +67,9 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
     try {
       const parsed = await decodeReceiptFromQr(data);
       if (!isReceiptJSON(parsed)) throw new Error(t.scanNotAegis);
-      // Igual que "usar último recibo": se elige qué revelar y se publica
-      // ahí mismo, sin pasar por la bóveda.
+      // Igual que "usar último recibo": se elige qué revelar y se publica ahí mismo.
       setPublishError(null);
       setScanned(parsed);
-      setPublishSource('direct');
       setScanError(null);
     } catch (e: any) {
       setScanError(e?.message ?? t.scanReadFailed);
@@ -94,86 +79,49 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
   function useLastReceipt() {
     if (!lastReceipt) return;
     setPublishError(null);
-    setPublishSource('direct');
     setScanned(lastReceipt);
   }
 
   async function handleTicketConfirm() {
-    if (publishSource === 'direct') {
-      if (needsLace || !scanned || confirmingMsg) return;
-      const receipt = scanned;
-      setPublishing(true);
-      setPublishError(null);
-      setBackgroundError(null);
-      // Con patrocinio no hay nada más que confirmar: a los 5 s se cierra el
-      // ticket y se enseña la explicación, mientras la transacción termina
-      // de confirmarse en la red (puede tardar bastante más). Con Lace no se
-      // adelanta, porque el usuario aún tiene que aprobarla en su ventana.
-      let closed = false;
-      const closeTicket = () => {
-        if (closed) return;
-        closed = true;
-        setScanned(null);
-        setPublishSource(null);
-        setShowExplainer(true);
-      };
-      const earlyClose = sponsored ? setTimeout(closeTicket, 5000) : undefined;
-      try {
-        setLastSponsored(await submitSignal(lace, receipt, lang));
-        onSignalPublished?.(receipt);
-        if (lastReceipt?.nonce === receipt.nonce) onReceiptConsumed?.();
-        clearTimeout(earlyClose);
-        closeTicket();
-        setJustPublished(true);
-        setTimeout(() => setJustPublished(false), 4000);
-      } catch (e: any) {
-        clearTimeout(earlyClose);
-        const msg = e?.message ? explainTxError(e, lang) : t.sendSignalError;
-        // Si el ticket ya se cerró, el error se enseña debajo de los botones.
-        if (closed) setBackgroundError(msg);
-        else setPublishError(msg);
-      } finally {
-        setPublishing(false);
-      }
-      return;
+    if (needsLace || !scanned || confirmingMsg) return;
+    const receipt = scanned;
+    setPublishing(true);
+    setPublishError(null);
+    setBackgroundError(null);
+    // Con patrocinio, a los 5 s se cierra el ticket y se enseña la
+    // explicación, sin esperar a que la red confirme la transacción (puede
+    // tardar bastante más). Si luego fallara, el error se enseña debajo de
+    // los botones. Con wallet propia no se adelanta: se espera a que el
+    // usuario la apruebe en su ventana y la wallet la envíe.
+    let closed = false;
+    const closeTicket = () => {
+      if (closed) return;
+      closed = true;
+      setScanned(null);
+      setShowExplainer(true);
+    };
+    const earlyClose = sponsored ? setTimeout(closeTicket, 5000) : undefined;
+    try {
+      setLastSponsored(await submitSignal(lace, receipt, lang));
+      onSignalPublished?.(receipt);
+      if (lastReceipt?.nonce === receipt.nonce) onReceiptConsumed?.();
+      clearTimeout(earlyClose);
+      closeTicket();
+      setJustPublished(true);
+      setTimeout(() => setJustPublished(false), 4000);
+    } catch (e: any) {
+      clearTimeout(earlyClose);
+      const msg = e?.message ? explainTxError(e, lang) : t.sendSignalError;
+      if (closed) setBackgroundError(msg);
+      else setPublishError(msg);
+    } finally {
+      setPublishing(false);
     }
-    if (scanned) {
-      addToVault(scanned);
-      setVault(listVault());
-    }
-    setScanned(null);
-    setPublishSource(null);
   }
 
   function handleTicketCancel() {
     setScanned(null);
-    setPublishSource(null);
     setPublishError(null);
-  }
-
-  async function handleSubmit(entry: VaultEntry) {
-    if (needsLace || confirmingMsg) return;
-    setSubmittingId(entry.id);
-    setSubmitErrors(prev => { const { [entry.id]: _, ...rest } = prev; return rest; });
-    // Con patrocinio, la explicación sale a los 5 s, sin esperar a que la red
-    // confirme (ver handleTicketConfirm).
-    let explained = false;
-    const explain = () => { if (!explained) { explained = true; setShowExplainer(true); } };
-    const earlyExplainer = sponsored ? setTimeout(explain, 5000) : undefined;
-    try {
-      setLastSponsored(await submitSignal(lace, entry.receipt, lang));
-      onSignalPublished?.(entry.receipt);
-      removeFromVault(entry.id);
-      setVault(listVault());
-      setJustSentId(entry.id);
-      explain();
-      setTimeout(() => setJustSentId(null), 4000);
-    } catch (e: any) {
-      setSubmitErrors(prev => ({ ...prev, [entry.id]: e?.message ? explainTxError(e, lang) : t.sendSignalError }));
-    } finally {
-      clearTimeout(earlyExplainer);
-      setSubmittingId(null);
-    }
   }
 
   return (
@@ -280,57 +228,6 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
           )}
         </div>
 
-        <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>
-            {t.vaultLabel(vault.length)}
-          </div>
-          {vault.length === 0 ? (
-            <p style={{ color: 'var(--ink-dim)', fontSize: isMobile ? 13 : 14 }}>{t.vaultEmpty}</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {vault.map(entry => {
-                const rls = entry.receipt.lines ?? [];
-                const summary = rls
-                  .map(l => `${subLabel[SUBCATEGORY_INDEX[l.subcategory]] ?? '?'} ×${l.qty}`)
-                  .join(' · ');
-                const amount = (rls.reduce((s, l) => s + Number(l.amount), 0) / 100).toFixed(2);
-                const sending = submittingId === entry.id;
-                return (
-                  <div key={entry.id} style={{
-                    background: 'var(--surface-2)', border: '1px solid var(--gray-900)', borderRadius: 10,
-                    padding: isMobile ? 12 : 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-                  }}>
-                    <div>
-                      <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, color: 'var(--ink-bright)' }}>
-                        {summary}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{amount} €</div>
-                      {submitErrors[entry.id] && (
-                        <div style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4 }}>{submitErrors[entry.id]}</div>
-                      )}
-                    </div>
-                    {justSentId === entry.id ? (
-                      <span style={{ fontSize: 13, color: 'var(--success-strong)', fontWeight: 600 }}>{t.userSentTitle} ✓{lastSponsored && ` · ${t.feePaidByAegis}`}</span>
-                    ) : (
-                      <button
-                        onClick={() => handleSubmit(entry)}
-                        disabled={sending || !!needsLace || !!needsDeploy || !!confirmingMsg}
-                        style={{
-                          background: 'var(--bronze-deep)', color: 'var(--on-bronze)', fontSize: 13, padding: '8px 16px',
-                          borderRadius: 8, border: 'none', cursor: 'pointer', flexShrink: 0,
-                          opacity: sending ? 0.5 : 1,
-                        }}
-                      >
-                        {sending ? '...' : t.sendSignal}
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
         <div style={{ marginTop: 14, marginBottom: 16, background: 'var(--surface-2)', border: '1px solid var(--gray-800)', borderRadius: 8, padding: isMobile ? 12 : 16 }}>
           <div style={{ fontSize: isMobile ? 12 : 12, color: 'var(--ink-pale)', lineHeight: 1.7 }}>
             <strong style={{ color: 'var(--ink-pale)' }}>{t.userPrivacy}</strong> {t.userPrivacyDetail}
@@ -348,9 +245,9 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
           receipt={scanned}
           onConfirm={handleTicketConfirm}
           onCancel={handleTicketCancel}
-          confirmLabel={publishSource === 'direct' ? (publishing ? t.publishing : t.publishSignal) : undefined}
-          confirmDisabled={publishSource === 'direct' && (publishing || !!confirmingMsg)}
-          error={publishSource === 'direct' ? publishError : null}
+          confirmLabel={publishing ? t.publishing : t.publishSignal}
+          confirmDisabled={publishing || !!confirmingMsg}
+          error={publishError}
         />
       )}
 

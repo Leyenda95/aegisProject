@@ -79,7 +79,7 @@ export default function App() {
   // estado que el indexer todavía no ha puesto al día (ver lace.ts pollUntil).
   const [confirmingMsg, setConfirmingMsg] = useState<string | null>(null);
   // Nonce del último recibo cuya señal se acaba de publicar (desde cualquier
-  // camino: directo o bóveda). StoreView lo usa para retirar su ticket/QR en
+  // camino: escaneado o último recibo). StoreView lo usa para retirar su ticket/QR en
   // cuanto ese mismo recibo queda publicado, en vez de dejarlo enseñado
   // indefinidamente como si aún estuviera pendiente.
   const [publishedReceiptNonce, setPublishedReceiptNonce] = useState<string | null>(null);

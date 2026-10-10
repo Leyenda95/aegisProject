@@ -97,9 +97,9 @@ const en = {
   userSentTitle: 'Signal published on Midnight',
   userSentDetail: 'Transaction submitted. Preprod version.',
 
-  // UserView, scan / vault
+  // UserView, scan
   scanSectionLabel: 'Receipt from a real purchase',
-  scanIntro: 'The store shows you a QR code when you pay. Scan it to add the receipt to your vault, you decide if and when to turn it into a signal.',
+  scanIntro: 'The store shows you a QR code when you pay. Scan it, choose what to reveal and publish it as a signal.',
   scanButton: 'Scan receipt',
   scanNotAegis: 'QR not recognised as an Aegis receipt',
   scanReadFailed: 'Could not read the QR',
@@ -110,8 +110,6 @@ const en = {
   publishSignal: 'Publish signal',
   publishing: 'Publishing...',
   signalConfirming: 'Your signal is on its way. Midnight is confirming it, this can take a minute.',
-  vaultLabel: (n: number) => `Your vault (${n})`,
-  vaultEmpty: "You haven't scanned any receipt yet.",
   sendSignal: 'Send signal',
   sendSignalError: 'Error sending the signal',
   scannerCancel: 'Cancel',
@@ -241,9 +239,9 @@ const es: typeof en = {
   userSentTitle: 'Señal publicada en Midnight',
   userSentDetail: 'Transacción enviada. Version preprod.',
 
-  // UserView, escaneo / bóveda
+  // UserView, escaneo
   scanSectionLabel: 'Recibo de una compra real',
-  scanIntro: 'La tienda te enseña un código QR al pagar. Escanéalo para añadir el recibo a tu bóveda, decides tú, y cuándo, convertirlo en una señal.',
+  scanIntro: 'La tienda te enseña un código QR al pagar. Escanéalo, elige qué revelar y publícalo como señal.',
   scanButton: 'Escanear recibo',
   scanNotAegis: 'QR no reconocido como recibo de Aegis',
   scanReadFailed: 'No se pudo leer el QR',
@@ -254,8 +252,6 @@ const es: typeof en = {
   publishSignal: 'Publicar señal',
   publishing: 'Publicando...',
   signalConfirming: 'Tu señal va de camino. Midnight la está confirmando, puede tardar un minuto.',
-  vaultLabel: (n: number) => `Tu bóveda (${n})`,
-  vaultEmpty: 'Todavía no has escaneado ningún recibo.',
   sendSignal: 'Enviar señal',
   sendSignalError: 'Error enviando la señal',
   scannerCancel: 'Cancelar',
