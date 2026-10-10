@@ -60,6 +60,9 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [justPublished, setJustPublished] = useState(false);
+  // Error de una publicación que falló después de haber cerrado ya el ticket
+  // (ver el cierre adelantado en handleTicketConfirm).
+  const [backgroundError, setBackgroundError] = useState<string | null>(null);
   // Si la última señal publicada la pagó el patrocinio (para decirlo en el mensaje de éxito).
   const [lastSponsored, setLastSponsored] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);
@@ -77,8 +80,11 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
     try {
       const parsed = await decodeReceiptFromQr(data);
       if (!isReceiptJSON(parsed)) throw new Error(t.scanNotAegis);
+      // Igual que "usar último recibo": se elige qué revelar y se publica
+      // ahí mismo, sin pasar por la bóveda.
+      setPublishError(null);
       setScanned(parsed);
-      setPublishSource('scan');
+      setPublishSource('direct');
       setScanError(null);
     } catch (e: any) {
       setScanError(e?.message ?? t.scanReadFailed);
@@ -95,19 +101,37 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
   async function handleTicketConfirm() {
     if (publishSource === 'direct') {
       if (needsLace || !scanned || confirmingMsg) return;
+      const receipt = scanned;
       setPublishing(true);
       setPublishError(null);
-      try {
-        setLastSponsored(await submitSignal(lace, scanned, lang));
-        onSignalPublished?.(scanned);
+      setBackgroundError(null);
+      // Con patrocinio no hay nada más que confirmar: a los 5 s se cierra el
+      // ticket y se enseña la explicación, mientras la transacción termina
+      // de confirmarse en la red (puede tardar bastante más). Con Lace no se
+      // adelanta, porque el usuario aún tiene que aprobarla en su ventana.
+      let closed = false;
+      const closeTicket = () => {
+        if (closed) return;
+        closed = true;
         setScanned(null);
         setPublishSource(null);
-        onReceiptConsumed?.();
-        setJustPublished(true);
         setShowExplainer(true);
+      };
+      const earlyClose = sponsored ? setTimeout(closeTicket, 5000) : undefined;
+      try {
+        setLastSponsored(await submitSignal(lace, receipt, lang));
+        onSignalPublished?.(receipt);
+        if (lastReceipt?.nonce === receipt.nonce) onReceiptConsumed?.();
+        clearTimeout(earlyClose);
+        closeTicket();
+        setJustPublished(true);
         setTimeout(() => setJustPublished(false), 4000);
       } catch (e: any) {
-        setPublishError(e?.message ? explainTxError(e, lang) : t.sendSignalError);
+        clearTimeout(earlyClose);
+        const msg = e?.message ? explainTxError(e, lang) : t.sendSignalError;
+        // Si el ticket ya se cerró, el error se enseña debajo de los botones.
+        if (closed) setBackgroundError(msg);
+        else setPublishError(msg);
       } finally {
         setPublishing(false);
       }
@@ -131,17 +155,23 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
     if (needsLace || confirmingMsg) return;
     setSubmittingId(entry.id);
     setSubmitErrors(prev => { const { [entry.id]: _, ...rest } = prev; return rest; });
+    // Con patrocinio, la explicación sale a los 5 s, sin esperar a que la red
+    // confirme (ver handleTicketConfirm).
+    let explained = false;
+    const explain = () => { if (!explained) { explained = true; setShowExplainer(true); } };
+    const earlyExplainer = sponsored ? setTimeout(explain, 5000) : undefined;
     try {
       setLastSponsored(await submitSignal(lace, entry.receipt, lang));
       onSignalPublished?.(entry.receipt);
       removeFromVault(entry.id);
       setVault(listVault());
       setJustSentId(entry.id);
-      setShowExplainer(true);
+      explain();
       setTimeout(() => setJustSentId(null), 4000);
     } catch (e: any) {
       setSubmitErrors(prev => ({ ...prev, [entry.id]: e?.message ? explainTxError(e, lang) : t.sendSignalError }));
     } finally {
+      clearTimeout(earlyExplainer);
       setSubmittingId(null);
     }
   }
@@ -241,6 +271,12 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
           </div>
           {justPublished && (
             <p style={{ color: 'var(--success-strong)', fontSize: 13, fontWeight: 600, marginTop: 10 }}>{t.userSentTitle} ✓{lastSponsored && ` · ${t.feePaidByAegis}`}</p>
+          )}
+          {publishing && !scanned && (
+            <p style={{ color: 'var(--ink-soft)', fontSize: 13, marginTop: 10 }}>{t.signalConfirming}</p>
+          )}
+          {backgroundError && (
+            <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 10 }}>{backgroundError}</p>
           )}
         </div>
 

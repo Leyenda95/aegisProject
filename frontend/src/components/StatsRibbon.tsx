@@ -1,8 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
-import { CATEGORIES, CATEGORY_LABELS, CATEGORY_STATE_KEY, type AegisState, type Category, type Lang } from '../api.ts';
+import { CATEGORIES, CATEGORY_LABELS, CATEGORY_STATE_KEY, type AegisState, type Lang } from '../api.ts';
 import { T } from '../i18n.ts';
 import { useBreakpoint } from '../hooks/useBreakpoint.ts';
 import { useCountBumps } from '../hooks/useCountBumps.ts';
+
+const BUMP_MS = 2600;
+
+/** "+N" flotante sobre un número de la cinta (animación aegis-bump-float en index.css). */
+function BumpBadge({ delta }: { delta: number }) {
+  return (
+    <span aria-hidden="true" style={{
+      position: 'absolute', top: -11, right: 6,
+      fontFamily: 'var(--font-mono)', fontSize: 10.5, fontWeight: 600, lineHeight: 1,
+      color: 'var(--bronze)', pointerEvents: 'none',
+      animation: `aegis-bump-float ${BUMP_MS}ms ease-out forwards`,
+    }}>
+      +{delta}
+    </span>
+  );
+}
 
 type Props = {
   state: AegisState | null;
@@ -27,20 +42,11 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
   const counts: Record<string, number> | null = state
     ? Object.fromEntries(CATEGORIES.map(c => [c, Number(state[CATEGORY_STATE_KEY[c]] ?? 0)]))
     : null;
-  const bumped = useCountBumps(counts);
-
-  const [toast, setToast] = useState<string | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    const ups = Object.entries(bumped);
-    if (ups.length === 0) return; // `bumped` se limpia solo a los 1500ms (ver useCountBumps);
-    // eso también dispara este efecto, así que NO hay que tocar el temporizador aquí,
-    // o cancelaríamos el que ya está en marcha para ocultar el toast.
-    setToast(ups.map(([c, d]) => `${catLabel[c as Category]} +${d}`).join(' · '));
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 2600);
-  }, [bumped, catLabel]);
-  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
+  // Cuando entran señales nuevas, un "+N" sobre cada categoría que sube y
+  // junto al total. Se mantiene montado lo mismo que dura su animación
+  // (BUMP_MS), para que se desvanezca entero en vez de desaparecer de golpe.
+  const bumped = useCountBumps(counts, BUMP_MS);
+  const totalBump = Object.values(bumped).reduce((sum, d) => sum + d, 0);
 
   return (
     <div style={{ position: 'relative' }}>
@@ -53,8 +59,11 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
       opacity: state ? 1 : 0.55,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0 }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', fontSize: isMobile ? 20 : 24, fontWeight: 500, color: 'var(--ink-bright)', lineHeight: 1 }}>
+        <span style={{ position: 'relative', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', fontSize: isMobile ? 20 : 24, fontWeight: 500, color: 'var(--ink-bright)', lineHeight: 1 }}>
           {fmt(total)}
+          {/* La clave cambia con cada total nuevo: así la animación vuelve a
+              empezar si entra otra compra mientras aún se ve la anterior. */}
+          {totalBump > 0 && <BumpBadge key={`total-${total}`} delta={totalBump} />}
         </span>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--ink-dim)', lineHeight: 1 }}>
           {isMobile ? t.signalsUnitShort : t.signalsUnit}
@@ -73,13 +82,16 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
           const isBump = Boolean(bumped[cat]);
           return (
             <span key={cat} style={{
+              position: 'relative',
               fontFamily: 'var(--font-mono)', fontSize: 11.5, whiteSpace: 'nowrap',
               border: `1px solid ${isBump ? 'var(--bronze)' : 'var(--line)'}`,
               background: isBump ? 'var(--bronze-wash)' : 'transparent',
               borderRadius: 999, padding: '4px 11px', color: 'var(--ink-soft)',
-              transition: 'border-color 0.3s ease, background 0.3s ease',
+              // Se enciende rápido y se apaga despacio.
+              transition: isBump ? 'border-color 0.3s ease, background 0.3s ease' : 'border-color 1s ease, background 1s ease',
             }}>
-              {catLabel[cat]}<b style={{ color: isBump ? '#C79A5E' : 'var(--price)', marginLeft: 6 }}>{fmt(state?.[CATEGORY_STATE_KEY[cat]])}</b>
+              {catLabel[cat]}<b style={{ color: isBump ? '#C79A5E' : 'var(--price)', marginLeft: 6, transition: 'color 1s ease' }}>{fmt(state?.[CATEGORY_STATE_KEY[cat]])}</b>
+              {isBump && <BumpBadge key={`${cat}-${total}`} delta={bumped[cat]} />}
             </span>
           );
         })}
@@ -127,17 +139,6 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
         </div>
       </div>
     )}
-
-    {toast && (
-        <div style={{
-          position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 60,
-          background: 'var(--surface-2)', border: '1px solid var(--bronze-deep)', borderRadius: 10,
-          padding: '10px 18px', fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--ink)',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
-        }}>
-          {toast}
-        </div>
-      )}
     </div>
   );
 }

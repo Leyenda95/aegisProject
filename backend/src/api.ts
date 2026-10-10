@@ -26,6 +26,27 @@ type AppContext = {
   config: NetworkConfig;
 };
 
+// Último estado del contrato leído del indexer, para /state mientras
+// history.ts aún no tiene el historial completo. Se responde siempre con lo
+// guardado (al instante) y, si tiene más de 10 s, se pide uno nuevo por
+// detrás. Solo la primera petición tras arrancar espera al indexer, y
+// varias a la vez comparten una sola consulta.
+const STATE_MAX_AGE_MS = 10_000;
+let cachedState: { at: number; state: Awaited<ReturnType<typeof readState>> } | null = null;
+let stateRefresh: Promise<Awaited<ReturnType<typeof readState>>> | null = null;
+
+function stateFromIndexer(providers: AegisProviders, contractAddress: ContractAddress) {
+  const refresh = () => {
+    stateRefresh ??= readState(providers, contractAddress)
+      .then((state) => { cachedState = { at: Date.now(), state }; return state; })
+      .finally(() => { stateRefresh = null; });
+    return stateRefresh;
+  };
+  if (!cachedState) return refresh();
+  if (Date.now() - cachedState.at > STATE_MAX_AGE_MS) refresh().catch(() => {});
+  return Promise.resolve(cachedState.state);
+}
+
 const campaigns = new Map<string, Campaign>();
 let campaignCounter = 0;
 
@@ -197,8 +218,9 @@ async function handleRequest(
     if (method === 'GET' && url === '/state') {
       if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
       // Desde la memoria de history.ts (al instante y sin bloquear el
-      // proceso); solo se pregunta al indexer mientras se carga el historial.
-      const state = latestCounters(ctx.contractAddress) ?? await readState(ctx.providers, ctx.contractAddress);
+      // proceso). Mientras se carga el historial, el último estado leído del
+      // indexer, refrescado por detrás (ver stateFromIndexer).
+      const state = latestCounters(ctx.contractAddress) ?? await stateFromIndexer(ctx.providers, ctx.contractAddress);
       return json(res, 200, Object.fromEntries(COUNTER_FIELDS.map((k) => [k, state[k].toString()])));
     }
 

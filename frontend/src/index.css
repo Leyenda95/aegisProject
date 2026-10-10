@@ -236,3 +236,12 @@ label { font-size: 13px; color: var(--ink-dim); margin-bottom: 6px; display: blo
   border-radius: 50%;
   animation: aegis-spin 0.7s linear infinite;
 }
+
+/* "+N" que aparece sobre una categoría de la cinta cuando entran señales
+   nuevas (ver StatsRibbon): entra, se mantiene y se desvanece subiendo. */
+@keyframes aegis-bump-float {
+  0% { opacity: 0; transform: translateY(4px); }
+  12% { opacity: 1; transform: translateY(0); }
+  65% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-5px); }
+}

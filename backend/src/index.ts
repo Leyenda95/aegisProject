@@ -6,6 +6,7 @@ import { getConfig } from './config.js';
 import { buildProviders } from './providers.js';
 import { zkConfigPath } from './contract.js';
 import { createServer } from './api.js';
+import { startProofServerWarmup } from './proofWarmup.js';
 
 const NETWORK = process.env['MIDNIGHT_NETWORK'] ?? 'local';
 const ADDRESS_FILE = `.contract-address-${NETWORK}`;
@@ -27,6 +28,7 @@ async function main() {
   }
 
   createServer({ providers, contractAddress, networkId: config.networkId, config });
+  startProofServerWarmup(config.proofServer);
 }
 
 main().catch((err) => {

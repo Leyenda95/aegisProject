@@ -27,3 +27,4 @@ Thumbs.db
 
 # Metadatos NTFS de Windows al descargar archivos (no son ficheros reales)
 *:Zone.Identifier
+.env.local

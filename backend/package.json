@@ -7,9 +7,9 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "start": "MIDNIGHT_NETWORK=local tsx src/index.ts",
-    "start:preprod": "MIDNIGHT_NETWORK=preprod NODE_OPTIONS=--max-old-space-size=6144 tsx src/index.ts",
-    "start:preview": "MIDNIGHT_NETWORK=preview NODE_OPTIONS=--max-old-space-size=6144 tsx src/index.ts",
+    "start": "MIDNIGHT_NETWORK=local node --env-file-if-exists=.env --import tsx src/index.ts",
+    "start:preprod": "MIDNIGHT_NETWORK=preprod NODE_OPTIONS=--max-old-space-size=6144 node --env-file-if-exists=.env --import tsx src/index.ts",
+    "start:preview": "MIDNIGHT_NETWORK=preview NODE_OPTIONS=--max-old-space-size=6144 node --env-file-if-exists=.env --import tsx src/index.ts",
     "setup-operator-wallet": "NODE_OPTIONS=--max-old-space-size=6144 tsx scripts/setup-operator-wallet.ts",
     "typecheck": "tsc --noEmit"
   },

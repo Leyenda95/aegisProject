@@ -21,7 +21,8 @@ import type { NetworkConfig } from './config.js';
 export type TimeRange = '7d' | '30d' | '90d' | '365d';
 
 const RANGE_DAYS: Record<TimeRange, number> = { '7d': 7, '30d': 30, '90d': 90, '365d': 365 };
-const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
 
 export function parseRange(value: string | null): TimeRange {
   return value && value in RANGE_DAYS ? value as TimeRange : '7d';
@@ -139,12 +140,26 @@ export function trackContractHistory(
 
   caughtUp = new Promise((resolve) => {
     let targetHeight: number | null = null;
+    // Al cargar el historial anterior, deserializar el estado de cada
+    // transacción bloquea el proceso varios minutos (son miles y el estado
+    // crece con cada recibo). Para los informes por periodos basta con el
+    // estado al final de cada hora, así que se guarda la última recibida
+    // (`pending`) y solo se procesa cuando llega una de otra hora. Una vez
+    // al día, cada transacción nueva se procesa al momento.
+    let pending: ActionMessage['contractActions'] | null = null;
+    const processPending = () => {
+      if (!pending) return;
+      const { state, transaction: { block } } = pending;
+      snapshots.push({ height: block.height, timestamp: block.timestamp, state: readCounters(state) });
+      pending = null;
+    };
     const checkCaughtUp = () => {
       if (isCaughtUp || targetHeight === null || trackedAddress !== contractAddress) return;
-      const last = snapshots.at(-1);
-      if (!last || last.height < targetHeight) return;
+      const lastHeight = pending?.transaction.block.height ?? snapshots.at(-1)?.height;
+      if (lastHeight === undefined || lastHeight < targetHeight) return;
+      processPending();
       isCaughtUp = true;
-      console.log(`[history] caught up: ${snapshots.length} contract transactions loaded`);
+      console.log(`[history] caught up: ${snapshots.length} snapshots loaded`);
       resolve();
     };
     const fetchTarget = () => {
@@ -169,11 +184,20 @@ export function trackContractHistory(
         {
           next: ({ data }) => {
             if (!data || trackedAddress !== contractAddress) return;
-            const { state, transaction: { block } } = data.contractActions;
+            const action = data.contractActions;
+            const { state, transaction: { block } } = action;
             const key = `${block.height}:${createHash('sha256').update(state).digest('hex')}`;
             if (seen.has(key)) return;
             seen.add(key);
-            snapshots.push({ height: block.height, timestamp: block.timestamp, state: readCounters(state) });
+            if (isCaughtUp) {
+              // En directo: cada transacción nueva, al momento.
+              pending = action;
+              processPending();
+              return;
+            }
+            const hourOf = (ts: number) => Math.floor(ts / HOUR_MS);
+            if (pending && hourOf(pending.transaction.block.timestamp) !== hourOf(block.timestamp)) processPending();
+            pending = action;
             checkCaughtUp();
           },
           error: (err) => {
