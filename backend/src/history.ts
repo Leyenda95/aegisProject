@@ -16,6 +16,7 @@ import WebSocket from 'ws';
 import { ContractState, type ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { ledger } from '../../contract/managed/aegis/contract/index.js';
 import type { AegisState } from './contract.js';
+import type { NetworkConfig } from './config.js';
 
 export type TimeRange = '7d' | '30d' | '90d' | '365d';
 
@@ -89,15 +90,45 @@ type ActionMessage = {
   contractActions: { state: string; transaction: { block: { height: number; timestamp: number } } };
 };
 
+const LATEST_ACTION = `
+  query ($address: HexEncoded!) {
+    contractAction(address: $address) {
+      transaction { block { height } }
+    }
+  }`;
+
+/** Bloque de la última transacción del contrato, preguntado al indexer por HTTP. */
+async function latestActionHeight(indexer: string, contractAddress: string): Promise<number> {
+  const res = await fetch(indexer, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: LATEST_ACTION, variables: { address: contractAddress } }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  const body = await res.json() as {
+    data?: { contractAction?: { transaction: { block: { height: number } } } | null };
+    errors?: { message: string }[];
+  };
+  const height = body.data?.contractAction?.transaction.block.height;
+  if (height === undefined) throw new Error(body.errors?.[0]?.message ?? `indexer answered ${res.status}`);
+  return height;
+}
+
 /**
  * Empieza a seguir el historial del contrato. La promesa se resuelve cuando
- * ya ha llegado todo el historial anterior (la suscripción no avisa de
- * cuándo termina de ponerse al día, así que se da por hecho cuando pasa un
- * rato sin recibir nada). Se puede llamar varias veces, solo se suscribe
- * una por contrato: si cambia la dirección (se desplegó uno nuevo), se
- * descarta el historial anterior y se empieza de cero.
+ * ya ha llegado todo el historial anterior. La suscripción no avisa de
+ * cuándo termina de ponerse al día, así que al empezar se pregunta al
+ * indexer cuál es la última transacción del contrato y se espera a recibir
+ * hasta ella. (Antes se daba por hecho tras un rato sin recibir nada, pero
+ * Blockfrost a veces tarda más que ese rato entre envíos y el historial se
+ * daba por completo a medias.) Se puede llamar varias veces, solo se
+ * suscribe una por contrato: si cambia la dirección (se desplegó uno
+ * nuevo), se descarta el historial anterior y se empieza de cero.
  */
-export function trackContractHistory(indexerWS: string, contractAddress: ContractAddress): Promise<void> {
+export function trackContractHistory(
+  indexer: Pick<NetworkConfig, 'indexer' | 'indexerWS'>,
+  contractAddress: ContractAddress,
+): Promise<void> {
   if (caughtUp && trackedAddress === contractAddress) return caughtUp;
 
   disposeClient?.();
@@ -107,15 +138,28 @@ export function trackContractHistory(indexerWS: string, contractAddress: Contrac
   trackedAddress = contractAddress;
 
   caughtUp = new Promise((resolve) => {
-    let quietTimer: NodeJS.Timeout | undefined;
-    const restartQuietTimer = () => {
-      clearTimeout(quietTimer);
-      quietTimer = setTimeout(() => { isCaughtUp = true; resolve(); }, 2000);
+    let targetHeight: number | null = null;
+    const checkCaughtUp = () => {
+      if (isCaughtUp || targetHeight === null || trackedAddress !== contractAddress) return;
+      const last = snapshots.at(-1);
+      if (!last || last.height < targetHeight) return;
+      isCaughtUp = true;
+      console.log(`[history] caught up: ${snapshots.length} contract transactions loaded`);
+      resolve();
+    };
+    const fetchTarget = () => {
+      if (trackedAddress !== contractAddress) return;
+      latestActionHeight(indexer.indexer, contractAddress)
+        .then((height) => { targetHeight = height; checkCaughtUp(); })
+        .catch((err) => {
+          console.error('[history] cannot read the latest contract transaction, retrying in 5s:', err instanceof Error ? err.message : err);
+          setTimeout(fetchTarget, 5000);
+        });
     };
 
     // Si se corta la conexión, graphql-ws reintenta solo. Al reconectar se
     // pide desde el bloque siguiente al último recibido, para no duplicar.
-    const client = createClient({ url: indexerWS, webSocketImpl: WebSocket, retryAttempts: Infinity, lazy: false });
+    const client = createClient({ url: indexer.indexerWS, webSocketImpl: WebSocket, retryAttempts: Infinity, lazy: false });
     disposeClient = () => { void client.dispose(); };
     const subscribe = () => {
       if (trackedAddress !== contractAddress) return;
@@ -130,7 +174,7 @@ export function trackContractHistory(indexerWS: string, contractAddress: Contrac
             if (seen.has(key)) return;
             seen.add(key);
             snapshots.push({ height: block.height, timestamp: block.timestamp, state: readCounters(state) });
-            restartQuietTimer();
+            checkCaughtUp();
           },
           error: (err) => {
             console.error('[history] subscription error, retrying in 5s', err);
@@ -141,7 +185,7 @@ export function trackContractHistory(indexerWS: string, contractAddress: Contrac
       );
     };
     subscribe();
-    restartQuietTimer();
+    fetchTarget();
   });
   return caughtUp;
 }
@@ -188,11 +232,11 @@ export type PeriodStates = {
 };
 
 export async function readPeriodStates(
-  indexerWS: string,
+  indexer: Pick<NetworkConfig, 'indexer' | 'indexerWS'>,
   contractAddress: ContractAddress,
   range: TimeRange,
 ): Promise<PeriodStates> {
-  await trackContractHistory(indexerWS, contractAddress);
+  await trackContractHistory(indexer, contractAddress);
   const now = snapshots.at(-1)?.state;
   if (!now) throw new Error('Contract state not found');
 
