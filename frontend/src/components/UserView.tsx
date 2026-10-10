@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { SUBCATEGORY_INDEX, SUBCATEGORY_LABELS, type Lang } from '../api.ts';
-import { submitSignalViaLace, explainTxError, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
+import { submitSignal, explainTxError, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
 import { decodeReceiptFromQr } from '../receiptCodec.ts';
 import { listVault, addToVault, removeFromVault, type VaultEntry } from '../vault.ts';
 import QrScanner from './QrScanner.tsx';
@@ -12,6 +12,8 @@ import ProfileSection from './ProfileSection.tsx';
 type Props = {
   lang: Lang;
   lace: ConnectedAPI | null;
+  /** El backend paga las transacciones (patrocinio): publicar señales no necesita wallet. */
+  sponsored: boolean;
   contractAddress: string | null;
   /** Último recibo sellado en la pestaña Tienda de esta misma sesión de demo. */
   lastReceipt: ReceiptJSON | null;
@@ -32,7 +34,7 @@ function isReceiptJSON(v: any): v is ReceiptJSON {
     && typeof v.timestamp === 'string' && typeof v.nonce === 'string';
 }
 
-export default function UserView({ lang, lace, contractAddress, lastReceipt, onReceiptConsumed, confirmingMsg, onSignalPublished, goToContributeSignal }: Props) {
+export default function UserView({ lang, lace, sponsored, contractAddress, lastReceipt, onReceiptConsumed, confirmingMsg, onSignalPublished, goToContributeSignal }: Props) {
   const t = T[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
   const bp = useBreakpoint();
@@ -58,14 +60,16 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [justPublished, setJustPublished] = useState(false);
+  // Si la última señal publicada la pagó el patrocinio (para decirlo en el mensaje de éxito).
+  const [lastSponsored, setLastSponsored] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);
 
   useEffect(() => {
     setVault(listVault());
   }, []);
 
-  const needsLace = !lace;
-  const needsDeploy = lace && !contractAddress;
+  const needsLace = !lace && !sponsored;
+  const needsDeploy = !needsLace && !contractAddress;
 
   async function handleScan(data: string) {
     if (!data || !data.trim()) return; // lectura vacía de la cámara: se ignora, sigue escaneando
@@ -90,11 +94,11 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
 
   async function handleTicketConfirm() {
     if (publishSource === 'direct') {
-      if (!lace || !scanned || confirmingMsg) return;
+      if (needsLace || !scanned || confirmingMsg) return;
       setPublishing(true);
       setPublishError(null);
       try {
-        await submitSignalViaLace(lace, scanned);
+        setLastSponsored(await submitSignal(lace, scanned, lang));
         onSignalPublished?.(scanned);
         setScanned(null);
         setPublishSource(null);
@@ -124,11 +128,11 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
   }
 
   async function handleSubmit(entry: VaultEntry) {
-    if (!lace || confirmingMsg) return;
+    if (needsLace || confirmingMsg) return;
     setSubmittingId(entry.id);
     setSubmitErrors(prev => { const { [entry.id]: _, ...rest } = prev; return rest; });
     try {
-      await submitSignalViaLace(lace, entry.receipt);
+      setLastSponsored(await submitSignal(lace, entry.receipt, lang));
       onSignalPublished?.(entry.receipt);
       removeFromVault(entry.id);
       setVault(listVault());
@@ -239,7 +243,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
             </div>
           </div>
           {justPublished && (
-            <p style={{ color: 'var(--success-strong)', fontSize: 13, fontWeight: 600, marginTop: 10 }}>{t.userSentTitle} ✓</p>
+            <p style={{ color: 'var(--success-strong)', fontSize: 13, fontWeight: 600, marginTop: 10 }}>{t.userSentTitle} ✓{lastSponsored && ` · ${t.feePaidByAegis}`}</p>
           )}
         </div>
 
@@ -273,7 +277,7 @@ export default function UserView({ lang, lace, contractAddress, lastReceipt, onR
                       )}
                     </div>
                     {justSentId === entry.id ? (
-                      <span style={{ fontSize: 13, color: 'var(--success-strong)', fontWeight: 600 }}>{t.userSentTitle} ✓</span>
+                      <span style={{ fontSize: 13, color: 'var(--success-strong)', fontWeight: 600 }}>{t.userSentTitle} ✓{lastSponsored && ` · ${t.feePaidByAegis}`}</span>
                     ) : (
                       <button
                         onClick={() => handleSubmit(entry)}

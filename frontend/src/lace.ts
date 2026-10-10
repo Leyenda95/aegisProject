@@ -185,7 +185,7 @@ export async function getReceiptStatus(commitmentHex: string): Promise<{ sealed:
  * lanza la siguiente antes de que el indexer refleje la anterior, el assert
  * correspondiente falla ("Not a registered store", "Receipt not attested by
  * a registered store", etc.). Este helper es lo que evita esa carrera: las
- * funciones *ViaLace no resuelven hasta que su efecto es visible on-chain.
+ * funciones *ViaLace y attestReceipt no resuelven hasta que su efecto es visible on-chain.
  */
 async function pollUntil(check: () => Promise<boolean>, lang: Lang, { intervalMs = 1500, timeoutMs = 120_000 } = {}): Promise<void> {
   const start = Date.now();
@@ -219,34 +219,64 @@ export async function registerStoreViaLace(lace: ConnectedAPI, lang: Lang, onWai
   await pollUntil(() => checkStoreRegistered(), lang);
 }
 
+/**
+ * ¿Puede el backend pagar las transacciones (patrocinio, ver
+ * backend/src/sponsor.ts)? Si sí, el sellado y las señales funcionan sin
+ * wallet y, con wallet conectada, tampoco le cuestan DUST al usuario.
+ */
+export async function getSponsorAvailable(): Promise<boolean> {
+  try {
+    const r = await fetch(`${API_BASE}/sponsor-status`);
+    if (!r.ok) return false;
+    const { available } = await r.json();
+    return available === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Las rutas que construyen una transacción con `sponsor: true` la devuelven
+ * ya pagada y enviada (`sponsored`), o, si el patrocinio no está disponible,
+ * la devuelven sin pagar (`tx`) para que la pague la wallet conectada.
+ * Devuelve true si la pagó el patrocinio.
+ */
+async function payIfNotSponsored(lace: ConnectedAPI | null, built: { sponsored?: boolean; tx?: string }, lang: Lang): Promise<boolean> {
+  if (built.sponsored) return true;
+  if (!lace || !built.tx) throw new Error(T[lang].sponsorUnavailable);
+  await laceBalanceAndSubmit(lace, built.tx);
+  return false;
+}
+
 /** Línea del rollup que la tienda manda a sellar (subcategoría por nombre del enum, importe en céntimos). */
 export type AttestLine = { subcategory: string; qty: number; amount: number };
 
 /**
  * La tienda vende y sella el compromiso del recibo on-chain. Recibe el
  * rollup por subcategoría (ya recortado a las 8 de mayor importe) y devuelve
- * el recibo sellado, quien llama lo convierte en QR. Lace balancea/firma/envía.
+ * el recibo sellado (quien llama lo convierte en QR) y si lo pagó el
+ * patrocinio. Paga el patrocinio o, si no está disponible, la wallet conectada.
  */
-export async function attestReceiptViaLace(
-  lace: ConnectedAPI,
+export async function attestReceipt(
+  lace: ConnectedAPI | null,
   lines: AttestLine[],
   lang: Lang,
   onWaiting?: () => void,
-): Promise<ReceiptJSON> {
+): Promise<{ receipt: ReceiptJSON; sponsored: boolean }> {
   const r = await fetch(`${API_BASE}/attest-receipt`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ lines }),
+    body: JSON.stringify({ lines, sponsor: true }),
   });
   if (!r.ok) {
     const { error } = await r.json().catch(() => ({ error: r.statusText }));
     throw new Error(error ?? 'Failed to build attest-receipt tx');
   }
-  const { tx, receipt, commitmentHex } = await r.json();
-  await laceBalanceAndSubmit(lace, tx);
+  const built = await r.json();
+  const sponsored = await payIfNotSponsored(lace, built, lang);
   onWaiting?.();
-  await pollUntil(async () => (await getReceiptStatus(commitmentHex)).sealed, lang);
-  return receipt as ReceiptJSON;
+  await pollUntil(async () => (await getReceiptStatus(built.commitmentHex)).sealed, lang);
+  return { receipt: built.receipt as ReceiptJSON, sponsored };
 }
 
 /**
@@ -255,21 +285,22 @@ export async function attestReceiptViaLace(
  * confirmación on-chain: resuelve en cuanto la red acepta el envío, sin
  * fallar. Es el último paso del flujo (no hay una acción siguiente cuyo
  * assert dependa de este envío), así que la espera solo añadía tiempo sin
- * evitar ningún error real.
+ * evitar ningún error real. Paga el patrocinio o, si no está disponible,
+ * la wallet conectada. Devuelve true si lo pagó el patrocinio.
  */
-export async function submitSignalViaLace(
-  lace: ConnectedAPI,
+export async function submitSignal(
+  lace: ConnectedAPI | null,
   receipt: ReceiptJSON,
-): Promise<void> {
+  lang: Lang,
+): Promise<boolean> {
   const r = await fetch(`${API_BASE}/build-tx/signal`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ receipt }),
+    body: JSON.stringify({ receipt, sponsor: true }),
   });
   if (!r.ok) {
     const { error } = await r.json().catch(() => ({ error: r.statusText }));
     throw new Error(error || `Backend error ${r.status}`);
   }
-  const { tx } = await r.json();
-  await laceBalanceAndSubmit(lace, tx);
+  return payIfNotSponsored(lace, await r.json(), lang);
 }

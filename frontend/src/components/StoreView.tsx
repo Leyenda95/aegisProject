@@ -8,7 +8,7 @@ import {
 } from '../api.ts';
 
 const TIME_RANGES: TimeRange[] = ['7d', '30d', '90d', '365d'];
-import { attestReceiptViaLace, explainTxError, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
+import { attestReceipt, explainTxError, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
 import { encodeReceiptForQr } from '../receiptCodec.ts';
 import {
   PRODUCTS, SUBCAT_TO_CATEGORY, cartLinesFrom, cartTotalCents, rollupBySubcategory, sealedLines, formatEUR,
@@ -26,6 +26,8 @@ const POS_CATEGORY_ORDER: Category[] = ['fashion', 'electronics', 'food', 'sport
 type Props = {
   lang: Lang;
   lace: ConnectedAPI | null;
+  /** El backend paga las transacciones (patrocinio): sellar no necesita wallet. */
+  sponsored: boolean;
   contractAddress: string | null;
   campaigns: Campaign[];
   setCampaigns: Dispatch<SetStateAction<Campaign[]>>;
@@ -43,7 +45,7 @@ type Props = {
   publishedReceiptNonce: string | null;
 };
 
-export default function StoreView({ lang, lace, contractAddress, campaigns, setCampaigns, matches, setMatches, aggregateState, onReceiptGenerated, confirmingMsg, setConfirmingMsg, onGoToUser, publishedReceiptNonce }: Props) {
+export default function StoreView({ lang, lace, sponsored, contractAddress, campaigns, setCampaigns, matches, setMatches, aggregateState, onReceiptGenerated, confirmingMsg, setConfirmingMsg, onGoToUser, publishedReceiptNonce }: Props) {
   const t = T[lang];
   const catLabel = CATEGORY_LABELS[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
@@ -89,6 +91,8 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
   const [posError, setPosError] = useState<string | null>(null);
   const [posReceipt, setPosReceipt] = useState<ReceiptJSON | null>(null);
   const [posQr, setPosQr] = useState<string | null>(null);
+  // Si el sellado del último recibo lo pagó el patrocinio (para decirlo junto al QR).
+  const [posSponsored, setPosSponsored] = useState(false);
 
   const cartLines = cartLinesFrom(cart);
   const cartCount = cartLines.reduce((n, l) => n + l.qty, 0);
@@ -113,7 +117,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
   }
 
   async function handleCheckout() {
-    if (!lace || cartLines.length === 0 || sealed.length === 0 || confirmingMsg) return;
+    if ((!lace && !sponsored) || cartLines.length === 0 || sealed.length === 0 || confirmingMsg) return;
     setPosSelling(true);
     setPosError(null);
     try {
@@ -122,7 +126,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
       // No resuelve hasta que attestReceipt está confirmado on-chain (ver
       // pollUntil en lace.ts), así que al volver ya se puede publicar la
       // señal sin el assert de "Receipt not attested by a registered store".
-      const receipt = await attestReceiptViaLace(
+      const { receipt, sponsored: paidBySponsor } = await attestReceipt(
         lace,
         sealed.map(r => ({ subcategory: r.subcategory, qty: r.qty, amount: r.amountCents })),
         lang,
@@ -133,6 +137,7 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
         items: cartLines.slice(0, 24).map(l => ({ name: l.product.name[lang], qty: l.qty, unitCents: l.product.priceCents })),
       };
       setPosReceipt(receiptForQr);
+      setPosSponsored(paidBySponsor);
       setPosQr(await QRCode.toDataURL(await encodeReceiptForQr(receiptForQr), { margin: 1, width: 260 }));
       onReceiptGenerated?.(receiptForQr);
     } catch (e: any) {
@@ -219,11 +224,11 @@ export default function StoreView({ lang, lace, contractAddress, campaigns, setC
 
         {!contractAddress ? (
           <p style={{ color: 'var(--ink-dim)', fontSize: 13 }}>{t.posDeployFirst}</p>
-        ) : !lace ? (
+        ) : !lace && !sponsored ? (
           <p style={{ color: 'var(--ink-dim)', fontSize: 13 }}>{t.posConnectFirst}</p>
         ) : posQr && posReceipt ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-            <p style={{ color: 'var(--ink-soft)', fontSize: 13, textAlign: 'center' }}>{t.posScanHint}</p>
+            <p style={{ color: 'var(--ink-soft)', fontSize: 13, textAlign: 'center' }}>{t.posScanHint}{posSponsored && ` · ${t.feePaidByAegis}`}</p>
             <ReceiptTicket
               lang={lang}
               lines={cartLines.map(l => ({ name: l.product.name[lang], qty: l.qty, unitCents: l.product.priceCents }))}

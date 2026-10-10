@@ -4,7 +4,7 @@ import UserView from './components/UserView.tsx';
 import LandingScreen from './components/LandingScreen.tsx';
 import TourGuide from './components/TourGuide.tsx';
 import { type Campaign, type MatchResult, type Lang } from './api.ts';
-import { type ConnectedAPI, type WalletInfo, type ReceiptJSON, listWallets, connectWallet, deployViaLace, seedViaLace, registerStoreViaLace, checkStoreRegistered } from './lace.ts';
+import { type ConnectedAPI, type WalletInfo, type ReceiptJSON, listWallets, connectWallet, deployViaLace, seedViaLace, registerStoreViaLace, checkStoreRegistered, getSponsorAvailable } from './lace.ts';
 import { T } from './i18n.ts';
 import { useAggregateState } from './hooks/useAggregateState.ts';
 import { CONTRACT_ADDRESS, NETWORK_ID } from './chainConfig.ts';
@@ -65,6 +65,9 @@ export default function App() {
   const [seedError, setSeedError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
   const [storeRegistered, setStoreRegistered] = useState(false);
+  // Si el backend paga las transacciones (patrocinio): entonces sellar y
+  // publicar señales no necesita wallet (ver lace.ts getSponsorAvailable).
+  const [sponsored, setSponsored] = useState(false);
   // Último recibo sellado en la pestaña Tienda de esta misma sesión de demo,
   // para poder usarlo directamente en la pestaña Usuario sin pasar por
   // cámara/QR (ver UserView "usar último recibo").
@@ -110,6 +113,16 @@ export default function App() {
     // ya no hace falta pedírselos al backend.
     setContractAddress(CONTRACT_ADDRESS);
     checkStoreRegistered().then(registered => { if (registered) setStoreRegistered(true); }).catch(() => {});
+  }, []);
+
+  // El patrocinio puede ir y venir (el bot se reinicia o tarda en tener la
+  // wallet lista), así que se vuelve a comprobar cada minuto en vez de solo
+  // al cargar la página.
+  useEffect(() => {
+    const refresh = () => { getSponsorAvailable().then(setSponsored); };
+    refresh();
+    const id = setInterval(refresh, 60_000);
+    return () => clearInterval(id);
   }, []);
 
   async function handleConnectWallet(walletKey?: string) {
@@ -214,9 +227,15 @@ export default function App() {
           </div>
 
           {landed && (
-            <span style={pill}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: lace ? '#63B98A' : '#8a6440' }} />
-              {networkId}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <span style={pill}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: lace ? '#63B98A' : '#8a6440' }} />
+                {networkId}
+              </span>
+              <span style={pill} title={sponsored ? t.sponsorOnHint : t.sponsorOffHint}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: sponsored ? '#63B98A' : 'var(--ink-dim)' }} />
+                {sponsored ? t.sponsorOn : t.sponsorOff}
+              </span>
             </span>
           )}
         </div>
@@ -397,10 +416,10 @@ export default function App() {
           checkout) no se pierda si cambias a la otra antes de que termine. */}
       <main className={styles.main}>
         <div style={{ display: tab === 'store' ? 'block' : 'none' }}>
-          <StoreView lang={lang} lace={lace} contractAddress={contractAddress} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} aggregateState={aggregateState} onReceiptGenerated={setLastReceipt} confirmingMsg={confirmingMsg} setConfirmingMsg={setConfirmingMsg} onGoToUser={() => { setTab('user'); setGoToContributeSignal(n => n + 1); window.scrollTo({ top: 0 }); }} publishedReceiptNonce={publishedReceiptNonce} />
+          <StoreView lang={lang} lace={lace} sponsored={sponsored} contractAddress={contractAddress} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} aggregateState={aggregateState} onReceiptGenerated={setLastReceipt} confirmingMsg={confirmingMsg} setConfirmingMsg={setConfirmingMsg} onGoToUser={() => { setTab('user'); setGoToContributeSignal(n => n + 1); window.scrollTo({ top: 0 }); }} publishedReceiptNonce={publishedReceiptNonce} />
         </div>
         <div style={{ display: tab === 'user' ? 'block' : 'none' }}>
-          <UserView lang={lang} lace={lace} contractAddress={contractAddress} lastReceipt={lastReceipt} onReceiptConsumed={() => setLastReceipt(null)} confirmingMsg={confirmingMsg} setConfirmingMsg={setConfirmingMsg} onSignalPublished={(receipt) => setPublishedReceiptNonce(receipt.nonce)} goToContributeSignal={goToContributeSignal} />
+          <UserView lang={lang} lace={lace} sponsored={sponsored} contractAddress={contractAddress} lastReceipt={lastReceipt} onReceiptConsumed={() => setLastReceipt(null)} confirmingMsg={confirmingMsg} setConfirmingMsg={setConfirmingMsg} onSignalPublished={(receipt) => setPublishedReceiptNonce(receipt.nonce)} goToContributeSignal={goToContributeSignal} />
         </div>
       </main>
 

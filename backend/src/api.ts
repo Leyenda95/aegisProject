@@ -8,6 +8,7 @@ import {
 } from './contract.js';
 import { generateInsights, matchCampaign, type Campaign } from './agent.js';
 import { COUNTER_FIELDS, parseRange, readPeriodStates, trackContractHistory } from './history.js';
+import { sponsorAvailable, sponsorConfigured, sponsorTx, takeSponsorQuota } from './sponsor.js';
 import type { AegisProviders } from './providers.js';
 import type { NetworkConfig } from './config.js';
 
@@ -16,6 +17,7 @@ const ADDRESS_FILE = `.contract-address-${NETWORK}`;
 // Ver MOCK_CHAIN en contract.ts, aquí solo se usa para no exigir un
 // contrato desplegado en las rutas que en modo mock no lo necesitan.
 const MOCK_CHAIN = process.env['MOCK_CHAIN'] === 'true';
+const TOO_MANY_SPONSORED = 'Too many sponsored transactions from this connection, try again later';
 
 type AppContext = {
   providers: AegisProviders;
@@ -116,12 +118,15 @@ async function handleRequest(
     }
 
     // La tienda "vende" y sella el compromiso del recibo on-chain. Igual
-    // que arriba, el backend prueba y Lace envía. Devuelve el recibo
+    // que arriba, el backend prueba; envía Lace o, si se pide, el sponsor
+    // (ver sponsor.ts). Devuelve el recibo
     // completo: quien llama es responsable de convertirlo en QR y de no
     // guardarlo en ningún sitio más, ver el diseño de privacidad.
     if (method === 'POST' && url === '/attest-receipt') {
       if (!ctx.contractAddress && !MOCK_CHAIN) return json(res, 400, { error: 'Contract not deployed yet' });
-      const body = await parseBody(req) as { lines?: { subcategory: string; qty: number; amount: number }[] };
+      const body = await parseBody(req) as { lines?: { subcategory: string; qty: number; amount: number }[]; sponsor?: boolean };
+      const sponsor = body.sponsor === true && sponsorConfigured();
+      if (sponsor && !takeSponsorQuota(req)) return json(res, 429, { error: TOO_MANY_SPONSORED });
       const rawLines = Array.isArray(body.lines) ? body.lines : [];
       const lines: ReceiptLineInput[] = [];
       for (const l of rawLines) {
@@ -134,16 +139,32 @@ async function handleRequest(
       if (lines.length === 0) return json(res, 400, { error: 'Empty receipt' });
       const receipt = makeReceipt(lines);
       const { tx, commitmentHex } = await buildAttestReceiptTx(ctx.providers, ctx.contractAddress as any, receipt);
+      if (sponsor) {
+        const txId = await sponsorTx(tx);
+        return json(res, 200, { sponsored: true, txId, receipt: receiptToJSON(receipt), commitmentHex });
+      }
       return json(res, 200, { tx, receipt: receiptToJSON(receipt), commitmentHex });
     }
 
     // El usuario envía como señal un recibo ya sellado (escaneado de un QR).
     if (method === 'POST' && url === '/build-tx/signal') {
       if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
-      const { receipt } = await parseBody(req) as { receipt: ReceiptJSON };
-      if (!receipt) return json(res, 400, { error: 'Missing receipt' });
-      const { tx, commitmentHex } = await buildSignalTx(ctx.providers, ctx.contractAddress, receiptFromJSON(receipt));
+      const body = await parseBody(req) as { receipt?: ReceiptJSON; sponsor?: boolean };
+      if (!body.receipt) return json(res, 400, { error: 'Missing receipt' });
+      const sponsor = body.sponsor === true && sponsorConfigured();
+      if (sponsor && !takeSponsorQuota(req)) return json(res, 429, { error: TOO_MANY_SPONSORED });
+      const { tx, commitmentHex } = await buildSignalTx(ctx.providers, ctx.contractAddress, receiptFromJSON(body.receipt));
+      if (sponsor) {
+        const txId = await sponsorTx(tx);
+        return json(res, 200, { sponsored: true, txId, commitmentHex });
+      }
       return json(res, 200, { tx, commitmentHex });
+    }
+
+    // ¿Puede el backend pagar las transacciones del usuario? (ver sponsor.ts)
+    // El frontend lo consulta al cargar para saber si hace falta wallet.
+    if (method === 'GET' && url === '/sponsor-status') {
+      return json(res, 200, { available: await sponsorAvailable() });
     }
 
     // Consulta barata (sin probar nada) de si un commitment ya está sellado
