@@ -7,7 +7,7 @@ import {
   getReceiptStatus, type ReceiptJSON, type ReceiptLineInput,
 } from './contract.js';
 import { generateInsights, matchCampaign, type Campaign } from './agent.js';
-import { COUNTER_FIELDS, parseRange, readPeriodStates, trackContractHistory } from './history.js';
+import { COUNTER_FIELDS, latestCounters, parseRange, readPeriodStates, trackContractHistory } from './history.js';
 import { sponsorAvailable, sponsorConfigured, sponsorTx, takeSponsorQuota } from './sponsor.js';
 import type { AegisProviders } from './providers.js';
 import type { NetworkConfig } from './config.js';
@@ -196,7 +196,9 @@ async function handleRequest(
     // lo copiara gastaría nuestra cuota), así que la lectura pasa por aquí.
     if (method === 'GET' && url === '/state') {
       if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
-      const state = await readState(ctx.providers, ctx.contractAddress);
+      // Desde la memoria de history.ts (al instante y sin bloquear el
+      // proceso); solo se pregunta al indexer mientras se carga el historial.
+      const state = latestCounters(ctx.contractAddress) ?? await readState(ctx.providers, ctx.contractAddress);
       return json(res, 200, Object.fromEntries(COUNTER_FIELDS.map((k) => [k, state[k].toString()])));
     }
 
@@ -232,7 +234,15 @@ export function createServer(ctx: AppContext, port = 3001): http.Server {
   // Empieza a cargar el historial del contrato ya al arrancar, para que el
   // primer informe por periodos no tenga que esperarlo.
   if (ctx.contractAddress) void trackContractHistory(ctx.config.indexerWS, ctx.contractAddress);
-  const server = http.createServer((req, res) => handleRequest(req, res, ctx));
+  const server = http.createServer((req, res) => {
+    // Cuánto tarda cada petición que construye o prueba algo (las POST),
+    // para ver en el log dónde se va el tiempo si la app va lenta.
+    if (req.method === 'POST') {
+      const started = Date.now();
+      res.on('finish', () => console.log(`[api] ${req.url} ${res.statusCode} (${((Date.now() - started) / 1000).toFixed(1)}s)`));
+    }
+    void handleRequest(req, res, ctx);
+  });
   server.listen(port, () => {
     console.log(`Aegis API running on http://localhost:${port}`);
   });

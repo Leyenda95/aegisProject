@@ -37,6 +37,9 @@ let snapshots: Snapshot[] = [];
 // variable de inicio, así que pueden repetirse transacciones ya recibidas.
 let seen = new Set<string>();
 let caughtUp: Promise<void> | null = null;
+// true una vez recibido todo el historial anterior: a partir de ahí el
+// último snapshot es el estado actual del contrato (ver latestCounters).
+let isCaughtUp = false;
 let trackedAddress: string | null = null;
 let disposeClient: (() => void) | null = null;
 
@@ -100,13 +103,14 @@ export function trackContractHistory(indexerWS: string, contractAddress: Contrac
   disposeClient?.();
   snapshots = [];
   seen = new Set();
+  isCaughtUp = false;
   trackedAddress = contractAddress;
 
   caughtUp = new Promise((resolve) => {
     let quietTimer: NodeJS.Timeout | undefined;
     const restartQuietTimer = () => {
       clearTimeout(quietTimer);
-      quietTimer = setTimeout(resolve, 2000);
+      quietTimer = setTimeout(() => { isCaughtUp = true; resolve(); }, 2000);
     };
 
     // Si se corta la conexión, graphql-ws reintenta solo. Al reconectar se
@@ -140,6 +144,18 @@ export function trackContractHistory(indexerWS: string, contractAddress: Contrac
     restartQuietTimer();
   });
   return caughtUp;
+}
+
+/**
+ * Contadores actuales del contrato, sacados de la memoria: la suscripción
+ * recibe cada transacción nueva al momento, así que el último snapshot es
+ * el estado actual sin tener que pedirlo al indexer y deserializarlo (que
+ * es pesado y bloquea el proceso). null mientras aún se está cargando el
+ * historial anterior: entonces quien llama debe leerlo del indexer.
+ */
+export function latestCounters(contractAddress: string): AegisState | null {
+  if (!isCaughtUp || trackedAddress !== contractAddress) return null;
+  return snapshots.at(-1)?.state ?? null;
 }
 
 /** Estado del contrato en un momento dado: el de la última transacción hasta esa fecha. */
