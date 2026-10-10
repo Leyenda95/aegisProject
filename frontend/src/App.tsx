@@ -232,11 +232,9 @@ export default function App() {
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: lace ? '#63B98A' : '#8a6440' }} />
                 {networkId}
               </span>
-              {/* Texto largo en escritorio, corto en móvil (ver .sponsorLong/.sponsorShort). */}
               <span style={pill} title={sponsored ? t.sponsorOnHint : t.sponsorOffHint}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: sponsored ? '#63B98A' : 'var(--ink-dim)' }} />
-                <span className={styles.sponsorLong}>{sponsored ? t.sponsorOn : t.sponsorOff}</span>
-                <span className={styles.sponsorShort}>{sponsored ? t.sponsorOnShort : t.sponsorOffShort}</span>
+                {sponsored ? t.sponsorOn : t.sponsorOff}
               </span>
             </span>
           )}

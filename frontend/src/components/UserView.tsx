@@ -198,18 +198,15 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
             <div>
               <button
                 onClick={() => { setScanError(null); setScanning(true); }}
-                disabled
+                disabled={!!needsLace || !!needsDeploy}
                 style={{
                   width: '100%', background: '#926a4514', border: '2px solid var(--bronze-deep)', color: 'var(--bronze-deep)',
                   padding: isMobile ? '14px 10px' : '18px 10px', fontSize: isMobile ? 14 : 15, fontWeight: 700, borderRadius: 12,
-                  opacity: 0.3, cursor: 'not-allowed',
+                  opacity: (needsLace || needsDeploy) ? 0.3 : 1, cursor: (needsLace || needsDeploy) ? 'not-allowed' : 'pointer',
                 }}
               >
                 {t.scanButton}
               </button>
-              <p style={{ color: 'var(--ink-dim)', fontSize: 11.5, marginTop: 8, lineHeight: 1.5 }}>
-                {t.scanUnavailable}
-              </p>
               {scanError && (
                 <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 8 }}>{scanError}</p>
               )}

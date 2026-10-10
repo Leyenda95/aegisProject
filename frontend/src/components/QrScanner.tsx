@@ -14,6 +14,12 @@ export default function QrScanner({ lang, onScan, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState<string | null>(null);
+  // onScan llega como función nueva en cada render del padre (que se
+  // redibuja cada pocos segundos al refrescar el estado). Si el efecto de la
+  // cámara dependiera de ella, se apagaría y volvería a encender cada vez;
+  // así la cámara se enciende una sola vez y se llama siempre a la última.
+  const onScanRef = useRef(onScan);
+  onScanRef.current = onScan;
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -36,7 +42,7 @@ export default function QrScanner({ lang, onScan, onClose }: Props) {
           // data vacía, no es un escaneo válido, hay que seguir mirando.
           if (code && code.data.trim()) {
             stopped = true;
-            onScan(code.data);
+            onScanRef.current(code.data);
             return;
           }
         }
@@ -77,7 +83,7 @@ export default function QrScanner({ lang, onScan, onClose }: Props) {
       cancelAnimationFrame(raf);
       stream?.getTracks().forEach(track => track.stop());
     };
-  }, [onScan]);
+  }, []);
 
   return (
     <div style={{
