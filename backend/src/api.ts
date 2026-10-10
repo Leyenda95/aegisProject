@@ -7,7 +7,7 @@ import {
   getReceiptStatus, type ReceiptJSON, type ReceiptLineInput,
 } from './contract.js';
 import { generateInsights, matchCampaign, type Campaign } from './agent.js';
-import { parseRange, readPeriodStates, trackContractHistory } from './history.js';
+import { COUNTER_FIELDS, parseRange, readPeriodStates, trackContractHistory } from './history.js';
 import type { AegisProviders } from './providers.js';
 import type { NetworkConfig } from './config.js';
 
@@ -167,6 +167,16 @@ async function handleRequest(
       const campaign: Campaign = { id, targetCategory, minSignals, message };
       campaigns.set(id, campaign);
       return json(res, 201, { id });
+    }
+
+    // Contadores públicos del contrato para el frontend. Antes el navegador
+    // los leía directamente del indexer, pero el de preprod ahora es de
+    // Blockfrost y pide un token que no debe acabar en el navegador (quien
+    // lo copiara gastaría nuestra cuota), así que la lectura pasa por aquí.
+    if (method === 'GET' && url === '/state') {
+      if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
+      const state = await readState(ctx.providers, ctx.contractAddress);
+      return json(res, 200, Object.fromEntries(COUNTER_FIELDS.map((k) => [k, state[k].toString()])));
     }
 
     if (method === 'GET' && url?.startsWith('/insights')) {

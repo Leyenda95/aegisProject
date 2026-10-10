@@ -15,13 +15,26 @@ export const LOCAL_CONFIG: NetworkConfig = {
   relayURL: 'ws://127.0.0.1:9944',
 };
 
-export const PREPROD_CONFIG: NetworkConfig = {
-  networkId: 'preprod',
-  indexer: 'https://indexer.preprod.midnight.network/api/v4/graphql',
-  indexerWS: 'wss://indexer.preprod.midnight.network/api/v4/graphql/ws',
-  proofServer: 'http://127.0.0.1:6300',
-  relayURL: 'wss://rpc.preprod.midnight.network',
-};
+/**
+ * Desde el 09-10-2026 el indexer y el RPC de preprod los sirve Blockfrost
+ * (Midnight apagó los suyos). Misma API, solo cambian las URLs y hace falta
+ * un token (project_id) que va en la propia URL: los clientes del SDK solo
+ * aceptan URLs. El token es privado, por eso se lee de una variable de
+ * entorno y el frontend nunca habla con Blockfrost directamente (pasa por
+ * GET /state del backend).
+ */
+function preprodConfig(): NetworkConfig {
+  const projectId = process.env['BLOCKFROST_PROJECT_ID'];
+  if (!projectId) throw new Error('BLOCKFROST_PROJECT_ID is required on preprod (create a project at https://blockfrost.io)');
+  const auth = `project_id=${encodeURIComponent(projectId)}`;
+  return {
+    networkId: 'preprod',
+    indexer: `https://midnight-preprod.blockfrost.io/api/v0?${auth}`,
+    indexerWS: `wss://midnight-preprod.blockfrost.io/api/v0/ws?${auth}`,
+    proofServer: 'http://127.0.0.1:6300',
+    relayURL: `wss://rpc.midnight-preprod.blockfrost.io?${auth}`,
+  };
+}
 
 export const PREVIEW_CONFIG: NetworkConfig = {
   networkId: 'preview',
@@ -34,7 +47,7 @@ export const PREVIEW_CONFIG: NetworkConfig = {
 function getNetworkConfig(): NetworkConfig {
   const network = process.env['MIDNIGHT_NETWORK'] ?? 'local';
   if (network === 'local') return LOCAL_CONFIG;
-  if (network === 'preprod') return PREPROD_CONFIG;
+  if (network === 'preprod') return preprodConfig();
   if (network === 'preview') return PREVIEW_CONFIG;
   throw new Error(`Unknown network: ${network}. Supported: 'local', 'preprod', 'preview'.`);
 }

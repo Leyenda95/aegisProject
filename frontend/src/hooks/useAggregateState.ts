@@ -3,15 +3,9 @@ import { type AegisState } from '../api.ts';
 
 /**
  * Estado agregado del contrato (los contadores públicos). Se consulta al
- * montar y cada 10 s, directamente del indexador (ver chainState.ts), sin
- * pasar por el backend. Lo comparten la cinta de estadísticas (App) y el
- * desglose por categoría (StoreView), así que vive aquí en vez de dentro de
- * una sola vista.
- *
- * chainState.ts se importa con import() dinámico, no de forma estática:
- * carga ~11MB de WASM (el runtime del contrato), y con un import estático
- * ese peso se cargaría al arrancar toda la página en vez de solo cuando
- * hace falta leer el estado, retrasando el primer render de todo lo demás.
+ * montar y cada 10 s a través del backend (ver chainState.ts). Lo comparten
+ * la cinta de estadísticas (App) y el desglose por categoría (StoreView),
+ * así que vive aquí en vez de dentro de una sola vista.
  */
 export function useAggregateState(contractAddress: string | null, intervalMs = 10_000) {
   const [state, setState] = useState<AegisState | null>(null);

@@ -1,7 +1,4 @@
-// Constantes ligeras (sin ningún import pesado): separadas de chainState.ts
-// a propósito para que quien solo necesite estas dos pueda importarlas sin
-// arrastrar el WASM del contrato (ver chainState.ts, cargado con import()
-// dinámico precisamente para no bloquear el arranque de la página con eso).
+// Constantes de la red y del contrato desplegado, sin ningún import pesado.
 
 export const NETWORK_ID = 'preprod';
 

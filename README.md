@@ -115,4 +115,4 @@ sequenceDiagram
 - [x] Backend: transaction builder/prover + market intelligence agent
 - [x] Frontend: store and user views, wallet integration (Lace/1AM), selective-disclosure preview before publishing a signal
 - [ ] Optional age/spend disclosure tied to a pseudonym: previewed in the UI, not wired into the contract yet. `submitPurchase` today only ever reveals subcategory and quantity, regardless of what's toggled in the preview.
-- [ ] Aggregate state (`/state`) now reads straight from the public indexer in the frontend (`frontend/src/chainState.ts`), no backend involved. That drops a ~11MB WASM chunk (`@midnight-ntwrk/ledger-v8`, lazy-loaded, doesn't block the rest of the page) on the client, noticeably slower to fetch/instantiate on mobile than desktop.
+- [x] Aggregate state goes through the backend (`GET /state`): the Preprod indexer is now served by Blockfrost and its token must stay server-side. The frontend no longer loads the contract's ~11MB WASM runtime just to read the counters.

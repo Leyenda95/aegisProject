@@ -48,7 +48,7 @@ const SUBSCRIPTION = `
     }
   }`;
 
-const COUNTER_FIELDS = [
+export const COUNTER_FIELDS = [
   'signalsElectronics', 'signalsFashion', 'signalsFood', 'signalsSports', 'signalsHome', 'signalsOther',
   'signalsMobile', 'signalsTablet', 'signalsComputer', 'signalsCamera', 'signalsAudio', 'signalsGaming',
   'signalsShoes', 'signalsTops', 'signalsBottoms', 'signalsAccessories', 'signalsOuterwear',

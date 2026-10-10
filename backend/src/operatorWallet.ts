@@ -28,7 +28,11 @@ if (!(globalThis as any).WebSocket) (globalThis as any).WebSocket = WebSocket as
 
 const NETWORK = process.env['MIDNIGHT_NETWORK'] ?? 'local';
 const SEED_FILE = `.operator-wallet-seed-${NETWORK}`;
-const STATE_FILE = `.operator-wallet-state-${NETWORK}.json`;
+// "-v2": el estado guardado queda ligado al indexer con el que se sincronizó
+// (cada indexer numera los eventos a su manera). El de antes de pasar a
+// Blockfrost no sirve y daría errores al restaurarlo, así que se ignora y la
+// wallet se sincroniza de nuevo desde cero.
+const STATE_FILE = `.operator-wallet-state-${NETWORK}-v2.json`;
 
 /** Semilla nueva la primera vez, persistida después, mismo patrón que las claves de admin/tienda en contract.ts. */
 function loadOrCreateSeed(): Buffer {
