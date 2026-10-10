@@ -164,7 +164,7 @@ async function handleRequest(
     // ¿Puede el backend pagar las transacciones del usuario? (ver sponsor.ts)
     // El frontend lo consulta al cargar para saber si hace falta wallet.
     if (method === 'GET' && url === '/sponsor-status') {
-      return json(res, 200, { available: await sponsorAvailable() });
+      return json(res, 200, { available: sponsorAvailable() });
     }
 
     // Consulta barata (sin probar nada) de si un commitment ya está sellado

@@ -41,17 +41,51 @@ async function callSponsor(route: string, init: RequestInit, timeoutMs: number):
   });
 }
 
-/** Si el bot está levantado y con la wallet lista para pagar. */
-export async function sponsorAvailable(): Promise<boolean> {
-  if (!sponsorConfigured()) return false;
+// Último motivo registrado, para escribir en el log solo cuando cambia.
+let lastStatus = '';
+
+function logStatus(status: string): void {
+  if (status === lastStatus) return;
+  lastStatus = status;
+  console.log(`[sponsor] ${status}`);
+}
+
+/** Pregunta al bot si su wallet está lista para pagar. */
+async function checkBotReady(): Promise<boolean> {
   try {
-    const res = await callSponsor('/health', {}, 3000);
-    if (!res.ok) return false;
+    // Margen amplio: el bot está a ratos ocupado (procesando bloques,
+    // reconectando con el indexer) y tarda varios segundos en contestar.
+    const res = await callSponsor('/health', {}, 10_000);
+    if (res.status === 401) { logStatus('unavailable: the bot rejected SPONSOR_TOKEN (not the same in both services?)'); return false; }
+    if (!res.ok) { logStatus(`unavailable: ${SPONSOR_URL}/health answered ${res.status}`); return false; }
     const { ready } = await res.json() as { ready?: boolean };
+    logStatus(ready === true ? `available at ${SPONSOR_URL}` : 'unavailable: the bot wallet is still syncing');
     return ready === true;
-  } catch {
+  } catch (err) {
+    const cause = (err as { cause?: { code?: string } }).cause?.code;
+    logStatus(`unavailable: cannot reach ${SPONSOR_URL} (${cause ?? (err instanceof Error ? err.message : String(err))})`);
     return false;
   }
+}
+
+// El estado se comprueba en segundo plano y se guarda: así /sponsor-status
+// responde al instante, y un fallo suelto (el bot tardó en contestar) no
+// lo marca como caído mientras haya respondido bien hace poco.
+const CHECK_EVERY_MS = 20_000;
+const GRACE_MS = 60_000;
+let lastReadyAt = 0;
+
+if (sponsorConfigured()) {
+  const check = async () => { if (await checkBotReady()) lastReadyAt = Date.now(); };
+  void check();
+  setInterval(() => { void check(); }, CHECK_EVERY_MS).unref();
+} else {
+  logStatus(`disabled: ${!SPONSOR_URL ? 'SPONSOR_URL' : 'SPONSOR_TOKEN'} is not set`);
+}
+
+/** Si el bot ha estado listo para pagar en el último minuto. */
+export function sponsorAvailable(): boolean {
+  return sponsorConfigured() && Date.now() - lastReadyAt < GRACE_MS;
 }
 
 /**
