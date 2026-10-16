@@ -10,6 +10,7 @@ import {
 import { sampleSigningKey } from '@midnight-ntwrk/compact-runtime';
 import type { ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
+import { ContractCall, Transaction } from '@midnight-ntwrk/ledger-v8';
 import { Contract, ledger, pureCircuits, Subcategory, type Receipt } from '../../contract/managed/aegis/contract/index.js';
 import { witnesses, type AegisPrivateState } from '../../contract/witnesses.js';
 import type { AegisProviders } from './providers.js';
@@ -338,6 +339,57 @@ export async function buildSignalTx(
   const provenTx = await providers.proofProvider.proveTx(unprovenData.private.unprovenTx);
 
   return { tx: txToHex(provenTx), commitmentHex };
+}
+
+/**
+ * Estado público que necesita quien construye una llamada al contrato por su
+ * cuenta (el navegador, cuando el usuario prueba su señal con su propio proof
+ * server). Es lo mismo que el SDK pide al indexer en createUnprovenCallTx,
+ * solo que el indexer de preprod pide un token que no puede ir al navegador,
+ * así que se lo sirve el backend ya serializado.
+ */
+export async function getContractStatesHex(
+  providers: AegisProviders,
+  contractAddress: ContractAddress,
+): Promise<{ zswapState: string; contractState: string; ledgerParameters: string } | null> {
+  const states = await providers.publicDataProvider.queryZSwapAndContractState(contractAddress);
+  if (!states) return null;
+  const [zswapState, contractState, ledgerParameters] = states;
+  return {
+    zswapState: Buffer.from(zswapState.serialize()).toString('hex'),
+    contractState: Buffer.from(contractState.serialize()).toString('hex'),
+    ledgerParameters: Buffer.from(ledgerParameters.serialize()).toString('hex'),
+  };
+}
+
+/**
+ * ¿Es esta transacción (ya probada, sin pagar) una señal y nada más? Es
+ * decir, una única llamada a submitPurchase de nuestro contrato, sin mover
+ * tokens. Se comprueba antes de pasar al patrocinio una transacción que no ha
+ * construido el backend, para que nadie use el DUST del bot para otra cosa.
+ */
+export function isSignalTx(txHex: string, contractAddress: ContractAddress): boolean {
+  let tx;
+  try {
+    tx = Transaction.deserialize('signature', 'proof', 'pre-binding', new Uint8Array(Buffer.from(txHex, 'hex')));
+  } catch {
+    return false;
+  }
+  return isOnlySubmitPurchase(tx, contractAddress);
+}
+
+/** La parte de isSignalTx que no depende de si la transacción ya está probada. */
+export function isOnlySubmitPurchase(tx: Transaction<any, any, any>, contractAddress: ContractAddress): boolean {
+  if (tx.guaranteedOffer || tx.fallibleOffer?.size) return false;
+  const intents = [...(tx.intents?.values() ?? [])];
+  if (intents.length !== 1) return false;
+  const [intent] = intents;
+  if (intent.guaranteedUnshieldedOffer || intent.fallibleUnshieldedOffer || intent.dustActions) return false;
+  if (intent.actions.length !== 1) return false;
+  const [action] = intent.actions;
+  if (!(action instanceof ContractCall) || action.address !== contractAddress) return false;
+  const entryPoint = typeof action.entryPoint === 'string' ? action.entryPoint : new TextDecoder().decode(action.entryPoint);
+  return entryPoint === 'submitPurchase';
 }
 
 /**

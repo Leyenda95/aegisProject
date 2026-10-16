@@ -94,6 +94,7 @@ const en = {
   userSubmitting: 'Waiting for Wallet confirmation...',
   userPrivacy: 'Privacy guaranteed:',
   userPrivacyDetail: 'You choose what to share before anything is published. Your wallet signs it on preprod.',
+  localProofProving: 'Generating the proof on your device, this can take a minute...',
   userSentTitle: 'Signal published on Midnight',
   userSentDetail: 'Transaction submitted. Preprod version.',
 
@@ -236,6 +237,7 @@ const es: typeof en = {
   userSubmitting: 'Esperando confirmación de la billetera...',
   userPrivacy: 'Privacidad garantizada:',
   userPrivacyDetail: 'Tú decides qué compartir antes de publicar nada. Tu billetera lo firma en preprod.',
+  localProofProving: 'Generando la prueba en tu equipo, puede tardar un minuto...',
   userSentTitle: 'Señal publicada en Midnight',
   userSentDetail: 'Transacción enviada. Version preprod.',
 

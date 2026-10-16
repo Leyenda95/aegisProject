@@ -7,6 +7,8 @@ import RedactedTicket from './RedactedTicket.tsx';
 import { T } from '../i18n.ts';
 import { useBreakpoint } from '../hooks/useBreakpoint.ts';
 import ProfileSection from './ProfileSection.tsx';
+import ProofLocationPicker, { type ProofServerStatus } from './ProofLocationPicker.tsx';
+import { isLocalProofServerUp, loadLocalProofPreference, saveLocalProofPreference } from '../localProofServer.ts';
 
 type Props = {
   lang: Lang;
@@ -57,6 +59,25 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
   // Si la última señal publicada la pagó el patrocinio (para decirlo en el mensaje de éxito).
   const [lastSponsored, setLastSponsored] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);
+  // Probar la señal con el proof server del propio usuario (ver localProver.ts).
+  const [localProof, setLocalProof] = useState(loadLocalProofPreference);
+  const [proofServer, setProofServer] = useState<ProofServerStatus>('checking');
+
+  async function checkProofServer() {
+    setProofServer('checking');
+    setProofServer(await isLocalProofServerUp() ? 'up' : 'down');
+  }
+
+  useEffect(() => {
+    if (localProof) void checkProofServer();
+  }, [localProof]);
+
+  function chooseLocalProof(local: boolean) {
+    setLocalProof(local);
+    saveLocalProofPreference(local);
+  }
+
+  const localProofBlocked = localProof && proofServer !== 'up';
 
   const needsLace = !lace && !sponsored;
   const needsDeploy = !needsLace && !contractAddress;
@@ -83,7 +104,7 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
   }
 
   async function handleTicketConfirm() {
-    if (needsLace || !scanned || confirmingMsg) return;
+    if (needsLace || !scanned || confirmingMsg || localProofBlocked) return;
     const receipt = scanned;
     setPublishing(true);
     setPublishError(null);
@@ -92,7 +113,9 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
     // explicación, sin esperar a que la red confirme la transacción (puede
     // tardar bastante más). Si luego fallara, el error se enseña debajo de
     // los botones. Con wallet propia no se adelanta: se espera a que el
-    // usuario la apruebe en su ventana y la wallet la envíe.
+    // usuario la apruebe en su ventana y la wallet la envíe. Tampoco si la
+    // prueba se genera en el equipo del usuario: a los 5 s todavía se está
+    // probando y el ticket es lo que enseña que sigue trabajando.
     let closed = false;
     const closeTicket = () => {
       if (closed) return;
@@ -100,9 +123,9 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
       setScanned(null);
       setShowExplainer(true);
     };
-    const earlyClose = sponsored ? setTimeout(closeTicket, 5000) : undefined;
+    const earlyClose = sponsored && !localProof ? setTimeout(closeTicket, 5000) : undefined;
     try {
-      setLastSponsored(await submitSignal(lace, receipt, lang));
+      setLastSponsored(await submitSignal(lace, receipt, lang, { localProof, sponsored, contractAddress }));
       onSignalPublished?.(receipt);
       if (lastReceipt?.nonce === receipt.nonce) onReceiptConsumed?.();
       clearTimeout(earlyClose);
@@ -246,8 +269,19 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
           onConfirm={handleTicketConfirm}
           onCancel={handleTicketCancel}
           confirmLabel={publishing ? t.publishing : t.publishSignal}
-          confirmDisabled={publishing || !!confirmingMsg}
+          confirmDisabled={publishing || !!confirmingMsg || localProofBlocked}
           error={publishError}
+          status={publishing && localProof ? t.localProofProving : null}
+          sideMenuExtra={
+            <ProofLocationPicker
+              lang={lang}
+              local={localProof}
+              onChange={chooseLocalProof}
+              status={proofServer}
+              onRetry={() => void checkProofServer()}
+              disabled={publishing}
+            />
+          }
         />
       )}
 

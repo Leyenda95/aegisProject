@@ -287,12 +287,39 @@ export async function attestReceipt(
  * assert dependa de este envío), así que la espera solo añadía tiempo sin
  * evitar ningún error real. Paga el patrocinio o, si no está disponible,
  * la wallet conectada. Devuelve true si lo pagó el patrocinio.
+ *
+ * Con `localProof`, la transacción se construye y se prueba en este
+ * navegador contra el proof server del usuario (ver localProver.ts) y el
+ * recibo no llega al backend: solo la transacción ya probada, si la paga el
+ * patrocinio.
  */
 export async function submitSignal(
   lace: ConnectedAPI | null,
   receipt: ReceiptJSON,
   lang: Lang,
+  { localProof = false, sponsored = false, contractAddress = null as string | null } = {},
 ): Promise<boolean> {
+  if (localProof) {
+    if (!contractAddress) throw new Error('Contract not deployed yet');
+    const { proveSignalLocally } = await import('./localProver.ts');
+    const tx = await proveSignalLocally(receipt, contractAddress);
+    if (sponsored) {
+      const r = await fetch(`${API_BASE}/sponsor-signal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tx }),
+      });
+      // Si el patrocinio falla (por ejemplo, el bot dejó de estar listo), se
+      // paga con la wallet si hay una conectada, igual que en el flujo normal.
+      if (r.ok) return true;
+      if (!lace) {
+        const { error } = await r.json().catch(() => ({ error: r.statusText }));
+        throw new Error(error || T[lang].sponsorUnavailable);
+      }
+    }
+    return payIfNotSponsored(lace, { tx }, lang);
+  }
+
   const r = await fetch(`${API_BASE}/build-tx/signal`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

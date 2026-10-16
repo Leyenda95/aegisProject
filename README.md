@@ -52,6 +52,8 @@ npm run start:preprod      # starts the API against Preprod. No contract deploye
 5. In the browser: **Connect Wallet** (Lace or 1AM, Preprod network) → **Deploy contract** (this deploys a fresh instance and makes your wallet its store admin) → **Register demo store** → **Load demo data** (seeds baseline counters so the store insights have something to talk about).
 6. Try the actual flow: in the **Store** tab, add a couple of products to the cart and check out, this seals a signed receipt and shows it as a QR. Switch to the **User** tab and click **Use last receipt** (skips the camera, grabs the receipt you just sealed in this same session), pick what you'd preview-share, and publish the signal. Watch the category counter bump in the stats ribbon.
 
+**Prove on your own device (optional).** By default the backend generates the signal's proof, which means the receipt travels to it. In the **User** tab you can tick **Prove on my device**: the browser then builds the `submitPurchase` transaction itself and proves it with a proof server running on your machine, so the receipt never leaves your device. Start one with `docker run -p 6300:6300 midnightntwrk/proof-server:8.1.3`. The backend only serves the public contract state (`GET /contract-states`) and, if sponsorship is on, forwards the already proven transaction (`POST /sponsor-signal`, which only accepts a single `submitPurchase` call to this contract).
+
 Camera/QR scanning is temporarily disabled in the UI (it's the same code path once wired to a second device, just not the focus of this demo). "Use last receipt" replaces it since store and customer are the same session here.
 
 ## Architecture

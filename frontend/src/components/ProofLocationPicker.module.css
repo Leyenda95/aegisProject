@@ -1,0 +1,202 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.subtitle {
+  font-size: 11px;
+  color: var(--ink-dim);
+  margin-top: 2px;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* index.css da estilos de botón genéricos (fondo bronce, padding); aquí
+   cada opción es una tarjeta, así que se parte de cero. */
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 11px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.option:hover:not(:disabled) {
+  border-color: var(--bronze);
+}
+
+.option:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.optionOn {
+  border-color: var(--bronze-deep);
+  background: var(--bronze-wash);
+}
+
+.radio {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-faint);
+  display: grid;
+  place-items: center;
+}
+
+.optionOn .radio {
+  border-color: var(--bronze-deep);
+}
+
+.optionOn .radio::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bronze-deep);
+}
+
+.optionBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.optionLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-bright);
+}
+
+.tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--success);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
+.optionHint {
+  display: block;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink-dim);
+  margin-top: 2px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding: 0 2px;
+}
+
+.dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+}
+
+.up { color: var(--success); }
+.up .dot { background: var(--success); }
+
+.down { color: var(--danger); }
+.down .dot { background: var(--danger); }
+
+.checking .dot {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.help {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink-dim);
+}
+
+.command {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--ground);
+  overflow: hidden;
+}
+
+.command code {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 9px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--ink-pale);
+  overflow-wrap: anywhere;
+}
+
+.copy,
+.retry {
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.copy {
+  flex: none;
+  padding: 0 10px;
+  border: none;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--surface-2);
+  color: var(--bronze-deep);
+}
+
+.retry {
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--bronze-deep);
+  background: transparent;
+  color: var(--bronze-deep);
+}

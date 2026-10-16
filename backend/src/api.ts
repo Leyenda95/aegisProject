@@ -4,7 +4,7 @@ import type { ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import {
   Subcategory, registerCampaign, readState, buildDeployTx, buildSignalTx, buildSeedTx, type SeedData,
   buildRegisterStoreTx, buildAttestReceiptTx, isStoreRegistered, makeReceipt, receiptFromJSON, receiptToJSON,
-  getReceiptStatus, type ReceiptJSON, type ReceiptLineInput,
+  getReceiptStatus, getContractStatesHex, isSignalTx, type ReceiptJSON, type ReceiptLineInput,
 } from './contract.js';
 import { generateInsights, matchCampaign, type Campaign } from './agent.js';
 import { COUNTER_FIELDS, latestCounters, parseRange, readPeriodStates, trackContractHistory } from './history.js';
@@ -180,6 +180,31 @@ async function handleRequest(
         return json(res, 200, { sponsored: true, txId, commitmentHex });
       }
       return json(res, 200, { tx, commitmentHex });
+    }
+
+    // Estado público del contrato (serializado) para quien prueba su señal
+    // en su propio equipo: el navegador lo necesita para ejecutar el
+    // circuito, y el indexer de preprod pide un token que no puede ir allí.
+    if (method === 'GET' && url === '/contract-states') {
+      if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
+      const states = await getContractStatesHex(ctx.providers, ctx.contractAddress);
+      if (!states) return json(res, 404, { error: 'Contract state not found' });
+      return json(res, 200, states);
+    }
+
+    // Señal ya probada en el equipo del usuario: el backend no la construye,
+    // solo comprueba que es una señal de este contrato y se la pasa al
+    // patrocinio. Sin patrocinio no hace falta esta ruta, la paga la wallet.
+    if (method === 'POST' && url === '/sponsor-signal') {
+      if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
+      if (!sponsorConfigured()) return json(res, 503, { error: 'Sponsored transactions are not configured' });
+      const body = await parseBody(req) as { tx?: string };
+      if (typeof body.tx !== 'string' || !isSignalTx(body.tx, ctx.contractAddress)) {
+        return json(res, 400, { error: 'Not a signal transaction for this contract' });
+      }
+      if (!takeSponsorQuota(req)) return json(res, 429, { error: TOO_MANY_SPONSORED });
+      const txId = await sponsorTx(body.tx);
+      return json(res, 200, { sponsored: true, txId });
     }
 
     // ¿Puede el backend pagar las transacciones del usuario? (ver sponsor.ts)

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useState, type ReactNode } from 'react';
 import { SUBCATEGORY_INDEX, SUBCATEGORY_LABELS, CATEGORY_LABELS, type Lang } from '../api.ts';
 import { SUBCAT_TO_CATEGORY, formatEUR } from '../catalog.ts';
 import type { ReceiptJSON } from '../lace.ts';
@@ -36,6 +36,10 @@ type Props = {
   /** Deshabilita ambos botones, p. ej. mientras se firma/envía una transacción. */
   confirmDisabled?: boolean;
   error?: string | null;
+  /** Aviso de progreso bajo los botones (no es un error), p. ej. mientras se genera la prueba. */
+  status?: string | null;
+  /** Contenido extra al final del menú lateral (p. ej. dónde se genera la prueba). */
+  sideMenuExtra?: ReactNode;
 };
 
 const L = {
@@ -101,7 +105,7 @@ const L = {
  * solo las subcategorías selladas) y dos botones alternan con la vista "sin
  * censura" y repiten la animación.
  */
-export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, confirmLabel, confirmDisabled, error }: Props) {
+export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, confirmLabel, confirmDisabled, error, status, sideMenuExtra }: Props) {
   const tt = L[lang];
   const isMobile = useBreakpoint() === 'mobile';
   const [redacted, setRedacted] = useState(true);
@@ -291,6 +295,7 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
           <button onClick={onCancel} disabled={confirmDisabled} style={{ flex: 1, background: '#111111', border: '1px solid #333333', color: '#FFFFFF', padding: '7px 16px', fontWeight: 600, letterSpacing: '0.3px', opacity: confirmDisabled ? 0.6 : 1 }}>{tt.discard}</button>
         </div>
         {error && <p style={{ color: 'var(--danger)', fontSize: 12.5, marginTop: 10, textAlign: 'center' }}>{error}</p>}
+        {!error && status && <p style={{ color: 'var(--ink-soft)', fontSize: 12.5, marginTop: 10, textAlign: 'center' }}>{status}</p>}
       </div>
 
       <div className={styles.sideMenu}>
@@ -354,6 +359,8 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
             {isOn('avgTicket') && <div className={styles.avgValue}>{formatEUR(DEMO_AVG_TICKET_CENTS, lang)}</div>}
           </div>
         </div>
+
+        {sideMenuExtra}
       </div>
       </div>
     </div>
