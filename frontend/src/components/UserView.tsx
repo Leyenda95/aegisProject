@@ -52,7 +52,7 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
   const [publishError, setPublishError] = useState<string | null>(null);
   const [justPublished, setJustPublished] = useState(false);
   // Error de una publicación que falló después de haber cerrado ya el ticket
-  // (ver el cierre a los 5 s en handleTicketConfirm).
+  // (ver el cierre adelantado en handleTicketConfirm).
   const [backgroundError, setBackgroundError] = useState<string | null>(null);
   // Si la última señal publicada la pagó el patrocinio (para decirlo en el mensaje de éxito).
   const [lastSponsored, setLastSponsored] = useState(false);
@@ -107,13 +107,13 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
     setPublishing(true);
     setPublishError(null);
     setBackgroundError(null);
-    // Con patrocinio, a los 5 s se cierra el ticket y se enseña la
+    // Con patrocinio, al segundo se cierra el ticket y se enseña la
     // explicación, sin esperar a que la red confirme la transacción (puede
     // tardar bastante más). Si luego fallara, el error se enseña debajo de
     // los botones. Con wallet propia no se adelanta: se espera a que el
     // usuario la apruebe en su ventana y la wallet la envíe. Tampoco si la
-    // prueba se genera en el equipo del usuario: a los 5 s todavía se está
-    // probando y el ticket es lo que enseña que sigue trabajando.
+    // prueba se genera en el equipo del usuario: todavía se está probando y
+    // el ticket es lo que enseña que sigue trabajando.
     let closed = false;
     const closeTicket = () => {
       if (closed) return;
@@ -121,7 +121,7 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
       setScanned(null);
       setShowExplainer(true);
     };
-    const earlyClose = sponsored && !localProof ? setTimeout(closeTicket, 5000) : undefined;
+    const earlyClose = sponsored && !localProof ? setTimeout(closeTicket, 1000) : undefined;
     try {
       setLastSponsored(await submitSignal(lace, receipt, lang, { localProof, sponsored, contractAddress }));
       onSignalPublished?.(receipt);
