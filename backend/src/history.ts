@@ -255,12 +255,24 @@ export type PeriodStates = {
   previous: AegisState;
 };
 
+/**
+ * null si el historial no termina de cargarse en `waitMs`: tras un reinicio
+ * puede tardar mucho (cada transacción del bot lo alarga) y quien llama no
+ * debe quedarse esperando todo ese rato.
+ */
 export async function readPeriodStates(
   indexer: Pick<NetworkConfig, 'indexer' | 'indexerWS'>,
   contractAddress: ContractAddress,
   range: TimeRange,
-): Promise<PeriodStates> {
-  await trackContractHistory(indexer, contractAddress);
+  waitMs: number,
+): Promise<PeriodStates | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const ready = await Promise.race([
+    trackContractHistory(indexer, contractAddress).then(() => true),
+    new Promise<false>((resolve) => { timer = setTimeout(() => resolve(false), waitMs); }),
+  ]);
+  clearTimeout(timer);
+  if (!ready) return null;
   const now = snapshots.at(-1)?.state;
   if (!now) throw new Error('Contract state not found');
 

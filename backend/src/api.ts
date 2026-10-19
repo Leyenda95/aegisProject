@@ -259,7 +259,17 @@ async function handleRequest(
       const params = new URL(url, 'http://localhost').searchParams;
       const storeProfile = params.get('store') ?? undefined;
       const lang = params.get('lang') ?? 'en';
-      const period = await readPeriodStates(ctx.config, ctx.contractAddress, parseRange(params.get('range')));
+      const range = parseRange(params.get('range'));
+      // Mientras se carga el historial (tras un reinicio puede tardar mucho),
+      // en vez de dejar la petición colgada se usa el estado actual, sin
+      // periodo anterior con el que comparar.
+      let period = await readPeriodStates(ctx.config, ctx.contractAddress, range, 10_000);
+      if (!period) {
+        console.log('[api] /insights: history still loading, using the current state');
+        const current = await stateFromIndexer(ctx.providers, ctx.contractAddress);
+        const empty = Object.fromEntries(COUNTER_FIELDS.map((k) => [k, 0n])) as unknown as typeof current;
+        period = { range, current, previous: empty };
+      }
       const insights = await generateInsights(period, storeProfile, lang);
       return json(res, 200, insights);
     }
