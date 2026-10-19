@@ -4,13 +4,12 @@ import UserView from './components/UserView.tsx';
 import LandingScreen from './components/LandingScreen.tsx';
 import TourGuide from './components/TourGuide.tsx';
 import { type Campaign, type MatchResult, type Lang } from './api.ts';
-import { type ConnectedAPI, type WalletInfo, type ReceiptJSON, listWallets, connectWallet, deployViaLace, seedViaLace, registerStoreViaLace, checkStoreRegistered, getSponsorAvailable } from './lace.ts';
+import { type ConnectedAPI, type WalletInfo, type ReceiptJSON, listWallets, connectWallet, deployViaLace, seedViaLace, registerStoreViaLace, checkStoreRegistered, getLocalContractAddress, getSponsorAvailable } from './lace.ts';
 import { T } from './i18n.ts';
 import { useAggregateState } from './hooks/useAggregateState.ts';
 import { CONTRACT_ADDRESS, NETWORK_ID } from './chainConfig.ts';
 import StatsRibbon from './components/StatsRibbon.tsx';
 import SignalsBreakdown from './components/SignalsBreakdown.tsx';
-import { useBreakpoint } from './hooks/useBreakpoint.ts';
 import styles from './App.module.css';
 
 type Tab = 'store' | 'user';
@@ -46,7 +45,6 @@ export default function App() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [matches, setMatches] = useState<Record<string, MatchResult>>({});
 
-  const isMobile = useBreakpoint() === 'mobile';
   const [landed, setLanded] = useState(false);
   const [lace, setLace] = useState<ConnectedAPI | null>(null);
   const [contractAddress, setContractAddress] = useState<string | null>(null);
@@ -110,8 +108,15 @@ export default function App() {
 
   useEffect(() => {
     // Dirección de contrato y red: datos públicos y fijos (ver chainState.ts),
-    // ya no hace falta pedírselos al backend.
+    // ya no hace falta pedírselos al backend. En local (`npm run dev`) se
+    // pregunta además al backend, por si quien clona el repo despliega el suyo:
+    // solo si responde que no tiene ninguno se ofrece desplegar.
     setContractAddress(CONTRACT_ADDRESS);
+    if (import.meta.env.DEV) {
+      getLocalContractAddress().then(address => {
+        if (address !== undefined) setContractAddress(address);
+      }).catch(() => {});
+    }
     checkStoreRegistered().then(registered => { if (registered) setStoreRegistered(true); }).catch(() => {});
   }, []);
 
@@ -343,14 +348,7 @@ export default function App() {
                   )}
                 </div>
               )}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={pill}>Wallet · {walletAddress ? `…${walletAddress.slice(-6)}` : 'connected'}</span>
-                {/* Solo en desktop/tablet: en móvil la pareja wallet+contrato
-                    no cabe bien y descuadra el bloque de controles. */}
-                {!isMobile && (
-                  <span style={pill}>{t.contractPrefix} 0x…{contractAddress.slice(-4)}</span>
-                )}
-              </div>
+              <span style={pill}>Wallet · {walletAddress ? `…${walletAddress.slice(-6)}` : 'connected'}</span>
             </div>
           )}
           </div>

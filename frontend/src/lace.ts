@@ -161,6 +161,17 @@ export function explainTxError(e: unknown, lang: Lang): string {
   return msg;
 }
 
+/**
+ * Solo en local: el contrato que desplegó este backend, null si responde que
+ * aún no tiene ninguno, o undefined si no lo sabe (backend antiguo o caído).
+ */
+export async function getLocalContractAddress(): Promise<string | null | undefined> {
+  const r = await fetch(`${API_BASE}/contract-address`);
+  if (!r.ok) return undefined;
+  const { address } = await r.json();
+  return address ?? null;
+}
+
 export async function checkStoreRegistered(): Promise<boolean> {
   const r = await fetch(`${API_BASE}/store-registered`);
   if (!r.ok) return false;

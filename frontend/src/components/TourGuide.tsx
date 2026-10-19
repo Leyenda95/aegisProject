@@ -71,24 +71,13 @@ const STEPS: Step[] = [
     tab: 'user', side: 'right',
   },
   {
-    target: 'contribute-tab',
-    clickTarget: 'contribute-tab',
-    hint: { en: '↑ Click Contribute to continue', es: '↑ Haz clic en Contribuir para continuar' },
-    title: { en: 'Ready to Contribute?', es: '¿Listo para Contribuir?' },
-    desc: {
-      en: 'Now switch to the Contribute tab to see how users privately submit their signals.',
-      es: 'Ahora cambia a la pestaña Contribuir para ver cómo los usuarios envían sus señales de forma privada.',
-    },
-    tab: 'user', side: 'bottom', noScroll: true,
-  },
-  {
     target: 'contribute-section',
     title: { en: 'Contribute Anonymously', es: 'Contribuir de Forma Anónima' },
     desc: {
       en: 'In this demo you share category and subcategory, but the same system works with age, spending patterns, personal interests, or any signal you choose. Everything verified on Midnight without revealing your identity.',
       es: 'En esta demo compartes categoría y subcategoría, pero el mismo sistema funciona con la edad, patrones de gasto, intereses personales o cualquier señal que elijas. Todo verificado en Midnight sin revelar tu identidad.',
     },
-    tab: 'user', side: 'top', noScroll: true,
+    tab: 'user', side: 'right', noScroll: true,
     note: {
       en: 'Connect your Lace wallet using the button in the top right to submit a real transaction and participate in the testnet.',
       es: 'Conecta tu billetera Lace con el botón de arriba a la derecha para enviar una transacción real y participar en el testnet.',
@@ -136,9 +125,6 @@ export default function TourGuide({ lang, onClose, onSetTab }: Props) {
 
     // Auto-clicks and listeners
     const t1 = setTimeout(() => {
-      if (current.target === 'profile-section') {
-        (document.querySelector('[data-tour="profile-tab"]') as HTMLButtonElement | null)?.click();
-      }
       if (isManual && current.clickTarget) {
         const btn = document.querySelector(`[data-tour="${current.clickTarget}"]`);
         if (btn) {

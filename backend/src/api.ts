@@ -85,6 +85,11 @@ async function handleRequest(
   }
 
   try {
+    // En local el frontend no lleva dirección fija y pregunta aquí si ya hay contrato
+    if (method === 'GET' && url === '/contract-address') {
+      return json(res, 200, { address: ctx.contractAddress ?? null });
+    }
+
     // El frontend manda aquí la dirección tras desplegar con la wallet conectada
     if (method === 'POST' && url === '/contract-address') {
       const { address } = await parseBody(req);

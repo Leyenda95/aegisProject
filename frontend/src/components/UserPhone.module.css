@@ -1,0 +1,617 @@
+/* Marco del móvil: bisel, isla y pantalla con su propio scroll, como una
+   app de verdad. En pantallas pequeñas (donde la página ya ES un móvil) el
+   marco se adelgaza y la pantalla deja de tener altura fija. */
+.phone {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  border: 9px solid var(--raised);
+  border-radius: 40px;
+  background: var(--ground);
+  box-shadow: 0 0 0 1px var(--line), 0 24px 60px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.island {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 84px;
+  height: 23px;
+  border-radius: 999px;
+  background: #050505;
+  z-index: 3;
+}
+
+.screen {
+  height: 640px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 0 15px 88px;
+}
+
+.screen::-webkit-scrollbar {
+  display: none;
+}
+
+.statusBar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 42px;
+  margin: 0 -15px;
+  padding: 0 22px;
+  background: var(--ground);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-bright);
+}
+
+.statusIcons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.signal {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5px;
+  height: 10px;
+}
+
+.signal span {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--ink-bright);
+}
+
+.battery {
+  position: relative;
+  width: 22px;
+  height: 11px;
+  border: 1.5px solid var(--ink-bright);
+  border-radius: 3px;
+  padding: 1px;
+}
+
+.battery::before {
+  content: '';
+  display: block;
+  width: 75%;
+  height: 100%;
+  border-radius: 1px;
+  background: var(--ink-bright);
+}
+
+.battery::after {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: 2px;
+  width: 2px;
+  height: 4px;
+  border-radius: 0 1px 1px 0;
+  background: var(--ink-bright);
+}
+
+/* Cabecera de la app */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0 18px;
+}
+
+.appTitle {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--ink-bright);
+  letter-spacing: -0.5px;
+}
+
+.privatePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--success);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.privatePill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.notice {
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink-pale);
+}
+
+.noticeWarn {
+  border-color: #92400e;
+  color: #b45309;
+}
+
+/* Tarjeta de ticket nuevo: lo único que pide una acción */
+.ticketCard {
+  position: relative;
+  border-radius: 18px;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--bronze-deep), var(--bronze));
+  color: var(--on-bronze);
+  box-shadow: 0 10px 26px rgba(146, 106, 69, 0.35);
+  animation: ticketIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Llega el ticket: entra con un pequeño rebote para que se note. */
+@keyframes ticketIn {
+  from { opacity: 0; transform: translateY(-10px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+.ticketTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.newBadge {
+  background: var(--on-bronze);
+  color: var(--bronze-deep);
+  border-radius: 999px;
+  padding: 2px 8px;
+  letter-spacing: 0.4px;
+}
+
+.ticketStore {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+.ticketMeta {
+  font-size: 12.5px;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.ticketFoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 14px;
+}
+
+.ticketTotal {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.ticketBtn {
+  background: var(--on-bronze);
+  color: var(--bronze-deep);
+  border: none;
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  animation: ticketPulse 1.8s ease-out infinite;
+}
+
+/* Halo que late alrededor del botón para invitar a publicar. */
+@keyframes ticketPulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--on-bronze) 70%, transparent); }
+  70%, 100% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--on-bronze) 0%, transparent); }
+}
+
+.ticketArrow {
+  display: inline-block;
+  animation: arrowNudge 1.8s ease-in-out infinite;
+}
+
+@keyframes arrowNudge {
+  0%, 50%, 100% { transform: none; }
+  25% { transform: translateX(3px); }
+}
+
+.ticketBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  animation: none;
+}
+
+.ticketBtn:disabled .ticketArrow {
+  animation: none;
+}
+
+/* Con "reducir movimiento" no se mueve nada: el halo se queda quieto y solo
+   cambia de intensidad, para que el botón siga llamando la atención. */
+@media (prefers-reduced-motion: reduce) {
+  .ticketCard, .ticketArrow { animation: none; }
+  .ticketBtn { animation-name: ticketGlow; animation-timing-function: ease-in-out; }
+}
+
+@keyframes ticketGlow {
+  0%, 100% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--on-bronze) 15%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--on-bronze) 55%, transparent); }
+}
+
+.emptyCard {
+  border: 1.5px dashed var(--line);
+  border-radius: 18px;
+  padding: 18px 16px;
+  text-align: center;
+}
+
+.emptyTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.emptyHint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-dim);
+  margin-top: 4px;
+}
+
+.messages {
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+
+/* Resumen */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 20px 0 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.stat {
+  padding: 12px 6px;
+  text-align: center;
+}
+
+.stat + .stat {
+  border-left: 1px solid var(--line);
+}
+
+.statValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-bright);
+  letter-spacing: -0.5px;
+}
+
+.statLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+
+/* Gasto por categoría, desplegable */
+.collapsible {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  margin-bottom: 22px;
+}
+
+.collapsibleHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 16px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chartIcon {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  gap: 2.5px;
+  width: 34px;
+  height: 34px;
+  padding: 0 0 9px;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--bronze-wash);
+}
+
+.chartIcon span {
+  width: 3.5px;
+  border-radius: 2px;
+  background: var(--bronze-deep);
+}
+
+.collapsibleTitle {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-bright);
+}
+
+.collapsibleSub {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink-dim);
+}
+
+.collapsibleSummary {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--price);
+}
+
+.chevron {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--ink-soft);
+  border-bottom: 1.5px solid var(--ink-soft);
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(225deg) translate(-2px, -2px);
+}
+
+.categories {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2px 14px 14px;
+  animation: reveal 0.2s ease;
+}
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.catRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.catAmount {
+  font-weight: 600;
+  color: var(--price);
+}
+
+.bar {
+  grid-column: 1 / -1;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--bronze);
+}
+
+/* Últimas compras */
+.purchases {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.purchase {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.purchase + .purchase {
+  border-top: 1px solid var(--line);
+}
+
+.purchaseNew {
+  animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-6px); background: var(--bronze-wash); }
+  to { opacity: 1; transform: none; }
+}
+
+.purchaseIcon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 17px;
+}
+
+.purchaseBody {
+  min-width: 0;
+}
+
+.purchaseStore {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.purchaseDate {
+  font-size: 11.5px;
+  color: var(--ink-dim);
+}
+
+.purchaseRight {
+  text-align: right;
+}
+
+.purchaseAmount {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.signalChip {
+  display: inline-block;
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.footnote {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-dim);
+  text-align: center;
+  margin-top: 18px;
+}
+
+/* Botón de escanear fijo abajo, sobre un degradado para que el contenido
+   se pierda por debajo en vez de cortarse en seco. */
+.dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  padding: 26px 0 18px;
+  background: linear-gradient(to bottom, transparent, var(--ground) 45%);
+  pointer-events: none;
+}
+
+.scanBtn {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 999px;
+  padding: 13px 26px;
+  background: var(--ink-bright);
+  color: var(--ground);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.scanBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.scanIcon {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+  position: relative;
+}
+
+.scanIcon::after {
+  content: '';
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  top: 5px;
+  height: 2px;
+  background: currentColor;
+}
+
+@media (max-width: 679px) {
+  /* clip en vez de hidden: hidden convierte el marco en contenedor de
+     scroll y el botón "sticky" dejaría de pegarse al borde de la página. */
+  .phone {
+    border-width: 6px;
+    border-radius: 32px;
+    overflow: clip;
+  }
+
+  .island {
+    display: none;
+  }
+
+  .screen {
+    height: auto;
+    overflow: visible;
+    padding-bottom: 20px;
+  }
+
+  .statusBar {
+    position: static;
+  }
+
+  .dock {
+    position: sticky;
+    padding: 18px 0 14px;
+  }
+}

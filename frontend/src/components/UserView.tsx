@@ -6,7 +6,7 @@ import QrScanner from './QrScanner.tsx';
 import RedactedTicket from './RedactedTicket.tsx';
 import { T } from '../i18n.ts';
 import { useBreakpoint } from '../hooks/useBreakpoint.ts';
-import ProfileSection from './ProfileSection.tsx';
+import UserPhone from './UserPhone.tsx';
 import ProofLocationPicker, { type ProofServerStatus } from './ProofLocationPicker.tsx';
 import { isLocalProofServerUp, loadLocalProofPreference, saveLocalProofPreference } from '../localProofServer.ts';
 
@@ -25,7 +25,7 @@ type Props = {
   setConfirmingMsg: (msg: string | null) => void;
   /** Se llama tras publicar cualquier señal (escaneada o el último recibo), para que StoreView pueda retirar su ticket si es el mismo. */
   onSignalPublished?: (receipt: ReceiptJSON) => void;
-  /** Se incrementa cada vez que se navega aquí desde "Go to User View" en la tienda: fuerza la pestaña Contribute aunque My Profile estuviera abierta. */
+  /** Se incrementa cada vez que se navega aquí desde "Go to User View" en la tienda: lleva la pantalla del móvil arriba, donde está el ticket nuevo. */
   goToContributeSignal?: number;
 };
 
@@ -39,11 +39,9 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
   const t = T[lang];
   const bp = useBreakpoint();
   const isMobile = bp === 'mobile';
-  const [activeTab, setActiveTab] = useState<'contribute' | 'profile'>('contribute');
-
-  useEffect(() => {
-    if (goToContributeSignal) setActiveTab('contribute');
-  }, [goToContributeSignal]);
+  // Recibos publicados como señal en esta sesión, para que pasen a la lista
+  // de compras del móvil con su marca (solo en memoria, como el resto del perfil).
+  const [published, setPublished] = useState<ReceiptJSON[]>([]);
 
   const [scanning, setScanning] = useState(false);
   // Recibo abierto en RedactedTicket (escaneado o el último sellado), a la
@@ -127,6 +125,7 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
     try {
       setLastSponsored(await submitSignal(lace, receipt, lang, { localProof, sponsored, contractAddress }));
       onSignalPublished?.(receipt);
+      setPublished(prev => prev.some(r => r.nonce === receipt.nonce) ? prev : [receipt, ...prev]);
       if (lastReceipt?.nonce === receipt.nonce) onReceiptConsumed?.();
       clearTimeout(earlyClose);
       closeTicket();
@@ -149,116 +148,26 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
 
   return (
     <div style={{ maxWidth: 560, margin: '0 auto' }}>
-      {/* Tour frame: title + subtitle + tabs + content */}
-      <div data-tour="profile-section">
-        <h2 style={{ fontSize: isMobile ? 17 : 20, fontWeight: 700, marginBottom: 4, textAlign: 'center' }}>{t.userTitle}</h2>
-        <p style={{ color: 'var(--ink-soft)', fontSize: isMobile ? 12 : 13, lineHeight: 1.6, textAlign: 'center', marginBottom: isMobile ? 16 : 24 }}>{t.userSubtitle}</p>
+      <h2 style={{ fontSize: isMobile ? 17 : 20, fontWeight: 700, marginBottom: 4, textAlign: 'center' }}>{t.userTitle}</h2>
+      <p style={{ color: 'var(--ink-soft)', fontSize: isMobile ? 12 : 13, lineHeight: 1.6, textAlign: 'center', marginBottom: isMobile ? 16 : 24 }}>{t.userSubtitle}</p>
 
-        {/* Tab switcher */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, background: 'var(--surface-2)', border: '1px solid var(--gray-800)', borderRadius: 9, padding: 3, marginBottom: isMobile ? 16 : 24 }}>
-          {(['contribute', 'profile'] as const).map(tab => (
-            <button key={tab} data-tour={tab === 'profile' ? 'profile-tab' : 'contribute-tab'} onClick={() => setActiveTab(tab)} style={{
-              background: activeTab === tab ? '#926a4520' : 'transparent',
-              color: activeTab === tab ? 'var(--ink-bright)' : 'var(--ink-dim)',
-              border: `1px solid ${activeTab === tab ? 'var(--bronze-deep)' : 'transparent'}`,
-              borderRadius: 6, padding: isMobile ? '9px' : '10px',
-              fontSize: 13, fontWeight: 600, cursor: 'pointer',
-            }}>
-              {tab === 'profile' ? t.profileTab : t.contributeTab}
-            </button>
-          ))}
-        </div>
-
-        {activeTab === 'profile' && <ProfileSection lang={lang} />}
-
-        {activeTab === 'contribute' && <div data-tour="contribute-section" style={{
-          border: `${isMobile ? 8 : 10}px solid var(--raised)`, borderRadius: isMobile ? 24 : 30,
-          background: 'var(--ground)', padding: isMobile ? 16 : 22, maxWidth: 420, margin: '0 auto',
-          boxShadow: '0 22px 55px rgba(0, 0, 0, 0.5)',
-        }}>
-        <div style={{ width: 58, height: 5, borderRadius: 3, background: 'var(--line)', margin: '2px auto 16px' }} />
-        {needsLace && (
-          <div style={{ background: 'var(--surface-2)', border: '1px solid var(--gray-850)', borderRadius: 8, padding: isMobile ? 12 : 14, marginBottom: 16, fontSize: isMobile ? 12 : 13, color: 'var(--ink-pale)' }}>
-            {t.userNeedsLace}
-          </div>
-        )}
-        {needsDeploy && (
-          <div style={{ background: 'var(--surface-2)', border: '1px solid #92400e', borderRadius: 8, padding: isMobile ? 12 : 14, marginBottom: 16, fontSize: isMobile ? 12 : 13, color: '#fbbf24' }}>
-            {t.userNeedsDeploy}
-          </div>
-        )}
-
-        <div style={{ marginBottom: isMobile ? 14 : 20 }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>
-            {t.scanSectionLabel}
-          </div>
-          <p style={{ color: 'var(--ink-soft)', fontSize: isMobile ? 12 : 13, lineHeight: 1.6, marginBottom: 12 }}>
-            {t.scanIntro}
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
-            <div>
-              <button
-                onClick={() => { setScanError(null); setScanning(true); }}
-                disabled={!!needsLace || !!needsDeploy}
-                style={{
-                  width: '100%', background: '#926a4514', border: '2px solid var(--bronze-deep)', color: 'var(--bronze-deep)',
-                  padding: isMobile ? '14px 10px' : '18px 10px', fontSize: isMobile ? 14 : 15, fontWeight: 700, borderRadius: 12,
-                  opacity: (needsLace || needsDeploy) ? 0.3 : 1, cursor: (needsLace || needsDeploy) ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {t.scanButton}
-              </button>
-              {scanError && (
-                <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 8 }}>{scanError}</p>
-              )}
-            </div>
-
-            <div style={{ position: 'relative' }}>
-              {lastReceipt && !needsLace && !needsDeploy && (
-                <span style={{
-                  position: 'absolute', top: -9, right: 8, background: 'var(--success-strong)', color: '#0a0a0a',
-                  fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, letterSpacing: 0.3,
-                }}>
-                  {t.newTicketBadge}
-                </span>
-              )}
-              <button
-                onClick={useLastReceipt}
-                disabled={!lastReceipt || !!needsLace || !!needsDeploy || !!confirmingMsg}
-                style={{
-                  width: '100%',
-                  background: lastReceipt ? 'color-mix(in srgb, var(--success) 18%, transparent)' : '#456d9226',
-                  border: `2px solid ${lastReceipt ? 'var(--success)' : 'var(--accent-blue)'}`, color: lastReceipt ? 'var(--success)' : 'var(--accent-blue)',
-                  padding: isMobile ? '14px 10px' : '18px 10px', fontSize: isMobile ? 14 : 15, fontWeight: 700, borderRadius: 12,
-                  opacity: (!lastReceipt || needsLace || needsDeploy || confirmingMsg) ? 0.3 : 1, cursor: (!lastReceipt || needsLace || needsDeploy || confirmingMsg) ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {t.useLastReceiptButton}
-              </button>
-              <p style={{ color: lastReceipt ? 'var(--success)' : 'var(--ink-dim)', fontSize: 11.5, marginTop: 8, lineHeight: 1.5, fontWeight: lastReceipt ? 600 : 400 }}>
-                {lastReceipt ? t.useLastReceiptReady : t.useLastReceiptEmpty}
-              </p>
-            </div>
-          </div>
-          {justPublished && (
-            <p style={{ color: 'var(--success-strong)', fontSize: 13, fontWeight: 600, marginTop: 10 }}>{t.userSentTitle} ✓{lastSponsored && ` · ${t.feePaidByAegis}`}</p>
-          )}
-          {publishing && !scanned && (
-            <p style={{ color: 'var(--ink-soft)', fontSize: 13, marginTop: 10 }}>{t.signalConfirming}</p>
-          )}
-          {backgroundError && (
-            <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 10 }}>{backgroundError}</p>
-          )}
-        </div>
-
-        <div style={{ marginTop: 14, marginBottom: 16, background: 'var(--surface-2)', border: '1px solid var(--gray-800)', borderRadius: 8, padding: isMobile ? 12 : 16 }}>
-          <div style={{ fontSize: isMobile ? 12 : 12, color: 'var(--ink-pale)', lineHeight: 1.7 }}>
-            <strong style={{ color: 'var(--ink-pale)' }}>{t.userPrivacy}</strong> {t.userPrivacyDetail}
-          </div>
-        </div>
-      </div>}
-
-      </div>{/* end profile-section tour frame */}
+      <UserPhone
+        lang={lang}
+        lastReceipt={lastReceipt}
+        published={published}
+        needsLace={needsLace}
+        needsDeploy={needsDeploy}
+        busy={publishing || !!confirmingMsg}
+        onPublishLast={useLastReceipt}
+        onScan={() => { setScanError(null); setScanning(true); }}
+        scrollTopSignal={goToContributeSignal}
+        messages={(justPublished || (publishing && !scanned) || backgroundError || scanError) && <>
+          {justPublished && <p style={{ color: 'var(--success)', fontWeight: 600 }}>{t.userSentTitle} ✓{lastSponsored && ` · ${t.feePaidByAegis}`}</p>}
+          {publishing && !scanned && <p style={{ color: 'var(--ink-soft)' }}>{t.signalConfirming}</p>}
+          {backgroundError && <p style={{ color: 'var(--danger)' }}>{backgroundError}</p>}
+          {scanError && <p style={{ color: 'var(--danger)' }}>{scanError}</p>}
+        </>}
+      />
 
       {scanning && <QrScanner lang={lang} onScan={handleScan} onClose={() => setScanning(false)} />}
 
