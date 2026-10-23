@@ -1,4 +1,5 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import StoreView from './components/StoreView.tsx';
 import UserView from './components/UserView.tsx';
 import LandingScreen from './components/LandingScreen.tsx';
@@ -99,10 +100,36 @@ export default function App() {
     }
   }, [landed]);
 
-  useEffect(() => {
+  // useLayoutEffect y no useEffect: el atributo tiene que quedar puesto en
+  // cuanto React aplica el cambio, para que la View Transition de
+  // toggleTheme capture ya la página con el tema nuevo.
+  useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
+
+  // Cambios de tema que aún se están fundiendo (ver toggleTheme).
+  const themeSwitches = useRef(0);
+
+  /**
+   * Cambia de tema con un solo fundido de toda la página (View Transitions):
+   * el navegador la captura, se aplica el tema nuevo de golpe y funde una
+   * imagen con la otra. Mientras tanto, .theme-switching (ver index.css)
+   * apaga las transiciones propias de cada elemento. Si el navegador no lo
+   * soporta, el tema cambia al instante.
+   */
+  function toggleTheme() {
+    const next: Theme = theme === 'dark' ? 'light' : 'dark';
+    if (!('startViewTransition' in document)) { setTheme(next); return; }
+    const root = document.documentElement;
+    root.classList.add('theme-switching');
+    themeSwitches.current++;
+    const transition = document.startViewTransition(() => flushSync(() => setTheme(next)));
+    // Si se vuelve a pulsar a mitad del fundido, la clase se quita al acabar el último.
+    transition.finished.finally(() => {
+      if (--themeSwitches.current === 0) root.classList.remove('theme-switching');
+    });
+  }
 
   const t = T[lang];
 
@@ -214,7 +241,7 @@ export default function App() {
         <TourGuide lang={lang} onClose={() => setTourActive(false)} onSetTab={setTab} />
       )}
 
-      <header className={`${styles.header} aegis-fade-gradient`}>
+      <header className={styles.header}>
         {/* Logo + nombre + red: agrupados para poder apilar la píldora de red
             bajo el logo solo en móvil (ver .brandGroup en App.module.css) */}
         <div className={styles.brandGroup}>
@@ -249,7 +276,7 @@ export default function App() {
         <div className={styles.controls}>
           <div className={styles.controlsSecondary}>
             <button
-              onClick={() => setTheme(th => th === 'dark' ? 'light' : 'dark')}
+              onClick={toggleTheme}
               title={theme === 'dark' ? t.lightMode : t.darkMode}
               style={{
                 background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--ink-dim)',

@@ -40,15 +40,6 @@
   --accent-blue: #456D92;
   --price: #9C6B2E;
 
-  /* Degradados fijos (uno por tema, siempre los dos disponibles aquí en
-     :root, no dentro del bloque [data-theme="dark"]) para el crossfade de
-     .aegis-fade-gradient más abajo. No usar var(--surface)/var(--ground)
-     dentro de un linear-gradient: la transición de tema no interpola bien
-     un degradado con paradas en variables, se nota como un salto en vez de
-     un fundido. Mantener sincronizados con --surface/--ground de cada tema. */
-  --gradient-dark: linear-gradient(180deg, #141414, #0C0C0D);
-  --gradient-light: linear-gradient(180deg, #FFFFFF, #F6F2EA);
-
   --font-display: 'Archivo', system-ui, -apple-system, sans-serif;
   --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -86,7 +77,6 @@
   --success: #64d1a9;
 }
 
-.midnight-logo { transition: filter 0.2s; }
 :root:not([data-theme="dark"]) .midnight-logo { filter: invert(1); }
 
 /* Etiqueta "Built on" junto al logo de Midnight (StoreView, UserView): en
@@ -96,38 +86,20 @@
 .builtOnLabel { color: var(--ink-bright); }
 :root[data-theme="dark"] .builtOnLabel { color: rgba(245,242,235,0.7); }
 
-/* Fondo con degradado que sí se sincroniza con el resto al cambiar de tema:
-   dos capas fijas (oscura/clara) superpuestas, se cruza su opacidad en vez
-   de intentar interpolar el degradado en sí (eso es lo que iba desacompasado). */
-.aegis-fade-gradient {
-  /* No fuerza position: relative aquí (el .header de App.module.css ya
-     trae position: sticky, que también sirve de contexto para las capas
-     absolutas; si el elemento no tiene ya position, hay que dársela aparte). */
-  isolation: isolate;
+/* Cambio de tema (ver toggleTheme en App.tsx): el fundido lo hace una View
+   Transition, que captura la página, aplica el tema nuevo de golpe y funde
+   una imagen con la otra. Mientras dura se apagan las transiciones propias
+   de cada elemento (las categorías de la cinta tardan 1 s, p. ej.), para
+   que ninguno se quede atrás animando su color encima del fundido.
+   !important para ganar también a las transiciones en línea (style=...). */
+:root.theme-switching *,
+:root.theme-switching *::before,
+:root.theme-switching *::after {
+  transition: none !important;
 }
-.aegis-fade-gradient::before,
-.aegis-fade-gradient::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  transition: opacity 0.25s ease;
-}
-.aegis-fade-gradient::before { background: var(--gradient-dark); opacity: 0; }
-.aegis-fade-gradient::after { background: var(--gradient-light); opacity: 1; }
-:root[data-theme="dark"] .aegis-fade-gradient::before { opacity: 1; }
-:root[data-theme="dark"] .aegis-fade-gradient::after { opacity: 0; }
 
 *, *::before, *::after {
   box-sizing: border-box; margin: 0; padding: 0;
-  /* Fundido suave al cambiar de tema (ver App.tsx, data-theme). Sin esto,
-     todo lo que usa var(--algo) cambia de golpe en cuanto se pone el
-     atributo. "background" (no solo background-color) para que los
-     degradados de la cabecera/cinta (linear-gradient con --surface/--ground)
-     también se difuminen en vez de saltar antes que el resto. Los elementos
-     con su propia lista de transition (p. ej. button, más abajo) no heredan
-     esta, hay que añadírselo ahí también. */
-  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, fill 0.25s ease, stroke 0.25s ease;
 }
 
 html { overflow-y: scroll; }
@@ -154,7 +126,9 @@ button {
   font-size: 14px;
   font-weight: 600;
   padding: 11px 22px;
-  transition: opacity 0.15s, background 0.2s, border-color 0.2s, color 0.25s ease;
+  /* Solo la opacidad del hover. Los cambios de estado (la pestaña o la
+     categoría elegida, p. ej.) se ven al instante, sin fundido. */
+  transition: opacity 0.15s;
 }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 button:hover:not(:disabled) { opacity: 0.88; }
