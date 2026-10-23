@@ -29,7 +29,7 @@
   position: relative;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 24px;
+  font-size: var(--text-3xl);
   font-weight: 500;
   line-height: 1;
   color: var(--ink-bright);
@@ -37,7 +37,7 @@
 
 .unit {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   letter-spacing: 1px;
   text-transform: uppercase;
   line-height: 1;
@@ -65,7 +65,7 @@
   position: relative;
   padding: 4px 11px;
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: var(--text-xs);
   white-space: nowrap;
   color: var(--ink-soft);
   background: transparent;
@@ -87,7 +87,7 @@
 }
 
 .chipBump .chipValue {
-  color: #C79A5E;
+  color: var(--bronze);
 }
 
 /* "+N" que aparece sobre un número cuando entran señales nuevas: entra, se
@@ -97,7 +97,7 @@
   top: -11px;
   right: 6px;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   line-height: 1;
   color: var(--bronze);
@@ -127,7 +127,7 @@
   gap: 7px;
   padding: 5px 12px;
   font-family: var(--font-body);
-  font-size: 12.5px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--ink-soft);
   background: var(--bronze-wash);
@@ -152,7 +152,7 @@
 
 .refresh {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   white-space: nowrap;
   color: var(--ink-dim);
 }
@@ -192,7 +192,7 @@
 /* Mobile (< 680px) */
 @media (max-width: 679px) {
   .ribbon { gap: 14px; padding: 10px 14px; }
-  .total { font-size: 20px; }
+  .total { font-size: var(--text-2xl); }
   .unitLong { display: none; }
   .unitShort { display: inline; }
   .sparkline { display: none; }

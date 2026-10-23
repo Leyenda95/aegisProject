@@ -8,12 +8,12 @@
   justify-content: center;
   gap: 16px;
   padding: 16px;
-  background: #000000ee;
+  background: var(--scrim-camera);
 }
 
 .error {
   max-width: 320px;
-  font-size: 14px;
+  font-size: var(--text-base);
   text-align: center;
   color: var(--danger);
 }
@@ -31,7 +31,7 @@
 
 .cancel {
   padding: 10px 24px;
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--on-bronze);
   background: var(--bronze-deep);
   border: none;

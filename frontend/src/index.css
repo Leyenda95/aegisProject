@@ -39,6 +39,29 @@
   --success-strong: #64d1a9dc;
   --accent-blue: #456D92;
   --price: #9C6B2E;
+  /* Bronce para bordes suaves (cabecera, notas). */
+  --bronze-line: rgba(176, 129, 63, 0.4);
+
+  /* Escala cerrada de tamaños de letra de la interfaz (la portada va
+     aparte). Ningún componente usa un tamaño que no esté aquí. */
+  --text-3xs: 10px; /* solo insignias diminutas ("Señal enviada", "Próximamente"...) */
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 20px;
+  --text-3xl: 24px;
+
+  /* Sombras: tres alturas, de un botón flotante a un modal. */
+  --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
+
+  /* Velos oscuros: detrás de los modales, y casi negro detrás de la cámara. */
+  --scrim: rgba(0, 0, 0, 0.8);
+  --scrim-camera: rgba(0, 0, 0, 0.93);
 
   --font-display: 'Archivo', system-ui, -apple-system, sans-serif;
   --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -123,7 +146,7 @@ button {
   border: none;
   border-radius: 8px;
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
   padding: 11px 22px;
   /* Solo la opacidad del hover. Los cambios de estado (la pestaña o la
@@ -139,7 +162,7 @@ input, select {
   border-radius: 8px;
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: var(--text-base);
   padding: 11px 16px;
   width: 100%;
 }
@@ -156,7 +179,7 @@ a:focus-visible {
    control que se pulse: sin anillo. */
 [role="dialog"]:focus { outline: none; }
 
-label { font-size: 13px; color: var(--ink-dim); margin-bottom: 6px; display: block; }
+label { font-size: var(--text-sm); color: var(--ink-dim); margin-bottom: 6px; display: block; }
 
 /* Números tabulares y monoespaciados donde se pida por clase */
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
@@ -184,7 +207,7 @@ label { font-size: 13px; color: var(--ink-dim); margin-bottom: 6px; display: blo
   color: var(--ink);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 14px;
+  font-size: var(--text-base);
   padding: 10px 18px;
   border-radius: 999px;
   animation: aegis-ping 2.2s ease-out infinite;

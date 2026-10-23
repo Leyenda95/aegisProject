@@ -121,9 +121,11 @@ async function settle(page: Page) {
   });
 }
 
+// expect.soft: si una foto no coincide, el recorrido sigue y se comparan
+// también las siguientes, así un cambio enseña todo lo que toca de una vez.
 async function shot(page: Page, name: string, { fullPage = true, threshold }: { fullPage?: boolean; threshold?: number } = {}) {
   await settle(page);
-  await expect(page).toHaveScreenshot(`${name}.png`, { fullPage, threshold });
+  await expect.soft(page).toHaveScreenshot(`${name}.png`, { fullPage, threshold });
 }
 
 for (const theme of ['light', 'dark'] as const) {
@@ -175,12 +177,12 @@ for (const theme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'Conectar Billetera' }).click();
       await expect(header.getByRole('button', { name: 'lace' })).toBeVisible();
       await settle(page);
-      await expect(header).toHaveScreenshot(`${theme}-cabecera-wallets.png`);
+      await expect.soft(header).toHaveScreenshot(`${theme}-cabecera-wallets.png`);
 
       await header.getByRole('button', { name: 'lace' }).click();
       await expect(header.getByText(/Wallet · /)).toBeVisible();
       await settle(page);
-      await expect(header).toHaveScreenshot(`${theme}-cabecera-conectada.png`);
+      await expect.soft(header).toHaveScreenshot(`${theme}-cabecera-conectada.png`);
     });
 
     test('desglose de señales', async ({ page }) => {

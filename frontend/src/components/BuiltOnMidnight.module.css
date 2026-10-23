@@ -7,7 +7,7 @@
 
 /* El color lo pone .builtOnLabel (index.css), que cambia con el tema. */
 .label {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   letter-spacing: 1.5px;
   text-transform: uppercase;
 }

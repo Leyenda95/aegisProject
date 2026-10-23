@@ -9,7 +9,7 @@
   border: 9px solid var(--raised);
   border-radius: 40px;
   background: var(--ground);
-  box-shadow: 0 0 0 1px var(--line), 0 24px 60px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 0 1px var(--line), var(--shadow-lg);
   overflow: hidden;
 }
 
@@ -47,7 +47,7 @@
   margin: 0 -15px;
   padding: 0 22px;
   background: var(--ground);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--ink-bright);
 }
@@ -110,7 +110,7 @@
 
 .appTitle {
   font-family: var(--font-display);
-  font-size: 21px;
+  font-size: var(--text-2xl);
   font-weight: 700;
   color: var(--ink-bright);
   letter-spacing: -0.5px;
@@ -120,7 +120,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 10.5px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--success);
   border: 1px solid currentColor;
@@ -137,7 +137,7 @@
 }
 
 .notice {
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 1.5;
   border-radius: 12px;
   padding: 10px 12px;
@@ -173,7 +173,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 10.5px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -190,13 +190,13 @@
 
 .ticketStore {
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: var(--text-lg);
   font-weight: 700;
   margin-top: 10px;
 }
 
 .ticketMeta {
-  font-size: 12.5px;
+  font-size: var(--text-sm);
   opacity: 0.85;
   margin-top: 2px;
 }
@@ -209,7 +209,7 @@
 }
 
 .ticketTotal {
-  font-size: 20px;
+  font-size: var(--text-2xl);
   font-weight: 700;
   letter-spacing: -0.5px;
 }
@@ -220,7 +220,7 @@
   border: none;
   border-radius: 999px;
   padding: 9px 16px;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 700;
   cursor: pointer;
   animation: ticketPulse 1.8s ease-out infinite;
@@ -272,20 +272,20 @@
 }
 
 .emptyTitle {
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--ink);
 }
 
 .emptyHint {
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 1.5;
   color: var(--ink-dim);
   margin-top: 4px;
 }
 
 .messages {
-  font-size: 12.5px;
+  font-size: var(--text-sm);
   line-height: 1.5;
   margin-top: 10px;
 }
@@ -310,14 +310,14 @@
 }
 
 .statValue {
-  font-size: 18px;
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--ink-bright);
   letter-spacing: -0.5px;
 }
 
 .statLabel {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--ink-faint);
@@ -325,7 +325,7 @@
 }
 
 .sectionLabel {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -377,20 +377,20 @@
 .collapsibleTitle {
   flex: 1;
   min-width: 0;
-  font-size: 13.5px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--ink-bright);
 }
 
 .collapsibleSub {
   display: block;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 400;
   color: var(--ink-dim);
 }
 
 .collapsibleSummary {
-  font-size: 13.5px;
+  font-size: var(--text-base);
   font-weight: 700;
   color: var(--price);
 }
@@ -426,7 +426,7 @@
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 4px 10px;
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--ink);
 }
 
@@ -487,7 +487,7 @@
   height: 34px;
   border-radius: 10px;
   background: var(--surface-2);
-  font-size: 17px;
+  font-size: var(--text-lg);
 }
 
 .purchaseBody {
@@ -495,7 +495,7 @@
 }
 
 .purchaseStore {
-  font-size: 13.5px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--ink-bright);
   white-space: nowrap;
@@ -504,7 +504,7 @@
 }
 
 .purchaseDate {
-  font-size: 11.5px;
+  font-size: var(--text-xs);
   color: var(--ink-dim);
 }
 
@@ -513,7 +513,7 @@
 }
 
 .purchaseAmount {
-  font-size: 13.5px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--ink);
 }
@@ -521,13 +521,13 @@
 .signalChip {
   display: inline-block;
   margin-top: 3px;
-  font-size: 10px;
+  font-size: var(--text-3xs);
   font-weight: 700;
   color: var(--success);
 }
 
 .footnote {
-  font-size: 11.5px;
+  font-size: var(--text-xs);
   line-height: 1.6;
   color: var(--ink-dim);
   text-align: center;
@@ -558,10 +558,10 @@
   padding: 13px 26px;
   background: var(--ink-bright);
   color: var(--ground);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 .scanBtn:disabled {

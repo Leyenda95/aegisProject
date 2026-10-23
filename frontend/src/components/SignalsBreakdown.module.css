@@ -23,7 +23,7 @@
 }
 
 .open .catBtn {
-  background: #926a4513;
+  background: var(--bronze-wash);
   border-color: var(--bronze-deep);
   border-radius: 10px 10px 0 0;
 }
@@ -36,7 +36,7 @@
 
 .catName {
   flex: 1;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--ink);
   text-align: left;
@@ -44,7 +44,7 @@
 
 .catValue {
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: var(--text-xl);
   font-weight: 500;
   color: var(--price);
 }
@@ -52,7 +52,7 @@
 .catPct {
   width: 34px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 500;
   color: var(--ink);
   text-align: right;
@@ -65,7 +65,7 @@
 
 .chevron {
   margin-left: 4px;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--accent-blue);
 }
 
@@ -109,14 +109,14 @@
 
 .subValue {
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: var(--text-xl);
   font-weight: 500;
   color: var(--ink-bright);
 }
 
 .subName {
   margin-top: 2px;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--ink-soft);
 }
 
@@ -129,7 +129,7 @@
 
 .subPct {
   margin-top: 2px;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 500;
   color: var(--ink-soft);
 }
@@ -143,10 +143,9 @@
 @media (max-width: 679px) {
   .grid { grid-template-columns: 1fr; }
   .catBtn { padding: 10px 12px; }
-  .catName { font-size: 13px; }
-  .catValue { font-size: 15px; }
+  .catName { font-size: var(--text-sm); }
+  .catValue { font-size: var(--text-lg); }
   .subs { grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 10px; }
   .sub { padding: 8px 4px; }
-  .subValue { font-size: 15px; }
-  .subName { font-size: 10px; }
+  .subValue { font-size: var(--text-lg); }
 }
