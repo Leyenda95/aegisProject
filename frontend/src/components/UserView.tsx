@@ -1,12 +1,15 @@
 ﻿import { useEffect, useRef, useState } from 'react';
 import { type Lang } from '../api.ts';
-import { submitSignal, explainTxError, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
+import { submitSignal, explainTxError, type ReceiptJSON } from '../lace.ts';
 import { decodeReceiptFromQr } from '../receiptCodec.ts';
 import QrScanner from './QrScanner.tsx';
 import RedactedTicket from './RedactedTicket.tsx';
 import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
 import { useDialog } from '../hooks/useDialog.ts';
+import { useWallet } from '../app/WalletProvider.tsx';
+import { useChain } from '../app/ChainProvider.tsx';
+import { useTx } from '../app/TxProvider.tsx';
 import UserPhone from './UserPhone.tsx';
 import BuiltOnMidnight from './BuiltOnMidnight.tsx';
 import styles from './UserView.module.css';
@@ -15,20 +18,13 @@ import { isLocalProofServerUp, loadLocalProofPreference, saveLocalProofPreferenc
 
 type Props = {
   lang: Lang;
-  lace: ConnectedAPI | null;
-  /** El backend paga las transacciones (patrocinio): publicar señales no necesita wallet. */
-  sponsored: boolean;
-  contractAddress: string | null;
   /** Último recibo sellado en la pestaña Tienda de esta misma sesión de demo. */
   lastReceipt: ReceiptJSON | null;
-  /** Se llama tras publicar la señal directamente desde `lastReceipt`, para que App lo limpie (ya no se puede reenviar, el contrato marca cada recibo como usado). */
+  /** Se llama tras publicar la señal directamente desde `lastReceipt`, para que DemoPage lo limpie (ya no se puede reenviar, el contrato marca cada recibo como usado). */
   onReceiptConsumed?: () => void;
-  /** Lock global: hay una transacción de otra pestaña/acción esperando confirmación. */
-  confirmingMsg: string | null;
-  setConfirmingMsg: (msg: string | null) => void;
   /** Se llama tras publicar cualquier señal (escaneada o el último recibo), para que StoreView pueda retirar su ticket si es el mismo. */
   onSignalPublished?: (receipt: ReceiptJSON) => void;
-  /** Se incrementa cada vez que se navega aquí desde "Go to User View" en la tienda: lleva la pantalla del móvil arriba, donde está el ticket nuevo. */
+  /** Se incrementa cada vez que se navega aquí desde "Ir a la vista de Usuario" en la tienda: lleva la pantalla del móvil arriba, donde está el ticket nuevo. */
   goToContributeSignal?: number;
 };
 
@@ -38,8 +34,13 @@ function isReceiptJSON(v: any): v is ReceiptJSON {
     && typeof v.timestamp === 'string' && typeof v.nonce === 'string';
 }
 
-export default function UserView({ lang, lace, sponsored, contractAddress, lastReceipt, onReceiptConsumed, confirmingMsg, onSignalPublished, goToContributeSignal }: Props) {
+export default function UserView({ lang, lastReceipt, onReceiptConsumed, onSignalPublished, goToContributeSignal }: Props) {
   const t = T[lang];
+  const { wallet: lace } = useWallet();
+  // Con patrocinio, el backend paga las transacciones: publicar señales no necesita wallet.
+  const { sponsored, contractAddress } = useChain();
+  // Lock global: hay una transacción de otra pestaña/acción esperando confirmación.
+  const { confirming: confirmingMsg } = useTx();
   // Recibos publicados como señal en esta sesión, para que pasen a la lista
   // de compras del móvil con su marca (solo en memoria, como el resto del perfil).
   const [published, setPublished] = useState<ReceiptJSON[]>([]);

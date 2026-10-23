@@ -6,8 +6,8 @@ import { CATEGORIES, SUBCATEGORIES, SUBCATEGORY_INDEX, type Category, type Lang 
  * lleva únicamente {subcategoría dominante, importe total}, el detalle de
  * artículos se queda en el ticket de papel (ver ReceiptTicket).
  *
- * Imágenes: deja las tuyas en `frontend/public/images/products/<id>.png`
- * (también valen `.webp` y `.jpg`). Mientras no exista la local, se usa una
+ * Imágenes: deja las tuyas en `frontend/public/images/products/<id>.webp`
+ * (también valen `.png` y `.jpg`). Mientras no exista la local, se usa una
  * foto de stock temporal por palabra clave; si tampoco carga, un emoji.
  */
 export type Product = {
@@ -16,7 +16,7 @@ export type Product = {
   subcategory: string;
   name: Record<Lang, string>;
   priceCents: number;
-  /** Ruta local sin extensión, ProductImage prueba .jpg/.webp/.png. */
+  /** Ruta local sin extensión, ProductImage prueba .webp/.png/.jpg. */
   image: string;
   /** Palabra(s) clave para la foto de stock temporal. */
   stockKeyword: string;

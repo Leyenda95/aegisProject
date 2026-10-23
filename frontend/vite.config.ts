@@ -57,7 +57,8 @@ export default defineConfig({
   // no hace falta vite-plugin-top-level-await, cuya versión actual choca
   // con la de swc instalada aquí).
   build: { target: 'esnext' },
-  optimizeDeps: { esbuildOptions: { target: 'esnext' } },
+  // Vite 8 optimiza las dependencias con Rolldown (antes, esbuildOptions).
+  optimizeDeps: { rolldownOptions: { transform: { target: 'esnext' } } },
   server: {
     watch: {
       usePolling: true,

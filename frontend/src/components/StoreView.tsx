@@ -1,23 +1,28 @@
 ﻿import { useEffect, useState } from 'react';
-import type { Dispatch, SetStateAction } from 'react';
+import { Link } from 'react-router';
+import { useMutation } from '@tanstack/react-query';
 import QRCode from 'qrcode';
 import {
   getInsights, postCampaign, getMatch,
   CATEGORIES, CATEGORY_LABELS, CATEGORY_STATE_KEY as CAT_KEY, SUBCATEGORY_LABELS,
-  type AegisState, type Insights, type Campaign, type MatchResult, type Category, type Lang, type TimeRange,
+  type Insights, type Campaign, type MatchResult, type Category, type Lang, type TimeRange,
 } from '../api.ts';
 
 const TIME_RANGES: TimeRange[] = ['7d', '30d', '90d', '365d'];
-import { attestReceipt, explainTxError, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
+import { attestReceipt, explainTxError, type ReceiptJSON } from '../lace.ts';
 import { encodeReceiptForQr } from '../receiptCodec.ts';
 import {
   PRODUCTS, SUBCAT_TO_CATEGORY, cartLinesFrom, cartTotalCents, rollupBySubcategory, sealedLines, formatEUR,
 } from '../catalog.ts';
 import ProductImage from './ProductImage.tsx';
+import { preloadProductImages } from '../productImages.ts';
 import ReceiptTicket from './ReceiptTicket.tsx';
 import BuiltOnMidnight from './BuiltOnMidnight.tsx';
 import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
+import { useWallet } from '../app/WalletProvider.tsx';
+import { useChain } from '../app/ChainProvider.tsx';
+import { useTx } from '../app/TxProvider.tsx';
 import styles from './StoreView.module.css';
 
 // Orden de las pestañas de categoría en el POS de la demo (moda primero).
@@ -27,36 +32,27 @@ const POS_CATEGORY_ORDER: Category[] = ['fashion', 'electronics', 'food', 'sport
 
 type Props = {
   lang: Lang;
-  lace: ConnectedAPI | null;
-  /** El backend paga las transacciones (patrocinio): sellar no necesita wallet. */
-  sponsored: boolean;
-  contractAddress: string | null;
-  campaigns: Campaign[];
-  setCampaigns: Dispatch<SetStateAction<Campaign[]>>;
-  matches: Record<string, MatchResult>;
-  setMatches: Dispatch<SetStateAction<Record<string, MatchResult>>>;
-  aggregateState: AegisState | null;
-  /** Notifica el recibo sellado a App, para que UserView pueda usarlo sin cámara/QR. */
+  /** Avisa del recibo sellado, para que el móvil pueda usarlo sin cámara/QR. */
   onReceiptGenerated?: (receipt: ReceiptJSON) => void;
-  /** Lock global: hay una transacción de otra pestaña/acción esperando confirmación. */
-  confirmingMsg: string | null;
-  setConfirmingMsg: (msg: string | null) => void;
   /** Cambia a la pestaña Usuario (guía el flujo cobro -> publicar señal). */
   onGoToUser: () => void;
-  /** Nonce del último recibo ya publicado como señal (ver App). Si coincide con el ticket abierto aquí, se retira. */
+  /** Nonce del último recibo ya publicado como señal (ver DemoPage). Si coincide con el ticket abierto aquí, se retira. */
   publishedReceiptNonce: string | null;
 };
 
-export default function StoreView({ lang, lace, sponsored, contractAddress, campaigns, setCampaigns, matches, setMatches, aggregateState, onReceiptGenerated, confirmingMsg, setConfirmingMsg, onGoToUser, publishedReceiptNonce }: Props) {
+export default function StoreView({ lang, onReceiptGenerated, onGoToUser, publishedReceiptNonce }: Props) {
   const t = T[lang];
   const catLabel = CATEGORY_LABELS[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
-  const state = aggregateState;
+  const { wallet: lace } = useWallet();
+  const { sponsored, contractAddress, state } = useChain();
+  // Lock global: hay una transacción de otra pestaña/acción esperando confirmación.
+  const { confirming: confirmingMsg, setConfirming: setConfirmingMsg } = useTx();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [matches, setMatches] = useState<Record<string, MatchResult>>({});
 
   const [insights, setInsights] = useState<Insights | null>(null);
   const [storeProfile, setStoreProfile] = useState('');
-  const [loadingInsights, setLoadingInsights] = useState(false);
-  const [insightsError, setInsightsError] = useState<string | null>(null);
   const [insightsRange, setInsightsRange] = useState<TimeRange>('7d');
   // Periodo del informe que se está mostrando, que puede no coincidir con el
   // seleccionado mientras se genera el nuevo.
@@ -157,8 +153,11 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
     }
   }
 
-  // El agregado lo consulta App (useAggregateState) y llega por props. Aquí
-  // solo reevaluamos qué campañas cumplen su umbral cuando cambia el estado.
+  // Las fotos de las demás categorías, en segundo plano: cambiar de categoría es instantáneo.
+  useEffect(() => preloadProductImages(), []);
+
+  // El agregado lo consulta ChainProvider. Aquí solo reevaluamos qué
+  // campañas cumplen su umbral cuando cambia el estado.
   useEffect(() => {
     if (!state) return;
     setMatches(prev => {
@@ -171,15 +170,19 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
     });
   }, [state, campaigns, setMatches]);
 
-  async function handleInsights(range = insightsRange) {
-    setLoadingInsights(true);
-    setInsightsError(null);
-    try {
-      setInsights(await getInsights(storeProfile || undefined, lang, range));
+  // El informe anterior se sigue enseñando mientras se genera el nuevo.
+  const insightsRequest = useMutation({
+    mutationFn: (range: TimeRange) => getInsights(storeProfile || undefined, lang, range),
+    onSuccess: (report, range) => {
+      setInsights(report);
       setShownRange(range);
-    }
-    catch (e: any) { setInsightsError(e?.message ?? t.errorUnknown); }
-    finally { setLoadingInsights(false); }
+    },
+  });
+  const loadingInsights = insightsRequest.isPending;
+  const insightsError = insightsRequest.error ? (insightsRequest.error.message || t.errorUnknown) : null;
+
+  function handleInsights(range = insightsRange) {
+    insightsRequest.mutate(range);
   }
 
   async function handleCreateCampaign(e: React.FormEvent) {
@@ -204,7 +207,7 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
         <div className={styles.cardTitle}>{t.posTitle}</div>
 
         {!contractAddress ? (
-          <p className={styles.notice}>{t.posDeployFirst}</p>
+          <p className={styles.notice}>{t.posDeployFirst} <Link to="/setup" className={styles.noticeLink}>{t.setupLink}</Link></p>
         ) : !lace && !sponsored ? (
           <p className={styles.notice}>{t.posConnectFirst}</p>
         ) : posQr && posReceipt ? (

@@ -21,6 +21,11 @@
   color: var(--ink-dim);
 }
 
+.noticeLink {
+  font-weight: 600;
+  color: var(--bronze-deep);
+}
+
 /* ---------- Punto de venta ---------- */
 
 /* Catálogo y cesta: una columna, y en escritorio la cesta a la derecha. */

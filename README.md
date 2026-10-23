@@ -66,7 +66,7 @@ npm run dev                # starts the frontend, open the printed URL
 2. Compile the contract: `cd contract && npm run compact` (generates the ZK keys under `contract/managed/`).
 3. Start the backend against Preprod: `cd backend && npm run start:preprod` (set `ANTHROPIC_API_KEY` in `backend/.env` first if you want insights). No contract is deployed yet at this point, that happens from the browser next.
 4. Start the frontend: `cd frontend && npm run dev`, then open the printed URL.
-5. In the browser: **Connect Wallet** (Lace or 1AM, Preprod network) → **Deploy contract** (this deploys a fresh instance and makes your wallet its store admin; the backend remembers it for next time) → **Register demo store** → **Load demo data** (seeds baseline counters so the store insights have something to talk about).
+5. In the browser, open `/setup` (once your wallet is connected, the header links to it as **Set up demo** while something is missing): **Connect Wallet** (Lace or 1AM, Preprod network) → **Deploy contract** (this deploys a fresh instance and makes your wallet its store admin; the backend remembers it for next time) → **Register demo store** → **Load demo data** (seeds baseline counters so the store insights have something to talk about).
 6. Try the flow: in the **Store** tab, check out a cart. Switch to the **User** tab, tap **Publish signal** on the new ticket, review what will be shared and publish.
 
 ### Prove on your own device (optional)
@@ -127,7 +127,8 @@ sequenceDiagram
 | Contract tests | Vitest, in-memory circuit simulator |
 | Backend | Node.js + TypeScript (`tsx`), native `http` server, `@midnight-ntwrk/midnight-js-contracts`, `@midnight-ntwrk/ledger-v8` |
 | Market intelligence | Claude (Anthropic Messages API) |
-| Frontend | React 18 + Vite 6 + TypeScript |
+| Frontend | React 19 + Vite 8 + TypeScript, React Router, TanStack Query, CSS Modules |
+| Screenshot tests | Playwright (`npm run screens` in `frontend/`) |
 | Wallet integration | Midnight DApp Connector API, Lace and 1AM |
 | Network | Midnight Preprod (node + Blockfrost indexer), hosted or local proof server |
 | Hosting | Frontend on Vercel, backend and proof server on Railway |

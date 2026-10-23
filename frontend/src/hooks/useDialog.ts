@@ -11,7 +11,7 @@ const FOCUSABLE = 'button:not(:disabled), [href], input:not(:disabled), select:n
  * - al cerrarse, el foco vuelve a donde estaba (el botón que lo abrió, p. ej.).
  * `open` es para modales que no se desmontan al cerrarse.
  */
-export function useDialog(ref: RefObject<HTMLElement>, onClose: () => void, open = true): void {
+export function useDialog(ref: RefObject<HTMLElement | null>, onClose: () => void, open = true): void {
   // Siempre la última onClose, sin volver a lanzar el efecto (y mover el foco) cada vez que cambia.
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;

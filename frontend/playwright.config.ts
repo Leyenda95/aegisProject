@@ -22,7 +22,7 @@ export default defineConfig({
     toHaveScreenshot: { animations: 'disabled', threshold: 0, maxDiffPixels: 20 },
   },
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:5180',
     locale: 'es-ES',
     timezoneId: 'Europe/Madrid',
   },
@@ -33,9 +33,11 @@ export default defineConfig({
     { name: 'tableta', use: { viewport: { width: 820, height: 1180 } } },
     { name: 'movil', use: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
   ],
+  // Servidor propio, en otro puerto que el `npm run dev` de siempre: así las
+  // fotos nunca salen de un servidor abierto a mano con otras dependencias.
   webServer: {
-    command: 'npm run dev -- --port 5173 --strictPort',
-    url: 'http://localhost:5173',
-    reuseExistingServer: true,
+    command: 'npm run dev -- --port 5180 --strictPort',
+    url: 'http://localhost:5180',
+    reuseExistingServer: false,
   },
 });

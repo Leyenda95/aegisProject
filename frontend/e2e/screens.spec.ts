@@ -70,14 +70,14 @@ async function mockBackend(page: Page, { fresh = false } = {}) {
   });
 }
 
-async function open(page: Page, theme: 'light' | 'dark', { fresh = false } = {}) {
+async function open(page: Page, theme: 'light' | 'dark', { fresh = false, path = '/' } = {}) {
   await page.clock.setFixedTime(NOW);
   await page.addInitScript(t => {
     localStorage.setItem('aegis-theme', t);
     localStorage.setItem('aegis-lang', 'es');
   }, theme);
   await mockBackend(page, { fresh });
-  await page.goto('/');
+  await page.goto(path);
 }
 
 /** Dos wallets de Midnight instaladas (Lace y 1AM), que aceptan la conexión sin preguntar. */
@@ -183,6 +183,20 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(header.getByText(/Wallet · /)).toBeVisible();
       await settle(page);
       await expect.soft(header).toHaveScreenshot(`${theme}-cabecera-conectada.png`);
+    });
+
+    test('preparar demo', async ({ page }) => {
+      await mockWallets(page);
+      await open(page, theme, { fresh: true, path: '/setup' });
+      const main = page.getByRole('main');
+      // El contrato ya existe (el de la demo): su paso sale hecho.
+      await expect(main.getByText('Hecho')).toHaveCount(1);
+      await shot(page, `${theme}-setup`);
+
+      await main.getByRole('button', { name: 'Conectar Billetera' }).click();
+      await main.getByRole('button', { name: 'lace' }).click();
+      await expect(main.getByText('Hecho')).toHaveCount(2);
+      await shot(page, `${theme}-setup-conectada`);
     });
 
     test('desglose de señales', async ({ page }) => {

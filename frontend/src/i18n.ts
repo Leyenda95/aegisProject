@@ -3,6 +3,7 @@ import type { Lang } from './api.ts';
 const en = {
   // Header
   tagline: 'Private market intelligence',
+  homeLink: 'Aegis, go to the home page',
   tabStore: 'Store',
   tabUser: 'User',
   lightMode: 'Switch to light mode',
@@ -19,6 +20,22 @@ const en = {
   seeding: 'Loading...',
   registerStore: 'Register demo store',
   registeringStore: 'Registering store...',
+
+  // Alta de la demo en local (SetupPage)
+  setupLink: 'Set up demo',
+  setupTitle: 'Set up the demo',
+  setupIntro: 'Only needed the first time you run Aegis on your own machine. Each step is a transaction your wallet signs.',
+  setupWallet: 'Connect your wallet',
+  setupWalletHint: 'Lace or 1AM, on the Preprod network.',
+  setupContract: 'Deploy the contract',
+  setupContractHint: 'Your own instance. Your wallet becomes its store admin.',
+  setupStore: 'Register the demo store',
+  setupStoreHint: 'So it can seal receipts.',
+  setupData: 'Load demo data',
+  setupDataHint: 'Starting counters, so the market intelligence has something to analyze.',
+  setupDone: 'Done',
+  setupReady: 'All set.',
+  setupGoToDemo: 'Go to the demo',
 
   // StoreView, signals
   signalsRefresh: 'updates every 10s',
@@ -85,7 +102,7 @@ const en = {
   userSubtitle: "Publish the signal from a new ticket or scan the store's QR. It's published anonymously: nobody sees who you are or how much you spent.",
   userNeedsLace: 'Sponsored transactions are unavailable right now. Connect a wallet with DUST in the header to send signals.',
   sponsorUnavailable: 'Sponsored transactions are unavailable right now. Connect a wallet with DUST to pay the fee yourself.',
-  userNeedsDeploy: 'Deploy the contract first using the button in the header.',
+  userNeedsDeploy: 'Deploy the contract first, in "Set up demo".',
   localProofProving: 'Generating the proof on your device, this can take a minute...',
   userSentTitle: 'Signal published on Midnight',
 
@@ -194,6 +211,7 @@ const en = {
 
 const es: typeof en = {
   tagline: 'Inteligencia de mercado privada',
+  homeLink: 'Aegis, ir a la portada',
   tabStore: 'Tienda',
   tabUser: 'Usuario',
   lightMode: 'Cambiar a modo claro',
@@ -210,6 +228,21 @@ const es: typeof en = {
   seeding: 'Cargando...',
   registerStore: 'Registrar tienda de demo',
   registeringStore: 'Registrando tienda...',
+
+  setupLink: 'Preparar demo',
+  setupTitle: 'Preparar la demo',
+  setupIntro: 'Solo hace falta la primera vez que ejecutas Aegis en tu equipo. Cada paso es una transacción que firma tu wallet.',
+  setupWallet: 'Conecta tu wallet',
+  setupWalletHint: 'Lace o 1AM, en la red Preprod.',
+  setupContract: 'Despliega el contrato',
+  setupContractHint: 'Una instancia propia. Tu wallet pasa a administrar sus tiendas.',
+  setupStore: 'Registra la tienda de demo',
+  setupStoreHint: 'Para que pueda sellar recibos.',
+  setupData: 'Carga los datos de demo',
+  setupDataHint: 'Contadores de partida, para que la inteligencia de mercado tenga algo que analizar.',
+  setupDone: 'Hecho',
+  setupReady: 'Todo listo.',
+  setupGoToDemo: 'Ir a la demo',
 
   signalsRefresh: 'se actualiza cada 10s',
   signalsUnit: 'señales en Midnight',
@@ -271,7 +304,7 @@ const es: typeof en = {
   userSubtitle: 'Publica la señal de un ticket nuevo o escanea el QR de la tienda. Se publica de forma anónima: nadie ve quién eres ni cuánto has gastado.',
   userNeedsLace: 'Las transacciones patrocinadas no están disponibles ahora mismo. Conecta una billetera con DUST en el encabezado para enviar señales.',
   sponsorUnavailable: 'Las transacciones patrocinadas no están disponibles ahora mismo. Conecta una billetera con DUST para pagar tú la comisión.',
-  userNeedsDeploy: 'Despliega el contrato primero usando el botón del encabezado.',
+  userNeedsDeploy: 'Despliega el contrato primero, en «Preparar demo».',
   localProofProving: 'Generando la prueba en tu equipo, puede tardar un minuto...',
   userSentTitle: 'Señal publicada en Midnight',
 
