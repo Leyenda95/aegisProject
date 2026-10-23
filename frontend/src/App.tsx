@@ -13,12 +13,13 @@ import SetupPage from './routes/SetupPage.tsx';
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
 /**
- * Rutas: la portada (/), la demo (/demo) y el alta de la demo para quien la
- * ejecuta en local con su propio contrato (/setup). La portada es la misma
- * demo con la pantalla de bienvenida encima: así la demo ya está dibujada
- * (fotos incluidas) cuando se entra, y entrar o volver con el logo no la
- * redibuja ni pierde la cesta. El estado compartido (preferencias, red,
- * wallet, transacciones) vive por encima de las rutas.
+ * Rutas: la portada (/), la demo (/demo), el mercado (/market) y el alta de
+ * la demo para quien la ejecuta en local con su propio contrato (/setup). La
+ * portada y el mercado son la misma demo, con la pantalla de bienvenida
+ * encima o con la pestaña del mercado: así la demo ya está dibujada (fotos
+ * incluidas) cuando se entra, e ir y volver no la redibuja ni pierde la
+ * cesta. El estado compartido (preferencias, red, wallet, transacciones)
+ * vive por encima de las rutas.
  */
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
                   <Route element={<Layout />}>
                     <Route path="/" element={<DemoPage landing />} />
                     <Route path="/demo" element={<DemoPage />} />
+                    <Route path="/market" element={<DemoPage market />} />
                     <Route path="/setup" element={<SetupPage />} />
                   </Route>
                   <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,0 +1,170 @@
+/* Gráfica del mercado (TrendChart.tsx). Marcas finas y ejes discretos: lo
+   único que destaca es la línea de este periodo. */
+.chart {
+  position: relative;
+  transition: opacity 0.2s;
+}
+
+/* Datos de otro periodo mientras llegan los del elegido. */
+.stale {
+  opacity: 0.5;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-bottom: 10px;
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* Trazo corto con el color de cada serie, en la leyenda y en la ficha. */
+.key {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.keyCurrent {
+  background: var(--bronze);
+}
+
+.keyPrevious {
+  background: var(--chart-context);
+}
+
+.plot {
+  position: relative;
+  touch-action: pan-y;
+  border-radius: 6px;
+}
+
+.plot:focus {
+  outline: none;
+}
+
+.plot:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: 4px;
+}
+
+.plot svg {
+  display: block;
+  overflow: visible;
+}
+
+.grid {
+  stroke: var(--line);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.yLabel,
+.xLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  fill: var(--ink-dim);
+}
+
+.currentLine,
+.previousLine {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.currentLine {
+  stroke: var(--bronze);
+}
+
+.previousLine {
+  stroke: var(--chart-context);
+}
+
+.crosshair {
+  stroke: var(--ink-faint);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+/* Puntos con un anillo del color de la tarjeta, para que se lean encima de las líneas. */
+.currentDot,
+.previousDot {
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.currentDot {
+  fill: var(--bronze);
+}
+
+.previousDot {
+  fill: var(--chart-context);
+}
+
+/* Ficha con los valores del punto señalado: a la derecha de la línea, o a
+   la izquierda en la mitad derecha de la gráfica. */
+.tooltip {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+  min-width: 150px;
+  padding: 9px 11px;
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  pointer-events: none;
+  transform: translateX(12px);
+}
+
+.tooltipLeft {
+  transform: translateX(calc(-100% - 12px));
+}
+
+.tooltipWhen {
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--ink-dim);
+}
+
+.tooltipRow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.tooltipRow + .tooltipRow {
+  margin-top: 3px;
+}
+
+.tooltipRow b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-bright);
+}
+
+/* Tabla con los mismos datos, solo para lectores de pantalla. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

@@ -1,9 +1,13 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import type { AegisState } from '../api.ts';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { AegisState, Change } from '../api.ts';
 import { CONTRACT_ADDRESS } from '../chainConfig.ts';
 import { readChainState } from '../chainState.ts';
+import { connectLive } from '../liveEvents.ts';
 import { checkStoreRegistered, getLocalContractAddress, getSponsorAvailable } from '../lace.ts';
+
+// Cuántas de las últimas transacciones con cambios se guardan (la lista del mercado).
+const RECENT_LIMIT = 20;
 
 // Último estado recibido, guardado en el navegador: al volver a abrir la
 // página se enseña al instante, sin esperar a la primera respuesta del
@@ -41,6 +45,10 @@ type Chain = {
   sponsored: boolean;
   /** Contadores públicos del contrato; null hasta la primera respuesta. */
   state: AegisState | null;
+  /** Conectado al directo del backend (GET /events): los contadores cambian en cuanto entra una señal. */
+  live: boolean;
+  /** Últimas transacciones que cambiaron algún contador, de la más nueva a la más vieja (solo con directo). */
+  recent: Change[];
 };
 
 const ChainContext = createContext<Chain | null>(null);
@@ -49,11 +57,15 @@ const ChainContext = createContext<Chain | null>(null);
  * Lo que la demo sabe de la red: qué contrato usa, si la tienda de demo está
  * registrada, si hay patrocinio y los contadores agregados. Los dos últimos
  * se piden con TanStack Query: cada cierto tiempo, solo con la pestaña
- * visible, y otra vez en cuanto se vuelve a ella.
+ * visible, y otra vez en cuanto se vuelve a ella. Los contadores, además,
+ * llegan en directo mientras haya conexión con /events.
  */
 export function ChainProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [contractAddress, setContractAddress] = useState<string | null>(CONTRACT_ADDRESS);
   const [storeRegistered, setStoreRegistered] = useState(false);
+  const [live, setLive] = useState(false);
+  const [recent, setRecent] = useState<Change[]>([]);
 
   useEffect(() => {
     // Dirección de contrato y red: datos públicos y fijos (ver chainConfig.ts),
@@ -83,11 +95,43 @@ export function ChainProvider({ children }: { children: ReactNode }) {
       if (contractAddress) writeCache(contractAddress, fresh);
       return fresh;
     },
-    refetchInterval: 10_000,
+    // Con directo, solo de vez en cuando, por si acaso.
+    refetchInterval: live ? 60_000 : 10_000,
     // Lo guardado se enseña al momento, pero cuenta como viejo: se pide igualmente.
     initialData: () => readCache(contractAddress),
     initialDataUpdatedAt: 0,
   });
+
+  useEffect(() => {
+    if (!contractAddress) return;
+    const applyState = (state: AegisState) => {
+      // Una consulta a /state en vuelo podría llegar después con el estado de antes.
+      void queryClient.cancelQueries({ queryKey: ['state', contractAddress] });
+      queryClient.setQueryData(['state', contractAddress], state);
+      writeCache(contractAddress, state);
+      // Las series de las gráficas (ver useHistory) también han cambiado.
+      void queryClient.invalidateQueries({ queryKey: ['history', contractAddress] });
+    };
+    const disconnect = connectLive({
+      onSnapshot: snapshot => {
+        if (snapshot.contractAddress !== contractAddress) return;
+        applyState(snapshot.state);
+        setRecent(snapshot.recent);
+      },
+      onChange: change => {
+        if (change.contractAddress !== contractAddress) return;
+        applyState(change.state);
+        const { height, timestamp, delta } = change;
+        setRecent(prev => [{ height, timestamp, delta }, ...prev].slice(0, RECENT_LIMIT));
+      },
+      onLive: setLive,
+    });
+    return () => {
+      disconnect();
+      setLive(false);
+      setRecent([]);
+    };
+  }, [contractAddress, queryClient]);
 
   return (
     <ChainContext value={{
@@ -95,6 +139,8 @@ export function ChainProvider({ children }: { children: ReactNode }) {
       storeRegistered, setStoreRegistered,
       sponsored: sponsor.data ?? false,
       state: aggregate.data ?? null,
+      live,
+      recent,
     }}>
       {children}
     </ChainContext>

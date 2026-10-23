@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { CONTRACT_ADDRESS } from '../src/chainConfig.ts';
 
 // Recorre la demo y captura cada pantalla, en tema claro y oscuro (ver
 // playwright.config.ts). El backend va simulado con datos fijos y el reloj
@@ -46,6 +47,64 @@ const INSIGHTS = {
   ],
 };
 
+// Historial del contrato para /history: desplegado hace 50 días (como el de
+// Preprod), con más señales de día que de noche y algo más de actividad
+// cada semana. Lo de la carga de demo (STATE) no cuenta como actividad.
+const HOUR = 3_600_000;
+const DAY = 24 * HOUR;
+const DEPLOYED = NOW.getTime() - 50 * DAY;
+const HOURLY: number[] = [0];
+for (let t = DEPLOYED; t < NOW.getTime(); t += HOUR) {
+  const daytime = 2 + 1.5 * Math.sin(((new Date(t).getUTCHours() - 9) / 24) * 2 * Math.PI);
+  const growth = 1 + ((t - DEPLOYED) / (50 * DAY)) * 0.3;
+  HOURLY.push(HOURLY[HOURLY.length - 1] + Math.round(daytime * growth));
+}
+const activityAt = (t: number) => (t < DEPLOYED ? 0 : HOURLY[Math.min(HOURLY.length - 1, Math.floor((t - DEPLOYED) / HOUR))]);
+
+// Reparto por categoría en el periodo y en el anterior: unas suben y otras bajan.
+const SHARES_NOW: Record<string, number> = { Fashion: 0.29, Food: 0.25, Electronics: 0.17, Sports: 0.14, Home: 0.09, Other: 0.06 };
+const SHARES_BEFORE: Record<string, number> = { Fashion: 0.26, Food: 0.27, Electronics: 0.18, Sports: 0.12, Home: 0.11, Other: 0.06 };
+const split = (n: number, shares: Record<string, number>) => ({
+  ...Object.fromEntries(Object.entries(shares).map(([category, share]) => [`signals${category}`, String(Math.round(n * share))])),
+  totalSignals: String(n),
+});
+
+/** Lo mismo que calcula backend/src/series.ts, sobre el historial inventado. */
+function historyFor(range: string) {
+  const span = ({ '7d': 7, '30d': 30, '90d': 90, '365d': 365 } as Record<string, number>)[range] * DAY;
+  const now = NOW.getTime();
+  const start = Math.max(DEPLOYED, now - span);
+  const step = [HOUR, 6 * HOUR, DAY, 3 * DAY].find(s => (now - start) / s <= 170) ?? 3 * DAY;
+  const gridEnd = Math.floor(now / step) * step;
+  const from = DEPLOYED > gridEnd - span ? Math.floor(DEPLOYED / step) * step : gridEnd - span;
+  const times: number[] = [];
+  for (let t = from; t <= gridEnd; t += step) times.push(t);
+  if (now > gridEnd) times.push(now);
+  const current = times.map(t => [t, activityAt(t) - activityAt(from)]);
+  const previous = DEPLOYED <= from - span
+    ? times.map(t => [t, activityAt(Math.min(t - span, from)) - activityAt(from - span)])
+    : null;
+  return {
+    range, from, to: now, span, since: DEPLOYED, current, previous,
+    totals: {
+      current: split(current[current.length - 1][1], SHARES_NOW),
+      previous: previous ? split(previous[previous.length - 1][1], SHARES_BEFORE) : null,
+    },
+    seeded: STATE.totalSignals,
+  };
+}
+
+// Últimas señales que manda /events al conectarse, de la más nueva a la más
+// vieja: hace cuántos segundos y qué sumó a cada contador.
+const RECENT = ([
+  [4, { signalsTops: '2', signalsFashion: '2', totalSignals: '2' }],
+  [70, { signalsGroceries: '1', signalsCafes: '2', signalsFood: '3', totalSignals: '3' }],
+  [5 * 60, { signalsAudio: '1', signalsElectronics: '1', totalSignals: '1' }],
+  [12 * 60, { signalsFurniture: '1', signalsDecor: '3', signalsHome: '4', totalSignals: '4' }],
+  [40 * 60, { signalsOther: '1', totalSignals: '1' }],
+  [2 * 3600, { signalsShoes: '1', signalsFashion: '1', totalSignals: '1' }],
+] as const).map(([secondsAgo, delta], i) => ({ height: 900_000 - i * 7, timestamp: NOW.getTime() - secondsAgo * 1000, delta }));
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': '*',
@@ -54,11 +113,23 @@ const CORS = {
 
 /** Con `fresh`, un contrato recién desplegado: sin tienda registrada ni datos de demo. */
 async function mockBackend(page: Page, { fresh = false } = {}) {
+  const state = fresh ? { ...STATE, isSeeded: '0' } : STATE;
   await page.route(`${API}/**`, async route => {
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
     const json = (body: unknown, status = 200) => route.fulfill({ status, headers: CORS, json: body });
-    switch (new URL(route.request().url()).pathname) {
-      case '/state': return json(fresh ? { ...STATE, isSeeded: '0' } : STATE);
+    const url = new URL(route.request().url());
+    switch (url.pathname) {
+      case '/state': return json(state);
+      case '/history': return json(historyFor(url.searchParams.get('range') ?? '7d'));
+      // El estado y las últimas señales, y la conexión se cierra. El navegador
+      // no volverá a conectar en 10 minutos (retry), así que el directo sigue
+      // encendido durante toda la prueba.
+      case '/events': return route.fulfill({
+        headers: { ...CORS, 'Content-Type': 'text/event-stream' },
+        body: `retry: 600000\n\nevent: snapshot\ndata: ${JSON.stringify({
+          contractAddress: CONTRACT_ADDRESS, height: 900_000, timestamp: NOW.getTime(), state, recent: fresh ? [] : RECENT,
+        })}\n\n`,
+      });
       case '/sponsor-status': return json({ available: true });
       case '/store-registered': return json({ registered: !fresh });
       case '/receipt-status': return json({ sealed: true, used: false });
@@ -214,6 +285,30 @@ for (const theme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'Generar informe' }).click();
       await expect(page.getByText(INSIGHTS.recommendations[0].title)).toBeVisible();
       await shot(page, `${theme}-informe`);
+    });
+
+    test('mercado', async ({ page }) => {
+      await open(page, theme);
+      await enter(page);
+      await page.getByRole('button', { name: 'Mercado', exact: true }).click();
+      await expect(page).toHaveURL(/\/market$/);
+      await expect(page.getByText('señales en la última semana')).toBeVisible();
+      await expect(page.getByText('hace 4 s')).toBeVisible();
+      await shot(page, `${theme}-mercado`);
+
+      // La ficha de un punto de la gráfica.
+      const plot = page.locator('figure [tabindex="0"]');
+      const box = (await plot.boundingBox())!;
+      await page.mouse.move(box.x + box.width * 0.35, box.y + box.height / 2);
+      await expect(page.getByRole('tooltip')).toBeVisible();
+      await shot(page, `${theme}-mercado-ficha`, { fullPage: false });
+
+      // Un periodo más largo que el contrato: empieza en su despliegue.
+      await page.mouse.move(0, 0);
+      await page.getByRole('button', { name: '3M', exact: true }).click();
+      await expect(page.getByText('señales en los últimos 3 meses')).toBeVisible();
+      await expect(page.getByText(/cuando se desplegó el contrato/)).toBeVisible();
+      await shot(page, `${theme}-mercado-3m`);
     });
   });
 }

@@ -1,7 +1,10 @@
 import { CATEGORIES, CATEGORY_LABELS, CATEGORY_STATE_KEY, type AegisState, type Lang } from '../api.ts';
 import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
+import { useChain } from '../app/ChainProvider.tsx';
 import { useCountBumps } from '../hooks/useCountBumps.ts';
+import { useHistory } from '../hooks/useHistory.ts';
+import Sparkline from './Sparkline.tsx';
 import styles from './StatsRibbon.module.css';
 
 const BUMP_MS = 2600;
@@ -28,6 +31,8 @@ type Props = {
  */
 export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakdown }: Props) {
   const t = T[lang];
+  const { live } = useChain();
+  const week = useHistory('7d');
   const catLabel = CATEGORY_LABELS[lang];
   const loc = lang === 'es' ? 'es-ES' : 'en-US';
   const fmt = (v: unknown) => Number(v ?? 0).toLocaleString(loc);
@@ -56,10 +61,7 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
         <span className={cx(styles.unit, styles.unitShort)}>{t.signalsUnitShort}</span>
       </div>
 
-      <svg className={styles.sparkline} width="96" height="26" viewBox="0 0 96 26" aria-hidden="true">
-        <path d="M0 20 L12 18 L24 19 L36 14 L48 15 L60 9 L72 11 L84 6 L96 7" fill="none" stroke="var(--bronze-deep)" strokeWidth="1.5" />
-        <circle cx="96" cy="7" r="2" fill="var(--bronze)" />
-      </svg>
+      <Sparkline className={styles.sparkline} points={week.data?.current} />
 
       <div className={styles.chips}>
         {CATEGORIES.map(cat => {
@@ -78,7 +80,11 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
           {t.signalsBreakdown}
           <span aria-hidden="true" className={styles.breakdownChevron}>▼</span>
         </button>
-        <span className={styles.refresh}>{t.signalsRefresh}</span>
+        {live ? (
+          <span className={cx(styles.refresh, styles.live)}>{t.signalsLive}</span>
+        ) : (
+          <span className={styles.refresh}>{t.signalsRefresh}</span>
+        )}
       </div>
     </div>
 

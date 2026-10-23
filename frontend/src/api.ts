@@ -101,15 +101,52 @@ export const SUBCATEGORY_ICONS: Record<string, string> = {
 // VITE_API_URL en el build de Vercel.
 export const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
+/** Error de una petición al backend, con su código HTTP. */
+export class RequestError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
 async function handleJson<T>(r: Response): Promise<T> {
   if (!r.ok) {
     const body = await r.text().catch(() => r.statusText);
-    throw new Error(body || `Request failed (${r.status})`);
+    throw new RequestError(body || `Request failed (${r.status})`, r.status);
   }
   return r.json() as Promise<T>;
 }
 
 export type TimeRange = '7d' | '30d' | '90d' | '365d';
+
+/** Contadores en texto, como los manda el backend: solo los que vienen al caso. */
+export type Counts = Partial<Record<keyof AegisState, string>>;
+
+/** Una transacción que cambió algún contador: lo que sumó a cada uno. */
+export type Change = { height: number; timestamp: number; delta: Counts };
+
+/** Serie de un periodo para las gráficas (GET /history, ver backend/src/series.ts). */
+export type History = {
+  range: TimeRange;
+  /** Principio y final (el momento de la respuesta) del periodo, en ms. */
+  from: number;
+  to: number;
+  /** Duración del periodo. */
+  span: number;
+  /** Despliegue del contrato; si es posterior al principio del periodo, la serie empieza ahí. */
+  since: number | null;
+  /** Señales acumuladas desde el principio del periodo, como [instante, señales]. */
+  current: [number, number][];
+  /** Lo mismo en el periodo anterior, en los mismos instantes; null si el contrato aún no existía. */
+  previous: [number, number][] | null;
+  /** Señales por contador en el periodo y en el anterior. */
+  totals: { current: Counts; previous: Counts | null };
+  /** Señales cargadas como datos de demo, que no cuentan en nada de lo anterior. */
+  seeded: string;
+};
+
+export async function getHistory(range: TimeRange): Promise<History> {
+  return handleJson<History>(await fetch(`${API_BASE}/history?range=${range}`));
+}
 
 export async function getInsights(storeProfile?: string, lang: Lang = 'en', range: TimeRange = '7d'): Promise<Insights> {
   const params = new URLSearchParams({ lang, range });

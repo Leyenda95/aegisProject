@@ -8,6 +8,7 @@ import StatsRibbon from '../components/StatsRibbon.tsx';
 import SignalsBreakdown from '../components/SignalsBreakdown.tsx';
 import StoreView from '../components/StoreView.tsx';
 import UserView from '../components/UserView.tsx';
+import MarketView from '../components/MarketView.tsx';
 import TourGuide from '../components/TourGuide.tsx';
 import styles from './DemoPage.module.css';
 
@@ -17,10 +18,12 @@ type Tab = 'store' | 'user';
 const TOUR_ENABLED = false;
 
 /**
- * La demo: cinta con el agregado, y las vistas de la tienda y del móvil del
- * cliente. Con `landing` (en /), la pantalla de bienvenida va encima.
+ * La demo: cinta con el agregado, y las vistas de la tienda, del móvil del
+ * cliente y del mercado. Con `landing` (en /), la pantalla de bienvenida va
+ * encima; con `market` (en /market), se ve el mercado. Es la misma página en
+ * las tres rutas, así que la cesta o un ticket abierto siguen al ir y volver.
  */
-export default function DemoPage({ landing = false }: { landing?: boolean }) {
+export default function DemoPage({ landing = false, market = false }: { landing?: boolean; market?: boolean }) {
   const { t, lang } = usePreferences();
   const { state } = useChain();
   const navigate = useNavigate();
@@ -70,19 +73,29 @@ export default function DemoPage({ landing = false }: { landing?: boolean }) {
       <div className={styles.tabsWrap}>
         <div className={styles.tabs}>
           {(['store', 'user'] as Tab[]).map(id => (
-            <button key={id} className={styles.tab} data-tour={id === 'user' ? 'tab-user' : undefined} onClick={() => setTab(id)} aria-pressed={tab === id}>
+            <button
+              key={id}
+              className={styles.tab}
+              data-tour={id === 'user' ? 'tab-user' : undefined}
+              onClick={() => { setTab(id); if (market) navigate('/demo'); }}
+              aria-pressed={!market && tab === id}
+            >
               {id === 'store' ? t.tabStore : t.tabUser}
             </button>
           ))}
+          <button className={styles.tab} onClick={() => navigate('/market')} aria-pressed={market}>
+            {t.tabMarket}
+          </button>
         </div>
       </div>
 
-      {/* Las dos vistas se quedan montadas siempre (solo se oculta la que no
-          toca): así una acción en curso (un cobro esperando confirmación,
-          p. ej.) no se pierde al cambiar de pestaña, y la cesta o el ticket
-          abierto siguen como estaban al volver. */}
+      {/* La tienda y el móvil se quedan montados siempre (solo se oculta lo
+          que no toca): así una acción en curso (un cobro esperando
+          confirmación, p. ej.) no se pierde al cambiar de pestaña, y la cesta
+          o el ticket abierto siguen como estaban al volver. */}
       <main className={styles.main}>
-        <div hidden={tab !== 'store'}>
+        {market && <MarketView lang={lang} />}
+        <div hidden={market || tab !== 'store'}>
           <StoreView
             lang={lang}
             onReceiptGenerated={setLastReceipt}
@@ -90,7 +103,7 @@ export default function DemoPage({ landing = false }: { landing?: boolean }) {
             publishedReceiptNonce={publishedReceiptNonce}
           />
         </div>
-        <div hidden={tab !== 'user'}>
+        <div hidden={market || tab !== 'user'}>
           <UserView
             lang={lang}
             lastReceipt={lastReceipt}

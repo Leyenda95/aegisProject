@@ -41,6 +41,10 @@
   --price: #9C6B2E;
   /* Bronce para bordes suaves (cabecera, notas). */
   --bronze-line: rgba(176, 129, 63, 0.4);
+  /* Serie de contexto en las gráficas (el periodo anterior, junto al bronce
+     del actual): un gris que se distingue bien del bronce también con
+     daltonismo, más claro para que no compita con él. */
+  --chart-context: #C2BBB0;
 
   /* Escala cerrada de tamaños de letra de la interfaz (la portada va
      aparte). Ningún componente usa un tamaño que no esté aquí. */
@@ -53,6 +57,7 @@
   --text-xl: 18px;
   --text-2xl: 20px;
   --text-3xl: 24px;
+  --text-4xl: 48px; /* solo la cifra protagonista de una vista (las señales del periodo en el mercado) */
 
   /* Sombras: tres alturas, de un botón flotante a un modal. */
   --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.3);
@@ -92,6 +97,7 @@
 
   --danger: #f87171;
   --price: #c0956de5;
+  --chart-context: #56524C;
   /* El verde fuerte de modo claro (#0E8A63) se pensó para texto sobre fondo
      claro, en oscuro queda muy apagado; aquí se usa el pastel original,
      pensado para fondo oscuro. --success-strong no se toca aparte: además de

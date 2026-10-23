@@ -1,0 +1,369 @@
+/* Mercado (MarketView.tsx): a la izquierda la actividad por periodo, con su
+   selector encima; a la derecha, las últimas señales en directo. */
+.market {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.intro {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-areas:
+    "filters ."
+    "activity feed"
+    "categories feed";
+  gap: 16px;
+  align-items: start;
+}
+
+.filters {
+  grid-area: filters;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.heading {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--ink-bright);
+}
+
+/* Selector de periodo, el mismo que el del informe de la tienda. */
+.ranges {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.range {
+  padding: 3px 9px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--ink-dim);
+  background: transparent;
+  border-radius: 6px;
+}
+
+.range[aria-pressed="true"] {
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.card {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.activity {
+  grid-area: activity;
+}
+
+.categories {
+  grid-area: categories;
+}
+
+.feed {
+  grid-area: feed;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.categories .cardTitle {
+  margin-bottom: 14px;
+}
+
+/* La cifra del periodo, que rueda al cambiar (NumberFlow). */
+.headline {
+  margin-bottom: 18px;
+}
+
+.figure {
+  font-family: var(--font-body);
+  font-size: var(--text-4xl);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink-bright);
+}
+
+.figureLabel {
+  margin-top: 4px;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.comparison {
+  margin-top: 8px;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+/* Variación: la flecha lleva el color (sube en verde, baja en rojo), la
+   cifra va en el color del texto. */
+.delta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.deltaGlyph {
+  font-size: 0.8em;
+  color: var(--ink-faint);
+}
+
+.up {
+  color: var(--success);
+}
+
+.down {
+  color: var(--danger);
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 280px;
+  font-size: var(--text-sm);
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.placeholderHint {
+  max-width: 44ch;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--ink-dim);
+}
+
+/* Barras por categoría: nombre, barra, señales del periodo y variación. */
+.categoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transition: opacity 0.2s;
+}
+
+.stale {
+  opacity: 0.5;
+}
+
+.category {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) 56px 64px;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--text-sm);
+}
+
+.categoryName {
+  color: var(--ink);
+}
+
+.barTrack {
+  display: block;
+  height: 8px;
+}
+
+/* Crece desde la izquierda, con el extremo de la derecha redondeado. */
+.bar {
+  display: block;
+  min-width: 2px;
+  height: 100%;
+  background: var(--bronze);
+  border-radius: 0 4px 4px 0;
+}
+
+.categoryValue {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--ink-bright);
+}
+
+.categoryChange {
+  font-size: var(--text-xs);
+  text-align: right;
+}
+
+.note {
+  margin-top: 16px;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--ink-dim);
+}
+
+/* Punto verde que late mientras hay directo, como en la cinta. */
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--ink-dim);
+}
+
+.live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: livePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.empty {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--ink-dim);
+}
+
+.feedList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feedItem {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.feedItem + .feedItem {
+  border-top: 1px solid var(--line-soft);
+}
+
+/* Las que entran mientras se mira: bajan un poco y se encienden. */
+.feedItemNew {
+  animation: feedIn 0.5s ease-out;
+}
+
+@keyframes feedIn {
+  from { opacity: 0; transform: translateY(-6px); }
+}
+
+.feedLines {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.feedLine {
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+
+.feedCategory {
+  color: var(--ink-soft);
+}
+
+.feedChevron {
+  color: var(--ink-faint);
+}
+
+.qty {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--price);
+}
+
+.feedTime {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  white-space: nowrap;
+  color: var(--ink-dim);
+}
+
+.notice {
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}
+
+.noticeLink {
+  color: var(--bronze-deep);
+  font-weight: 600;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live::before,
+  .feedItemNew { animation: none; }
+}
+
+/* Tablet (< 860px): una sola columna, el directo al final. */
+@media (max-width: 859px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "filters"
+      "activity"
+      "categories"
+      "feed";
+  }
+}
+
+/* Mobile (< 680px) */
+@media (max-width: 679px) {
+  .card { padding: 16px; }
+  .category {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    row-gap: 6px;
+  }
+  .barTrack {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

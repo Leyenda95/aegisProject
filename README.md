@@ -115,7 +115,7 @@ sequenceDiagram
 
 1. A store checks out a cart in the frontend; the backend builds the `attestReceipt` circuit call (proof of membership in the registered-stores tree, no store identity revealed) and generates the ZK proof. The customer's receipt (subcategory lines, amounts, timestamp) is never published as plaintext, only its commitment gets sealed on-chain.
 2. From that receipt, the customer builds and submits `submitPurchase`: either the backend or the customer's own local proof server proves the circuit, and the connected wallet (Lace or 1AM, via the Midnight DApp Connector API) balances, signs, and submits it to the Midnight node. Only the subcategory and quantity are revealed, no identity, no amount, no store.
-3. Aggregate state (`GET /state`) is public ledger data. The backend reads it from the Preprod indexer, served by Blockfrost (its token stays server-side), and decodes it with the contract's own `ledger()` function. No proof, no key, no privileged access involved.
+3. Aggregate state (`GET /state`) is public ledger data. The backend reads it from the Preprod indexer, served by Blockfrost (its token stays server-side), and decodes it with the contract's own `ledger()` function. No proof, no key, no privileged access involved. The backend also follows every contract transaction live: `GET /events` (Server-Sent Events) pushes each change to the browser as it lands, and `GET /history?range=7d` returns the signals over a period next to the previous one, for the market charts. The demo data load counts as setup, not as activity. What the backend has read is kept on disk (`.history-<network>.json`), so a restart only fetches the transactions it hasn't seen.
 4. For the store side, the backend feeds the aggregate counters to Claude (Anthropic API), which returns trending categories and actionable recommendations over 1W, 1M, 3M and 1Y windows. The model only ever sees aggregate numbers, never individual signals or user data.
 5. Stores register campaigns on-chain (`registerCampaign`) through the same build-tx-then-wallet-submit flow, and the backend matches campaign thresholds against live state (`/match/:id`), again using Claude to explain the reasoning.
 
@@ -146,6 +146,7 @@ sequenceDiagram
 - [x] Prove the signal on your own local proof server, so the receipt never leaves your device
 - [x] Sponsored signal transactions: Aegis can pay the fee so customers don't need DUST
 - [x] Aggregate state goes through the backend (`GET /state`): the Preprod indexer is served by Blockfrost and its token must stay server-side. The frontend no longer loads the contract's ~11MB WASM runtime just to read the counters.
+- [x] Live market page (`/market`): signals per period against the previous one, by category, and the latest signals as they land on chain.
 - [ ] Optional age/spend disclosure tied to a pseudonym: previewed in the UI, not wired into the contract yet. `submitPurchase` today only ever reveals subcategory and quantity, regardless of what's toggled in the preview.
 
 ## What's next

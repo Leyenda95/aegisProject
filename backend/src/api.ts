@@ -7,7 +7,9 @@ import {
   getReceiptStatus, getContractStatesHex, isSignalTx, type ReceiptJSON, type ReceiptLineInput,
 } from './contract.js';
 import { generateInsights, matchCampaign, type Campaign } from './agent.js';
-import { COUNTER_FIELDS, latestCounters, parseRange, readPeriodStates, trackContractHistory } from './history.js';
+import {
+  COUNTER_FIELDS, latestCounters, liveSnapshot, onLiveEvent, parseRange, readHistory, readPeriodStates, trackContractHistory,
+} from './history.js';
 import { sponsorAvailable, sponsorConfigured, sponsorTx, takeSponsorQuota } from './sponsor.js';
 import type { AegisProviders } from './providers.js';
 import type { NetworkConfig } from './config.js';
@@ -69,6 +71,42 @@ function json(res: http.ServerResponse, status: number, data: unknown) {
     'Access-Control-Allow-Headers': 'Content-Type',
   });
   res.end(body);
+}
+
+// Un mensaje cada 25 s aunque no pase nada: así la web sabe que la conexión
+// de /events sigue viva, y ningún proxy la cierra por inactiva.
+const PING_MS = 25_000;
+
+/**
+ * GET /events (Server-Sent Events). Al conectarse, el estado del contrato y
+ * sus últimas transacciones con cambios; después, cada transacción nueva en
+ * cuanto llega por la suscripción de history.ts. Mientras el historial se
+ * carga (tras un reinicio) no hay estado que mandar: llega en cuanto termina.
+ */
+function streamEvents(req: http.IncomingMessage, res: http.ServerResponse, contractAddress: string) {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+    // Que un proxy por delante no se guarde los mensajes para mandarlos juntos.
+    'X-Accel-Buffering': 'no',
+  });
+  // Si se corta, el navegador vuelve a conectarse solo a los 5 s.
+  res.write('retry: 5000\n\n');
+  const send = (event: string, data: unknown) => {
+    // Puede llegar un aviso justo cuando el navegador ya ha cerrado la conexión.
+    if (res.destroyed || res.writableEnded) return;
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+  const snapshot = liveSnapshot(contractAddress);
+  if (snapshot) send('snapshot', snapshot);
+  const stop = onLiveEvent((event) => send(event.type, event.data));
+  const ping = setInterval(() => send('ping', {}), PING_MS);
+  req.on('close', () => {
+    stop();
+    clearInterval(ping);
+  });
 }
 
 async function handleRequest(
@@ -252,6 +290,24 @@ async function handleRequest(
       // indexer, refrescado por detrás (ver stateFromIndexer).
       const state = latestCounters(ctx.contractAddress) ?? await stateFromIndexer(ctx.providers, ctx.contractAddress);
       return json(res, 200, Object.fromEntries(COUNTER_FIELDS.map((k) => [k, state[k].toString()])));
+    }
+
+    // Lo mismo que /state pero en directo, sin tener que preguntar cada
+    // pocos segundos (ver streamEvents).
+    if (method === 'GET' && url === '/events') {
+      if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
+      return streamEvents(req, res, ctx.contractAddress);
+    }
+
+    // Series de las gráficas: señales acumuladas en el periodo, el periodo
+    // anterior para comparar y los contadores de los dos (ver series.ts).
+    if (method === 'GET' && url?.startsWith('/history')) {
+      if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
+      const range = parseRange(new URL(url, 'http://localhost').searchParams.get('range'));
+      const history = await readHistory(ctx.config, ctx.contractAddress, range, 5_000);
+      // Tras un reinicio el historial tarda en cargarse: la web vuelve a pedirlo.
+      if (!history) return json(res, 503, { error: 'Contract history is still loading' });
+      return json(res, 200, history);
     }
 
     if (method === 'GET' && url?.startsWith('/insights')) {

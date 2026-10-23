@@ -10,29 +10,50 @@
 // transacciones del contrato desde el bloque que se le pida y luego sigue
 // emitiendo las nuevas en directo. El backend se suscribe al arrancar y
 // guarda en memoria solo los contadores y la fecha de cada una.
+//
+// Lo mismo sirve para el directo de la web (cada transacción nueva se avisa
+// en onLiveEvent, que GET /events reenvía al navegador) y para las series de
+// las gráficas (readHistory, GET /history). Los cálculos están en series.ts.
+//
+// Recibir todo el historial tarda (cada transacción trae el estado entero del
+// contrato, que crece con cada recibo): con unas miles de transacciones, más
+// de diez minutos. Por eso lo ya leído se guarda en disco y, tras un
+// reinicio, solo se piden las transacciones nuevas.
 import { createHash } from 'node:crypto';
+import { readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { createClient } from 'graphql-ws';
 import WebSocket from 'ws';
 import { ContractState, type ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { ledger } from '../../contract/managed/aegis/contract/index.js';
 import type { AegisState } from './contract.js';
 import type { NetworkConfig } from './config.js';
+import {
+  COUNTER_FIELDS, DAY_MS, HOUR_MS, NON_PURCHASE_FIELDS, RANGE_DAYS,
+  buildHistory, compactSnapshots, deltaCounts, parseSnapshots, recentChanges, seededAfter, serializeSnapshots,
+  snapshotAt, toCounts,
+  type Change, type Counts, type History, type Snapshot, type TimeRange,
+} from './series.js';
 
-export type TimeRange = '7d' | '30d' | '90d' | '365d';
+export { COUNTER_FIELDS };
+export type { TimeRange };
 
-const RANGE_DAYS: Record<TimeRange, number> = { '7d': 7, '30d': 30, '90d': 90, '365d': 365 };
-const HOUR_MS = 60 * 60 * 1000;
-const DAY_MS = 24 * HOUR_MS;
+// Al cargar el historial, las transacciones de las dos últimas horas se
+// procesan una a una, como las que llegan en directo: así, nada más arrancar,
+// ya se sabe qué hizo cada una de las más recientes (la lista de últimas
+// señales que manda /events al conectarse).
+const RECENT_MS = 2 * 60 * 60 * 1000;
+const RECENT_LIMIT = 20;
+
+// El historial guardado, en el directorio de trabajo (en Railway, el volumen
+// /data, ver el Dockerfile), como la dirección del contrato.
+const HISTORY_FILE = `.history-${process.env['MIDNIGHT_NETWORK'] ?? 'local'}.json`;
+const SAVE_EVERY_MS = 60_000;
+// Lo de hace más de dos días se guarda compactado por horas (ver compactSnapshots).
+const KEEP_EXACT_MS = 2 * DAY_MS;
 
 export function parseRange(value: string | null): TimeRange {
   return value && value in RANGE_DAYS ? value as TimeRange : '7d';
 }
-
-// Contadores que no son compras: se toman del estado actual, restarlos no
-// tiene sentido.
-const NON_PURCHASE_FIELDS = new Set(['campaignCount', 'isSeeded']);
-
-type Snapshot = { height: number; timestamp: number; state: AegisState };
 
 let snapshots: Snapshot[] = [];
 // Al reconectar, graphql-ws vuelve a pedir la suscripción con la misma
@@ -52,16 +73,6 @@ const SUBSCRIPTION = `
       transaction { block { height timestamp } }
     }
   }`;
-
-export const COUNTER_FIELDS = [
-  'signalsElectronics', 'signalsFashion', 'signalsFood', 'signalsSports', 'signalsHome', 'signalsOther',
-  'signalsMobile', 'signalsTablet', 'signalsComputer', 'signalsCamera', 'signalsAudio', 'signalsGaming',
-  'signalsShoes', 'signalsTops', 'signalsBottoms', 'signalsAccessories', 'signalsOuterwear',
-  'signalsGroceries', 'signalsRestaurant', 'signalsCafes', 'signalsFastfood', 'signalsLocalshops',
-  'signalsEquipment', 'signalsClothing', 'signalsFootwear', 'signalsSupplements',
-  'signalsFurniture', 'signalsAppliances', 'signalsDecor', 'signalsTools',
-  'totalSignals', 'campaignCount', 'isSeeded',
-] as const satisfies readonly (keyof AegisState)[];
 
 /**
  * Lee los contadores de un estado del contrato y libera enseguida la
@@ -90,6 +101,87 @@ function readCounters(stateHex: string): AegisState {
 type ActionMessage = {
   contractActions: { state: string; transaction: { block: { height: number; timestamp: number } } };
 };
+
+/** Estado del contrato al conectarse a /events, con las últimas transacciones que cambiaron algo. */
+export type LiveSnapshot = { contractAddress: string; height: number; timestamp: number; state: Counts; recent: Change[] };
+/** Una transacción nueva que ha cambiado algún contador. */
+export type LiveChange = Change & { contractAddress: string; state: Counts };
+export type LiveEvent = { type: 'snapshot'; data: LiveSnapshot } | { type: 'change'; data: LiveChange };
+
+const listeners = new Set<(event: LiveEvent) => void>();
+
+/**
+ * Avisa de cada transacción nueva que cambie algún contador ('change') y de
+ * cuándo termina de cargarse el historial ('snapshot'). Devuelve cómo dejar
+ * de escuchar.
+ */
+export function onLiveEvent(listener: (event: LiveEvent) => void): () => void {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+}
+
+function emit(event: LiveEvent): void {
+  for (const listener of listeners) {
+    try {
+      listener(event);
+    } catch (err) {
+      console.error('[history] live listener failed:', err);
+    }
+  }
+}
+
+/** Lo que manda /events al conectarse, o null mientras se carga el historial. */
+export function liveSnapshot(contractAddress: string): LiveSnapshot | null {
+  const last = snapshots.at(-1);
+  if (!isCaughtUp || trackedAddress !== contractAddress || !last) return null;
+  return {
+    contractAddress,
+    height: last.height,
+    timestamp: last.timestamp,
+    state: toCounts(last.state),
+    recent: recentChanges(snapshots, RECENT_LIMIT),
+  };
+}
+
+/**
+ * El historial guardado de este contrato, sin las transacciones de su último
+ * bloque: así la suscripción vuelve a pedir ese bloque entero (puede tener
+ * más de una) y sigue desde ahí. Vacío si no hay fichero o es de otro contrato.
+ */
+function loadSnapshots(contractAddress: string): Snapshot[] {
+  try {
+    const saved = parseSnapshots(readFileSync(HISTORY_FILE, 'utf8'));
+    if (!saved || saved.contractAddress !== contractAddress || saved.snapshots.length === 0) return [];
+    const lastHeight = saved.snapshots.at(-1)!.height;
+    const loaded = saved.snapshots.filter((s) => s.height < lastHeight);
+    console.log(`[history] ${loaded.length} snapshots read from ${HISTORY_FILE}, resuming at block ${lastHeight}`);
+    return loaded;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') console.error(`[history] cannot read ${HISTORY_FILE}, loading everything:`, err);
+    return [];
+  }
+}
+
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** Compacta lo antiguo y guarda el historial en disco (de golpe, para no dejar nunca un fichero a medias). */
+function saveSnapshots(contractAddress: string): void {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = null;
+  if (trackedAddress !== contractAddress) return;
+  snapshots = compactSnapshots(snapshots, Date.now() - KEEP_EXACT_MS);
+  try {
+    writeFileSync(`${HISTORY_FILE}.tmp`, serializeSnapshots(contractAddress, snapshots));
+    renameSync(`${HISTORY_FILE}.tmp`, HISTORY_FILE);
+  } catch (err) {
+    console.error(`[history] cannot save ${HISTORY_FILE}:`, err);
+  }
+}
+
+/** Guarda como mucho una vez por minuto, también mientras se carga el historial. */
+function scheduleSave(contractAddress: string): void {
+  saveTimer ??= setTimeout(() => saveSnapshots(contractAddress), SAVE_EVERY_MS);
+}
 
 const LATEST_ACTION = `
   query ($address: HexEncoded!) {
@@ -133,10 +225,12 @@ export function trackContractHistory(
   if (caughtUp && trackedAddress === contractAddress) return caughtUp;
 
   disposeClient?.();
-  snapshots = [];
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = null;
+  trackedAddress = contractAddress;
+  snapshots = loadSnapshots(contractAddress);
   seen = new Set();
   isCaughtUp = false;
-  trackedAddress = contractAddress;
 
   caughtUp = new Promise((resolve) => {
     let targetHeight: number | null = null;
@@ -144,14 +238,29 @@ export function trackContractHistory(
     // transacción bloquea el proceso varios minutos (son miles y el estado
     // crece con cada recibo). Para los informes por periodos basta con el
     // estado al final de cada hora, así que se guarda la última recibida
-    // (`pending`) y solo se procesa cuando llega una de otra hora. Una vez
-    // al día, cada transacción nueva se procesa al momento.
+    // (`pending`) y solo se procesa cuando llega una de otra hora. Las de la
+    // última media hora (RECENT_MS) y, una vez al día, cada transacción
+    // nueva se procesan al momento.
     let pending: ActionMessage['contractActions'] | null = null;
-    const processPending = () => {
-      if (!pending) return;
+    // Si se ha descartado alguna transacción desde la última guardada: la
+    // siguiente que se guarde no es la justo posterior (ver Snapshot.exact).
+    let dropped = false;
+    const processPending = (): Snapshot | null => {
+      if (!pending) return null;
       const { state, transaction: { block } } = pending;
-      snapshots.push({ height: block.height, timestamp: block.timestamp, state: readCounters(state) });
+      const counters = readCounters(state);
+      const snapshot: Snapshot = {
+        height: block.height,
+        timestamp: block.timestamp,
+        state: counters,
+        seeded: seededAfter(snapshots.at(-1), counters),
+        exact: !dropped,
+      };
+      snapshots.push(snapshot);
       pending = null;
+      dropped = false;
+      scheduleSave(contractAddress);
+      return snapshot;
     };
     const checkCaughtUp = () => {
       if (isCaughtUp || targetHeight === null || trackedAddress !== contractAddress) return;
@@ -159,7 +268,10 @@ export function trackContractHistory(
       if (lastHeight === undefined || lastHeight < targetHeight) return;
       processPending();
       isCaughtUp = true;
+      saveSnapshots(contractAddress);
       console.log(`[history] caught up: ${snapshots.length} snapshots loaded`);
+      const snapshot = liveSnapshot(contractAddress);
+      if (snapshot) emit({ type: 'snapshot', data: snapshot });
       resolve();
     };
     const fetchTarget = () => {
@@ -190,14 +302,27 @@ export function trackContractHistory(
             if (seen.has(key)) return;
             seen.add(key);
             if (isCaughtUp) {
-              // En directo: cada transacción nueva, al momento.
+              // En directo: cada transacción nueva, al momento, y se avisa si
+              // ha cambiado algo (sellar un recibo o dar de alta una tienda no
+              // toca ningún contador).
               pending = action;
-              processPending();
+              const snapshot = processPending()!;
+              const delta = deltaCounts(snapshot.state, snapshots.at(-2)?.state ?? snapshot.state);
+              if (Object.keys(delta).length > 0) {
+                emit({ type: 'change', data: { contractAddress, height: snapshot.height, timestamp: snapshot.timestamp, state: toCounts(snapshot.state), delta } });
+              }
               return;
             }
-            const hourOf = (ts: number) => Math.floor(ts / HOUR_MS);
-            if (pending && hourOf(pending.transaction.block.timestamp) !== hourOf(block.timestamp)) processPending();
-            pending = action;
+            if (block.timestamp >= Date.now() - RECENT_MS) {
+              processPending();
+              pending = action;
+              processPending();
+            } else {
+              const hourOf = (ts: number) => Math.floor(ts / HOUR_MS);
+              if (pending && hourOf(pending.transaction.block.timestamp) !== hourOf(block.timestamp)) processPending();
+              else if (pending) dropped = true;
+              pending = action;
+            }
             checkCaughtUp();
           },
           error: (err) => {
@@ -226,16 +351,6 @@ export function latestCounters(contractAddress: string): AegisState | null {
   return snapshots.at(-1)?.state ?? null;
 }
 
-/** Estado del contrato en un momento dado: el de la última transacción hasta esa fecha. */
-function stateAt(time: number): AegisState | null {
-  for (let i = snapshots.length - 1; i >= 0; i--) {
-    if (snapshots[i].timestamp <= time) return snapshots[i].state;
-  }
-  // Antes de desplegarse el contrato no hay estado: cuenta como todo a cero,
-  // así "último año" muestra todo lo que hay aunque el contrato sea más nuevo.
-  return null;
-}
-
 function subtract(end: AegisState, start: AegisState | null): AegisState {
   const result: Record<string, bigint> = {};
   for (const [key, value] of Object.entries(end)) {
@@ -256,33 +371,55 @@ export type PeriodStates = {
 };
 
 /**
- * null si el historial no termina de cargarse en `waitMs`: tras un reinicio
- * puede tardar mucho (cada transacción del bot lo alarga) y quien llama no
- * debe quedarse esperando todo ese rato.
+ * true cuando el historial está cargado; false si no termina en `waitMs`:
+ * tras un reinicio puede tardar mucho (cada transacción del bot lo alarga) y
+ * quien llama no debe quedarse esperando todo ese rato.
  */
-export async function readPeriodStates(
+async function waitForHistory(
   indexer: Pick<NetworkConfig, 'indexer' | 'indexerWS'>,
   contractAddress: ContractAddress,
-  range: TimeRange,
   waitMs: number,
-): Promise<PeriodStates | null> {
+): Promise<boolean> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const ready = await Promise.race([
     trackContractHistory(indexer, contractAddress).then(() => true),
     new Promise<false>((resolve) => { timer = setTimeout(() => resolve(false), waitMs); }),
   ]);
   clearTimeout(timer);
-  if (!ready) return null;
+  return ready;
+}
+
+/** null si el historial no termina de cargarse en `waitMs` (ver waitForHistory). */
+export async function readPeriodStates(
+  indexer: Pick<NetworkConfig, 'indexer' | 'indexerWS'>,
+  contractAddress: ContractAddress,
+  range: TimeRange,
+  waitMs: number,
+): Promise<PeriodStates | null> {
+  if (!await waitForHistory(indexer, contractAddress, waitMs)) return null;
   const now = snapshots.at(-1)?.state;
   if (!now) throw new Error('Contract state not found');
 
+  // Antes de desplegarse el contrato no hay estado: cuenta como todo a cero,
+  // así "último año" muestra todo lo que hay aunque el contrato sea más nuevo.
   const span = RANGE_DAYS[range] * DAY_MS;
-  const start = stateAt(Date.now() - span);
-  const prevStart = stateAt(Date.now() - 2 * span);
+  const start = snapshotAt(snapshots, Date.now() - span)?.state ?? null;
+  const prevStart = snapshotAt(snapshots, Date.now() - 2 * span)?.state ?? null;
 
   return {
     range,
     current: subtract(now, start),
     previous: start ? subtract(start, prevStart) : subtract(now, now),
   };
+}
+
+/** Serie del periodo para las gráficas (ver buildHistory), o null si el historial aún se carga. */
+export async function readHistory(
+  indexer: Pick<NetworkConfig, 'indexer' | 'indexerWS'>,
+  contractAddress: ContractAddress,
+  range: TimeRange,
+  waitMs: number,
+): Promise<History | null> {
+  if (!await waitForHistory(indexer, contractAddress, waitMs)) return null;
+  return buildHistory(snapshots, range, Date.now());
 }
