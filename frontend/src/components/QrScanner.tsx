@@ -3,6 +3,7 @@ import jsQR from 'jsqr';
 import { T } from '../i18n.ts';
 import type { Lang } from '../api.ts';
 import { useDialog } from '../hooks/useDialog.ts';
+import styles from './QrScanner.module.css';
 
 type Props = {
   lang: Lang;
@@ -89,20 +90,14 @@ export default function QrScanner({ lang, onScan, onClose }: Props) {
   }, []);
 
   return (
-    <div ref={overlayRef} role="dialog" aria-modal="true" aria-label={t.scanButton} tabIndex={-1} style={{
-      position: 'fixed', inset: 0, background: '#000000ee', zIndex: 1000,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 16,
-    }}>
+    <div ref={overlayRef} role="dialog" aria-modal="true" aria-label={t.scanButton} tabIndex={-1} className={styles.overlay}>
       {error ? (
-        <div style={{ color: 'var(--danger)', maxWidth: 320, textAlign: 'center', fontSize: 14 }}>{error}</div>
+        <div className={styles.error}>{error}</div>
       ) : (
-        <video ref={videoRef} style={{ maxWidth: '90vw', maxHeight: '70vh', borderRadius: 12 }} playsInline muted />
+        <video ref={videoRef} className={styles.video} playsInline muted />
       )}
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
-      <button onClick={onClose} style={{
-        background: 'var(--bronze-deep)', color: 'var(--on-bronze)', padding: '10px 24px', borderRadius: 8,
-        border: 'none', fontSize: 14, cursor: 'pointer',
-      }}>
+      <canvas ref={canvasRef} className={styles.canvas} />
+      <button className={styles.cancel} onClick={onClose}>
         {t.scannerCancel}
       </button>
     </div>

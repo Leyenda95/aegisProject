@@ -1,0 +1,152 @@
+/* Desglose por categoría y subcategoría, en el plegable bajo la cinta (ver App). */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+/* Categoría desplegada: ocupa la fila entera para que quepan sus subcategorías. */
+.open {
+  grid-column: 1 / -1;
+}
+
+.catBtn {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.open .catBtn {
+  background: #926a4513;
+  border-color: var(--bronze-deep);
+  border-radius: 10px 10px 0 0;
+}
+
+.catRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.catName {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  text-align: left;
+}
+
+.catValue {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--price);
+}
+
+.catPct {
+  width: 34px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink);
+  text-align: right;
+}
+
+.open .catName,
+.open .catPct {
+  color: var(--ink-bright);
+}
+
+.chevron {
+  margin-left: 4px;
+  font-size: 12px;
+  color: var(--accent-blue);
+}
+
+.track {
+  height: 3px;
+  background: var(--line);
+  border-radius: 0 0 4px 4px;
+}
+
+.open .track {
+  border-radius: 0;
+}
+
+/* Barra de porcentaje: el ancho llega en línea desde el componente. */
+.fill {
+  height: 100%;
+  background: var(--bronze-deep);
+  border-radius: 3px;
+  transition: width 0.4s;
+}
+
+/* Tantas columnas como subcategorías (--cols, hasta 6, en línea desde el componente). */
+.subs {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  gap: 8px;
+  padding: 16px;
+  background: var(--ground);
+  border: 1px solid var(--bronze-deep);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+}
+
+.sub {
+  padding: 10px 8px;
+  text-align: center;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.subValue {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--ink-bright);
+}
+
+.subName {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.subTrack {
+  margin-top: 4px;
+  height: 3px;
+  background: var(--line);
+  border-radius: 3px;
+}
+
+.subPct {
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+/* Tablet (680px - 1079px) */
+@media (max-width: 1079px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Mobile (< 680px) */
+@media (max-width: 679px) {
+  .grid { grid-template-columns: 1fr; }
+  .catBtn { padding: 10px 12px; }
+  .catName { font-size: 13px; }
+  .catValue { font-size: 15px; }
+  .subs { grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 10px; }
+  .sub { padding: 8px 4px; }
+  .subValue { font-size: 15px; }
+  .subName { font-size: 10px; }
+}

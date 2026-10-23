@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { SUBCATEGORY_ICONS } from '../api.ts';
 import { stockImageUrl, type Product } from '../catalog.ts';
+import { cx } from '../cx.ts';
+import styles from './ProductImage.module.css';
 
 // .png primero porque es el formato de todas las imágenes que hay ahora: cada
 // extensión que se prueba y no existe es una petición fallida más.
@@ -15,22 +17,14 @@ const EXTS = ['.png', '.webp', '.jpg', '.jpeg'];
  * contain), sin recortar ni deformar, sobre un fondo neutro. Así da igual
  * el tamaño o la proporción del fichero que se suba.
  */
-export default function ProductImage({ product, size = 96 }: { product: Product; size?: number }) {
+export default function ProductImage({ product }: { product: Product }) {
   const candidates = [...EXTS.map(ext => product.image + ext), stockImageUrl(product)];
   const [idx, setIdx] = useState(0);
   const src = candidates[idx];
 
-  const frame = {
-    width: size,
-    height: size,
-    borderRadius: 10,
-    background: 'var(--surface-2)',
-    flexShrink: 0,
-  } as const;
-
   if (!src) {
     return (
-      <div style={{ ...frame, display: 'grid', placeItems: 'center', fontSize: Math.round(size * 0.42) }}>
+      <div className={cx(styles.frame, styles.emoji)}>
         {SUBCATEGORY_ICONS[product.subcategory] ?? '📦'}
       </div>
     );
@@ -38,11 +32,11 @@ export default function ProductImage({ product, size = 96 }: { product: Product;
 
   return (
     <img
+      className={cx(styles.frame, styles.photo)}
       src={src}
       alt=""
       loading="lazy"
       onError={() => setIdx(i => i + 1)}
-      style={{ ...frame, objectFit: 'contain', padding: Math.round(size * 0.08), display: 'block' }}
     />
   );
 }

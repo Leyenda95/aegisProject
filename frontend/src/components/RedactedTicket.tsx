@@ -2,7 +2,8 @@
 import { SUBCATEGORY_INDEX, SUBCATEGORY_LABELS, CATEGORY_LABELS, type Lang } from '../api.ts';
 import { SUBCAT_TO_CATEGORY, formatEUR } from '../catalog.ts';
 import type { ReceiptJSON } from '../lace.ts';
-import { useBreakpoint } from '../hooks/useBreakpoint.ts';
+import { T } from '../i18n.ts';
+import { cx } from '../cx.ts';
 import { useDialog } from '../hooks/useDialog.ts';
 import styles from './ReceiptTicket.module.css';
 
@@ -32,7 +33,7 @@ type Props = {
   receipt: ReceiptJSON;
   onConfirm: () => void;
   onCancel: () => void;
-  /** Sobrescribe el texto del botón de confirmación (por defecto tt.add). */
+  /** Sobrescribe el texto del botón de confirmación (por defecto t.publishSignal). */
   confirmLabel?: string;
   /** Deshabilita ambos botones, p. ej. mientras se firma/envía una transacción. */
   confirmDisabled?: boolean;
@@ -43,63 +44,6 @@ type Props = {
   sideMenuExtra?: ReactNode;
 };
 
-const L = {
-  es: {
-    addr: 'C/ del Ejemplo 12 · Madrid · CIF B00000000',
-    ticket: 'Ticket', subtotal: 'Subtotal', vat: 'IVA (21%) incl.', total: 'TOTAL',
-    showPlain: 'Sin censura', showRedacted: 'Con censura',
-    plainTitle: 'Tu ticket completo',
-    plainText: 'Se queda íntegro en tu dispositivo. Pulsa «Con censura» para ver qué se publica en Midnight.',
-    onlyThis: 'Solo esto se publica en Midnight',
-    rest: 'Todo lo demás se queda en tu dispositivo y nunca llega a la red.',
-    midtag: '↑ ESTO VA ON-CHAIN',
-    add: 'Publicar señal', discard: 'Descartar',
-    locale: 'es-ES',
-    menuTitle: 'Qué compartir',
-    previewNote: 'Cuanto más compartas, más personalizada será tu experiencia. Tú pones el límite.',
-    categoryLabel: 'Categoría',
-    subcategoryLabel: 'Subcategoría',
-    mandatoryHint: 'Siempre se publica',
-    amountLabel: 'Importe total del ticket',
-    amountHint: 'Cuánto pagaste en total',
-    datetimeLabel: 'Fecha y hora exactas',
-    datetimeHint: 'Cuándo hiciste la compra',
-    productsLabel: 'Productos comprados',
-    productsHint: 'Qué compraste, no solo la categoría',
-    ageLabel: 'Tu edad',
-    ageHint: 'Para ofertas ajustadas a tu edad',
-    avgTicketLabel: 'Ticket medio',
-    avgTicketHint: 'Cuánto sueles gastar de media',
-  },
-  en: {
-    addr: '12 Example St · Madrid · VAT B00000000',
-    ticket: 'Receipt', subtotal: 'Subtotal', vat: 'VAT (21%) incl.', total: 'TOTAL',
-    showPlain: 'Uncensored', showRedacted: 'Censored',
-    plainTitle: 'Your full receipt',
-    plainText: 'It stays complete on your device. Tap "Censored" to see what gets published on Midnight.',
-    onlyThis: 'Only this is published on Midnight',
-    rest: 'Everything else stays on your device and never reaches the network.',
-    midtag: '↑ THIS GOES ON-CHAIN',
-    add: 'Publish signal', discard: 'Discard',
-    locale: 'en-GB',
-    menuTitle: 'What to share',
-    previewNote: 'The more you share, the more personalized your experience. You set the limit.',
-    categoryLabel: 'Category',
-    subcategoryLabel: 'Subcategory',
-    mandatoryHint: 'Always published',
-    amountLabel: 'Total ticket amount',
-    amountHint: 'How much you paid in total',
-    datetimeLabel: 'Exact date and time',
-    datetimeHint: 'When you made the purchase',
-    productsLabel: 'Products bought',
-    productsHint: 'What you bought, not just the category',
-    ageLabel: 'Your age',
-    ageHint: 'For offers matched to your age',
-    avgTicketLabel: 'Average ticket',
-    avgTicketHint: 'How much you typically spend',
-  },
-} as const;
-
 /**
  * Al escanear el QR: reconstruye el ticket original. Arranca en modo "con
  * censura" (todo lo no publicado se difumina y se apaga, dejando nítidas
@@ -107,8 +51,7 @@ const L = {
  * censura" y repiten la animación.
  */
 export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, confirmLabel, confirmDisabled, error, status, sideMenuExtra }: Props) {
-  const tt = L[lang];
-  const isMobile = useBreakpoint() === 'mobile';
+  const t = T[lang];
   // Esc hace lo mismo que "Descartar", que no se puede pulsar mientras se publica.
   const stageRef = useRef<HTMLDivElement>(null);
   useDialog(stageRef, () => { if (!confirmDisabled) onCancel(); });
@@ -135,27 +78,22 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
     setTouched(prev => (prev.has(field) ? prev : new Set(prev).add(field)));
   }
   const isOn = (field: OptionalField) => revealed.has(field);
-  // Mismo efecto que la censura automática del principio: medido con
-  // clics reales en el navegador (getComputedStyle), el keyframe veilOut
-  // solo llega a bajar la opacidad a 0.1 — el blur nunca se asienta de
-  // verdad. Replicar blur(3.5px) aquí hacía que se viera "desaparecido"
-  // en vez de "atenuado". Solo opacidad, misma duración --censor-dur.
-  const FADE = 'opacity var(--censor-dur) ease';
-  function censorStyle(field: OptionalField, delay: () => { animationDelay: string }) {
-    if (!touched.has(field)) return delay(); // aún no tocado: sigue la censura automática de siempre
-    return isOn(field)
-      ? { animation: 'none', filter: 'none', opacity: 1, transition: FADE }
-      : { animation: 'none', filter: 'none', opacity: 0.1, transition: FADE };
+  /**
+   * Clase y estilo de un trozo de un campo opcional. Hasta que el usuario lo
+   * toca sigue la censura automática de siempre (con su retardo, ver veil
+   * más abajo); desde entonces se ve o se atenúa según esté marcado (ver
+   * .shown y .hidden en ReceiptTicket.module.css).
+   */
+  function optional(field: OptionalField, extra?: string) {
+    if (!touched.has(field)) return { className: cx(styles.censor, extra), style: veil() };
+    return { className: cx(styles.censor, extra, isOn(field) ? styles.shown : styles.hidden) };
   }
-  function rowHighlight(field: OptionalField) {
-    return isOn(field)
-      ? { backgroundColor: 'rgba(146, 106, 69, 0.1)', boxShadow: 'inset 0 0 0 1.5px rgba(146, 106, 69, 0.85)', borderRadius: 6, padding: '1px 6px', margin: '-1px -6px' }
-      : undefined;
-  }
+  /** Fila de un campo opcional: realzada mientras está marcado. */
+  const optionalRow = (field: OptionalField, extra?: string) => cx(styles.row, extra, isOn(field) && styles.rowOn);
 
   const when = new Date(Number(receipt.timestamp));
-  const dateStr = when.toLocaleDateString(tt.locale);
-  const timeStr = when.toLocaleTimeString(tt.locale, { hour: '2-digit', minute: '2-digit' });
+  const dateStr = when.toLocaleDateString(t.locale);
+  const timeStr = when.toLocaleTimeString(t.locale, { hour: '2-digit', minute: '2-digit' });
   const ticketNo = receipt.nonce.slice(0, 8).toUpperCase();
   const bars = receipt.nonce.slice(0, 34).split('').map(ch => (parseInt(ch, 16) % 4) + 1);
 
@@ -197,7 +135,7 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
 
   return (
     <div className={styles.overlay} onClick={onCancel}>
-      <div ref={stageRef} role="dialog" aria-modal="true" aria-label={tt.add} tabIndex={-1} className={styles.stage} style={{ flexDirection: isMobile ? 'column' : 'row', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+      <div ref={stageRef} role="dialog" aria-modal="true" aria-label={t.publishSignal} tabIndex={-1} className={styles.stage} onClick={e => e.stopPropagation()}>
       <div className={styles.panel}>
         <div className={`${styles.wrap} ${styles.enter}`}>
           <div
@@ -205,44 +143,44 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
             className={`${styles.ticket} ${redacted ? styles.redacted : ''}`}
           >
             <div className={`${styles.head} ${styles.censor} ${styles.censorBlock}`} style={veil()}>AEGIS STORE</div>
-            <div className={`${styles.sub} ${styles.censor} ${styles.censorBlock}`} style={veil()}>{tt.addr}</div>
+            <div className={`${styles.sub} ${styles.censor} ${styles.censorBlock}`} style={veil()}>{t.receiptAddr}</div>
 
             <hr className={styles.rule} />
-            <div className={styles.row} style={rowHighlight('datetime')}>
-              <span className={styles.censor} style={censorStyle('datetime', veil)}>{dateStr}</span>
-              <span className={styles.censor} style={censorStyle('datetime', veil)}>{timeStr}</span>
+            <div className={optionalRow('datetime')}>
+              <span {...optional('datetime')}>{dateStr}</span>
+              <span {...optional('datetime')}>{timeStr}</span>
             </div>
             <div className={styles.row}>
-              <span className={`${styles.censor} ${styles.dim}`} style={veil()}>{tt.ticket} #{ticketNo}</span>
+              <span className={`${styles.censor} ${styles.dim}`} style={veil()}>{t.receiptNumber} #{ticketNo}</span>
             </div>
 
             <hr className={styles.rule} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div className={styles.items}>
               {items.map((it, i) => (
-                <div className={styles.row} key={i} style={rowHighlight('products')}>
-                  <span className={`${styles.censor} ${styles.item}`} style={censorStyle('products', veil)}>{it.qty}× {it.name}</span>
-                  <span className={styles.censor} style={censorStyle('products', veil)}>{formatEUR(it.unitCents * it.qty, lang)}</span>
+                <div className={optionalRow('products')} key={i}>
+                  <span {...optional('products', styles.item)}>{it.qty}× {it.name}</span>
+                  <span {...optional('products')}>{formatEUR(it.unitCents * it.qty, lang)}</span>
                 </div>
               ))}
             </div>
 
             <hr className={styles.rule} />
             <div className={styles.row}>
-              <span className={`${styles.censor} ${styles.dim}`} style={veil()}>{tt.subtotal}</span>
+              <span className={`${styles.censor} ${styles.dim}`} style={veil()}>{t.receiptSubtotal}</span>
               <span className={`${styles.censor} ${styles.dim}`} style={veil()}>{formatEUR(base, lang)}</span>
             </div>
             <div className={styles.row}>
-              <span className={`${styles.censor} ${styles.dim}`} style={veil()}>{tt.vat}</span>
+              <span className={`${styles.censor} ${styles.dim}`} style={veil()}>{t.receiptVat}</span>
               <span className={`${styles.censor} ${styles.dim}`} style={veil()}>{formatEUR(vat, lang)}</span>
             </div>
-            <div className={`${styles.row} ${styles.total}`} style={rowHighlight('amount')}>
-              <span className={styles.censor} style={censorStyle('amount', veil)}>{tt.total}</span>
-              <span className={styles.censor} style={censorStyle('amount', veil)}>{formatEUR(totalCents, lang)}</span>
+            <div className={optionalRow('amount', styles.total)}>
+              <span {...optional('amount')}>{t.receiptTotal}</span>
+              <span {...optional('amount')}>{formatEUR(totalCents, lang)}</span>
             </div>
 
             <hr className={styles.rule} />
             <div className={styles.seal}>
-              <div className={styles.keep} style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: 3, animationDelay: `${keepDelayMs}ms` }}>
+              <div className={styles.keep} style={{ animationDelay: `${keepDelayMs}ms` }}>
                 {sealed.map((l, i) => (
                   <div className={styles.row} key={i}>
                     <span className={styles.item}>{l.catLabel} › {l.subLabel}</span>
@@ -251,18 +189,18 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
                 ))}
                 {isOn('age') && (
                   <div className={styles.row}>
-                    <span className={styles.item}>{tt.ageLabel}</span>
+                    <span className={styles.item}>{t.shareAge}</span>
                     <span>{DEMO_AGE}</span>
                   </div>
                 )}
                 {isOn('avgTicket') && (
                   <div className={styles.row}>
-                    <span className={styles.item}>{tt.avgTicketLabel}</span>
+                    <span className={styles.item}>{t.shareAvgTicket}</span>
                     <span>{formatEUR(DEMO_AVG_TICKET_CENTS, lang)}</span>
                   </div>
                 )}
               </div>
-              <div className={styles.midTag} style={{ animationDelay: `${midTagDelayMs}ms` }}>{tt.midtag}</div>
+              <div className={styles.midTag} style={{ animationDelay: `${midTagDelayMs}ms` }}>{t.redactMidtag}</div>
             </div>
 
             <div className={`${styles.censor} ${styles.censorBlock}`} style={veil()}>
@@ -279,80 +217,80 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
             onClick={() => setRedacted(false)}
             aria-pressed={!redacted}
           >
-            {tt.showPlain}
+            {t.redactShowPlain}
           </button>
           <button
             className={`${styles.modeBtn} ${redacted ? styles.modeBtnOn : ''}`}
             onClick={() => { setRedacted(true); setPlayKey(k => k + 1); }}
             aria-pressed={redacted}
           >
-            {tt.showRedacted}
+            {t.redactShowRedacted}
           </button>
         </div>
 
         <div className={styles.caption}>
           {redacted
-            ? <><strong>{tt.onlyThis}</strong><br />{tt.rest}</>
-            : <><strong>{tt.plainTitle}</strong><br />{tt.plainText}</>}
+            ? <><strong>{t.redactOnlyThis}</strong><br />{t.redactRest}</>
+            : <><strong>{t.redactPlainTitle}</strong><br />{t.redactPlainText}</>}
         </div>
 
         <div className={styles.actions}>
-          <button onClick={onConfirm} disabled={confirmDisabled} style={{ flex: 1, background: 'var(--bronze-deep)', color: 'var(--on-bronze)', padding: '7px 16px', fontWeight: 600, letterSpacing: '0.3px', opacity: confirmDisabled ? 0.6 : 1, cursor: confirmDisabled ? 'not-allowed' : 'pointer' }}>{confirmLabel ?? tt.add}</button>
-          <button onClick={onCancel} disabled={confirmDisabled} style={{ flex: 1, background: '#111111', border: '1px solid #333333', color: '#FFFFFF', padding: '7px 16px', fontWeight: 600, letterSpacing: '0.3px', opacity: confirmDisabled ? 0.6 : 1 }}>{tt.discard}</button>
+          <button className={styles.confirmBtn} onClick={onConfirm} disabled={confirmDisabled}>{confirmLabel ?? t.publishSignal}</button>
+          <button className={styles.discardBtn} onClick={onCancel} disabled={confirmDisabled}>{t.redactDiscard}</button>
         </div>
-        {error && <p style={{ color: 'var(--danger)', fontSize: 12.5, marginTop: 10, textAlign: 'center' }}>{error}</p>}
-        {!error && status && <p style={{ color: 'var(--ink-soft)', fontSize: 12.5, marginTop: 10, textAlign: 'center' }}>{status}</p>}
+        {error && <p className={cx(styles.message, styles.messageError)}>{error}</p>}
+        {!error && status && <p className={styles.message}>{status}</p>}
       </div>
 
       <div className={styles.sideMenu}>
-        <div className={styles.sideMenuTitle}>{tt.menuTitle}</div>
-        <div className={styles.previewNote}>{tt.previewNote}</div>
+        <div className={styles.sideMenuTitle}>{t.shareTitle}</div>
+        <div className={styles.previewNote}>{t.sharePreviewNote}</div>
 
         <div className={`${styles.toggleRow} ${styles.disabled}`}>
           <input type="checkbox" checked disabled />
           <div className={styles.toggleBody}>
-            <label className={styles.toggleLabel}>{tt.categoryLabel}</label>
-            <div className={styles.toggleHint}>{tt.mandatoryHint}</div>
+            <label className={styles.toggleLabel}>{t.shareCategory}</label>
+            <div className={styles.toggleHint}>{t.shareMandatoryHint}</div>
           </div>
         </div>
 
         <div className={`${styles.toggleRow} ${styles.disabled}`}>
           <input type="checkbox" checked disabled />
           <div className={styles.toggleBody}>
-            <label className={styles.toggleLabel}>{tt.subcategoryLabel}</label>
-            <div className={styles.toggleHint}>{tt.mandatoryHint}</div>
+            <label className={styles.toggleLabel}>{t.shareSubcategory}</label>
+            <div className={styles.toggleHint}>{t.shareMandatoryHint}</div>
           </div>
         </div>
 
         <div className={styles.toggleRow}>
           <input type="checkbox" id="opt-amount" checked={isOn('amount')} onChange={() => toggle('amount')} />
           <div className={styles.toggleBody}>
-            <label className={styles.toggleLabel} htmlFor="opt-amount">{tt.amountLabel}</label>
-            <div className={styles.toggleHint}>{tt.amountHint}</div>
+            <label className={styles.toggleLabel} htmlFor="opt-amount">{t.shareAmount}</label>
+            <div className={styles.toggleHint}>{t.shareAmountHint}</div>
           </div>
         </div>
 
         <div className={styles.toggleRow}>
           <input type="checkbox" id="opt-datetime" checked={isOn('datetime')} onChange={() => toggle('datetime')} />
           <div className={styles.toggleBody}>
-            <label className={styles.toggleLabel} htmlFor="opt-datetime">{tt.datetimeLabel}</label>
-            <div className={styles.toggleHint}>{tt.datetimeHint}</div>
+            <label className={styles.toggleLabel} htmlFor="opt-datetime">{t.shareDatetime}</label>
+            <div className={styles.toggleHint}>{t.shareDatetimeHint}</div>
           </div>
         </div>
 
         <div className={styles.toggleRow}>
           <input type="checkbox" id="opt-products" checked={isOn('products')} onChange={() => toggle('products')} />
           <div className={styles.toggleBody}>
-            <label className={styles.toggleLabel} htmlFor="opt-products">{tt.productsLabel}</label>
-            <div className={styles.toggleHint}>{tt.productsHint}</div>
+            <label className={styles.toggleLabel} htmlFor="opt-products">{t.shareProducts}</label>
+            <div className={styles.toggleHint}>{t.shareProductsHint}</div>
           </div>
         </div>
 
         <div className={styles.toggleRow}>
           <input type="checkbox" id="opt-age" checked={isOn('age')} onChange={() => toggle('age')} />
           <div className={styles.toggleBody}>
-            <label className={styles.toggleLabel} htmlFor="opt-age">{tt.ageLabel}</label>
-            <div className={styles.toggleHint}>{tt.ageHint}</div>
+            <label className={styles.toggleLabel} htmlFor="opt-age">{t.shareAge}</label>
+            <div className={styles.toggleHint}>{t.shareAgeHint}</div>
             {isOn('age') && <div className={styles.avgValue}>{DEMO_AGE}</div>}
           </div>
         </div>
@@ -360,8 +298,8 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
         <div className={styles.toggleRow}>
           <input type="checkbox" id="opt-avg" checked={isOn('avgTicket')} onChange={() => toggle('avgTicket')} />
           <div className={styles.toggleBody}>
-            <label className={styles.toggleLabel} htmlFor="opt-avg">{tt.avgTicketLabel}</label>
-            <div className={styles.toggleHint}>{tt.avgTicketHint}</div>
+            <label className={styles.toggleLabel} htmlFor="opt-avg">{t.shareAvgTicket}</label>
+            <div className={styles.toggleHint}>{t.shareAvgTicketHint}</div>
             {isOn('avgTicket') && <div className={styles.avgValue}>{formatEUR(DEMO_AVG_TICKET_CENTS, lang)}</div>}
           </div>
         </div>

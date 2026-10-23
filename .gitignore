@@ -12,6 +12,11 @@ contract/managed/*
 dist/
 logs/
 midnight-level-db/
+# Capturas de Playwright (ver frontend/playwright.config.ts): dependen de la
+# máquina y pesan, la referencia se genera en local antes de cada cambio.
+frontend/e2e/screens/
+frontend/test-results/
+frontend/playwright-report/
 .env
 .contract-address-*
 .admin-key-*

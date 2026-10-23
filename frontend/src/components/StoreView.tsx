@@ -15,8 +15,10 @@ import {
 } from '../catalog.ts';
 import ProductImage from './ProductImage.tsx';
 import ReceiptTicket from './ReceiptTicket.tsx';
+import BuiltOnMidnight from './BuiltOnMidnight.tsx';
 import { T } from '../i18n.ts';
-import { useBreakpoint } from '../hooks/useBreakpoint.ts';
+import { cx } from '../cx.ts';
+import styles from './StoreView.module.css';
 
 // Orden de las pestañas de categoría en el POS de la demo (moda primero).
 // CATEGORIES en sí no se toca: su orden fija el de SUBCATEGORY_INDEX, que
@@ -49,28 +51,7 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
   const t = T[lang];
   const catLabel = CATEGORY_LABELS[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
-  const bp = useBreakpoint();
-  const isMobile = bp === 'mobile';
-  const twoCol = bp === 'desktop';
   const state = aggregateState;
-
-  const card: React.CSSProperties = {
-    background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12,
-    padding: isMobile ? 14 : 26, marginBottom: 16,
-  };
-
-  const stepBtn: React.CSSProperties = {
-    background: 'var(--surface-2)', border: '1px solid var(--line)', color: 'var(--ink-pale)',
-    fontSize: 16, lineHeight: 1, width: 28, height: 28, borderRadius: 6, cursor: 'pointer', padding: 0,
-  };
-
-  const tool: React.CSSProperties = {
-    background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 10,
-    padding: isMobile ? 14 : 20,
-  };
-  const toolTitle: React.CSSProperties = {
-    fontFamily: 'var(--font-display)', fontSize: isMobile ? 15 : 16, fontWeight: 600, color: 'var(--ink-bright)', margin: '0 0 12px',
-  };
 
   const [insights, setInsights] = useState<Insights | null>(null);
   const [storeProfile, setStoreProfile] = useState('');
@@ -219,16 +200,16 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
   return (
     <>
       {/* Punto de venta (protagonista): cesta -> recibo sellado -> QR */}
-      <div style={card}>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 15 : 16, fontWeight: 600, color: 'var(--ink)', marginBottom: isMobile ? 12 : 16 }}>{t.posTitle}</div>
+      <div className={styles.card}>
+        <div className={styles.cardTitle}>{t.posTitle}</div>
 
         {!contractAddress ? (
-          <p style={{ color: 'var(--ink-dim)', fontSize: 13 }}>{t.posDeployFirst}</p>
+          <p className={styles.notice}>{t.posDeployFirst}</p>
         ) : !lace && !sponsored ? (
-          <p style={{ color: 'var(--ink-dim)', fontSize: 13 }}>{t.posConnectFirst}</p>
+          <p className={styles.notice}>{t.posConnectFirst}</p>
         ) : posQr && posReceipt ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-            <p style={{ color: 'var(--ink-soft)', fontSize: 13, textAlign: 'center' }}>{t.posScanHint}{posSponsored && ` · ${t.feePaidByAegis}`}</p>
+          <div className={styles.sold}>
+            <p className={styles.scanHint}>{t.posScanHint}{posSponsored && ` · ${t.feePaidByAegis}`}</p>
             <ReceiptTicket
               lang={lang}
               lines={cartLines.map(l => ({ name: l.product.name[lang], qty: l.qty, unitCents: l.product.priceCents }))}
@@ -236,60 +217,51 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
               receipt={posReceipt}
               qr={posQr}
             />
-            <div className="aegis-hint" style={{ '--hint-accent': 'var(--success)', '--hint-glow': 'rgba(100, 209, 169, 0.45)' } as React.CSSProperties}>
+            <div className={cx('aegis-hint', styles.hintSuccess)}>
               {t.posGoToUserCallout}
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={onGoToUser} style={{ background: 'var(--bronze-deep)', color: 'var(--on-bronze)', fontSize: 13, padding: '7px 14px', fontWeight: 600, letterSpacing: '0.3px' }}>
+            <div className={styles.soldActions}>
+              <button className={styles.goToUser} onClick={onGoToUser}>
                 {t.posGoToUser}
               </button>
-              <button onClick={handleResetPos} style={{ background: 'var(--surface-2)', border: '1px solid var(--gray-850)', color: 'var(--ink-soft)', fontSize: 13, padding: '7px 14px', fontWeight: 600, letterSpacing: '0.3px' }}>
+              <button className={styles.newSale} onClick={handleResetPos}>
                 {t.posNewSale}
               </button>
             </div>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: twoCol ? '1fr 320px' : '1fr', gap: 16, alignItems: 'start' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+          <div className={styles.pos}>
+            <div className={styles.catalog}>
               {cartLines.length === 0 && (
-                <div className="aegis-hint" style={{ alignSelf: isMobile ? 'center' : 'flex-start', marginBottom: 6 }}>{t.posFirstPurchase}</div>
+                <div className={cx('aegis-hint', styles.firstPurchase)}>{t.posFirstPurchase}</div>
               )}
-              <p style={{ color: 'var(--ink-dim)', fontSize: 13, margin: 0 }}>{t.posCatalogHint}</p>
+              <p className={styles.catalogHint}>{t.posCatalogHint}</p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)', gap: 8 }}>
+              <div className={styles.categories}>
                 {POS_CATEGORY_ORDER.map(cat => (
-                  <button key={cat} onClick={() => setBrowseCat(cat)} aria-pressed={browseCat === cat} style={{
-                    background: browseCat === cat ? '#926a4510' : 'var(--surface-2)',
-                    border: `2px solid ${browseCat === cat ? 'var(--bronze-deep)' : 'var(--line)'}`,
-                    borderRadius: 10, padding: isMobile ? '8px 4px' : '10px 6px',
-                    color: browseCat === cat ? 'var(--ink-bright)' : 'var(--ink-dim)',
-                    fontSize: 12, cursor: 'pointer',
-                  }}>
+                  <button key={cat} className={styles.category} onClick={() => setBrowseCat(cat)} aria-pressed={browseCat === cat}>
                     {catLabel[cat]}
                   </button>
                 ))}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 10 }}>
+              <div className={styles.products}>
                 {PRODUCTS.filter(prod => SUBCAT_TO_CATEGORY[prod.subcategory] === browseCat).map(prod => {
                   const qty = cart[prod.id] ?? 0;
                   return (
-                    <div key={prod.id} style={{
-                      background: 'var(--surface-2)', border: `1px solid ${qty > 0 ? 'var(--bronze-deep)' : 'var(--line)'}`,
-                      borderRadius: 10, padding: 10, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center',
-                    }}>
-                      <ProductImage product={prod} size={isMobile ? 84 : 104} />
-                      <div style={{ fontSize: 12, color: 'var(--ink-pale)', textAlign: 'center', lineHeight: 1.3, minHeight: 32 }}>{prod.name[lang]}</div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--price)' }}>{formatEUR(prod.priceCents, lang)}</div>
+                    <div key={prod.id} className={cx(styles.product, qty > 0 && styles.productInCart)}>
+                      <ProductImage product={prod} />
+                      <div className={styles.productName}>{prod.name[lang]}</div>
+                      <div className={styles.productPrice}>{formatEUR(prod.priceCents, lang)}</div>
                       {qty === 0 ? (
-                        <button onClick={() => addToCart(prod.id)} style={{ background: 'var(--bronze-deep)', color: 'var(--on-bronze)', fontSize: 12, padding: '6px 14px', width: '100%' }}>
+                        <button className={styles.addBtn} onClick={() => addToCart(prod.id)}>
                           {t.posAdd}
                         </button>
                       ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center' }}>
-                          <button onClick={() => setQty(prod.id, qty - 1)} aria-label={t.posLess(prod.name[lang])} style={stepBtn}>−</button>
-                          <span style={{ fontSize: 14, fontWeight: 700, minWidth: 18, textAlign: 'center' }}>{qty}</span>
-                          <button onClick={() => setQty(prod.id, qty + 1)} aria-label={t.posMore(prod.name[lang])} style={stepBtn}>+</button>
+                        <div className={styles.stepper}>
+                          <button className={styles.stepBtn} onClick={() => setQty(prod.id, qty - 1)} aria-label={t.posLess(prod.name[lang])}>−</button>
+                          <span className={styles.qty}>{qty}</span>
+                          <button className={styles.stepBtn} onClick={() => setQty(prod.id, qty + 1)} aria-label={t.posMore(prod.name[lang])}>+</button>
                         </div>
                       )}
                     </div>
@@ -298,39 +270,32 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
               </div>
             </div>
 
-            <div style={{
-              background: 'var(--ground)', border: '1px solid var(--gray-800)', borderRadius: 10, padding: isMobile ? 12 : 16,
-              display: 'flex', flexDirection: 'column', gap: 10,
-              position: twoCol ? 'sticky' : undefined, top: twoCol ? 84 : undefined,
-            }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink-bright)' }}>{t.posBasket} ({cartCount})</div>
+            <div className={styles.basket}>
+              <div className={styles.basketTitle}>{t.posBasket} ({cartCount})</div>
               {cartLines.length === 0 ? (
-                <p style={{ color: 'var(--ink-dim)', fontSize: 13 }}>{t.posEmpty}</p>
+                <p className={styles.notice}>{t.posEmpty}</p>
               ) : (
                 <>
                   {cartLines.map(l => (
-                    <div key={l.product.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-pale)' }}>
-                      <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div key={l.product.id} className={styles.basketLine}>
+                      <span className={styles.basketItem}>
                         {l.qty}× {l.product.name[lang]}
                       </span>
-                      <span style={{ color: 'var(--ink-pale)' }}>{formatEUR(l.product.priceCents * l.qty, lang)}</span>
-                      <button onClick={() => setQty(l.product.id, 0)} aria-label={t.posRemove(l.product.name[lang])} style={{ background: 'transparent', border: 'none', color: 'var(--ink-dim)', cursor: 'pointer', fontSize: 14, padding: '0 4px' }}>✕</button>
+                      <span>{formatEUR(l.product.priceCents * l.qty, lang)}</span>
+                      <button className={styles.removeBtn} onClick={() => setQty(l.product.id, 0)} aria-label={t.posRemove(l.product.name[lang])}>✕</button>
                     </div>
                   ))}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--gray-850)', paddingTop: 8, fontSize: 15, fontWeight: 700, color: 'var(--ink-bright)' }}>
+                  <div className={styles.basketTotal}>
                     <span>{t.posTotal}</span><span>{formatEUR(totalCents, lang)}</span>
                   </div>
-                  <p style={{ fontSize: 11.5, color: 'var(--ink-dim)', lineHeight: 1.5 }}>{t.posSealNote(sealedSummary)}</p>
+                  <p className={styles.sealNote}>{t.posSealNote(sealedSummary)}</p>
                 </>
               )}
-              {posError && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{posError}</p>}
+              {posError && <p className={styles.posError}>{posError}</p>}
               <button
+                className={styles.checkout}
                 onClick={handleCheckout}
                 disabled={cartLines.length === 0 || posSelling || !!confirmingMsg}
-                style={{
-                  background: 'var(--bronze-deep)', color: 'var(--on-bronze)', width: '100%', fontSize: isMobile ? 14 : undefined,
-                  opacity: (cartLines.length === 0 || posSelling || !!confirmingMsg) ? 0.4 : 1,
-                }}
               >
                 {posSelling ? t.posSealing : t.posCheckout}
               </button>
@@ -340,94 +305,83 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
       </div>
 
       {/* Herramientas de tienda: analítica y campañas (secundario) */}
-      <div style={{ ...card, padding: storeToolsOpen ? (isMobile ? 14 : 26) : '14px 18px' }}>
+      <div className={cx(styles.card, !storeToolsOpen && styles.toolsClosed)}>
         <button
+          className={styles.toolsToggle}
           onClick={() => setStoreToolsOpen(o => !o)}
           aria-expanded={storeToolsOpen}
-          style={{
-            width: '100%', background: 'transparent', border: 'none', padding: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer',
-            marginBottom: storeToolsOpen ? (isMobile ? 14 : 20) : 0,
-          }}
         >
           {/* SVG en vez del carácter Unicode ⚙: cada plataforma lo renderiza
               con su propia fuente de emoji/símbolos (3D y a color en iOS,
               plano en Android, y con ︎ forzando texto plano el glifo de
               iOS quedaba encima minúsculo). Un SVG se ve igual en todas. */}
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600, color: 'var(--ink-dim)' }}>
+          <span className={styles.toolsLabel}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
             </svg>
             {t.storeTools}
           </span>
-          <span aria-hidden="true" style={{ fontSize: 16, color: 'var(--accent-blue)', transition: 'transform 0.2s', display: 'inline-block', transform: storeToolsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+          <span aria-hidden="true" className={styles.toolsChevron}>▼</span>
         </button>
 
         {storeToolsOpen && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className={styles.toolsBody}>
 
             {/* Market intelligence */}
-            <div style={tool} data-tour="insights-section">
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
-                <h3 style={{ ...toolTitle, margin: 0 }}>{t.insightsTitle}</h3>
+            <div className={styles.tool} data-tour="insights-section">
+              <div className={styles.toolHeader}>
+                <h3 className={styles.toolTitle}>{t.insightsTitle}</h3>
                 {/* Periodo que analizará el próximo informe. Cambiarlo no genera
                     nada por sí solo: hay que pulsar el botón. */}
-                <div style={{ display: 'flex', gap: 2, border: '1px solid var(--line)', borderRadius: 8, padding: 2 }}>
+                <div className={styles.ranges}>
                   {TIME_RANGES.map(r => (
-                    <button key={r} disabled={loadingInsights}
+                    <button key={r} className={styles.range} disabled={loadingInsights}
                       onClick={() => setInsightsRange(r)}
-                      aria-pressed={insightsRange === r}
-                      style={{
-                        background: insightsRange === r ? 'var(--surface)' : 'transparent',
-                        color: insightsRange === r ? 'var(--ink)' : 'var(--ink-dim)',
-                        fontSize: 12, fontWeight: insightsRange === r ? 600 : 500,
-                        padding: '3px 9px', borderRadius: 6,
-                      }}>
+                      aria-pressed={insightsRange === r}>
                       {t.insightsRanges[r]}
                     </button>
                   ))}
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 10, marginBottom: 16 }}>
+              <div className={styles.insightsForm}>
                 <input
+                  className={styles.insightsInput}
                   type="text"
                   placeholder={t.insightsPlaceholder}
                   value={storeProfile}
                   onChange={e => setStoreProfile(e.target.value)}
-                  style={{ flex: 1 }}
                 />
-                <button onClick={() => handleInsights()} disabled={loadingInsights}
-                  style={{ background: 'var(--bronze-deep)', color: 'var(--on-bronze)', whiteSpace: 'nowrap', fontSize: isMobile ? 14 : undefined }}>
+                <button className={styles.generate} onClick={() => handleInsights()} disabled={loadingInsights}>
                   {loadingInsights ? t.insightsGenerating : t.insightsGenerate}
                 </button>
               </div>
               {insightsError ? (
-                <p style={{ color: 'var(--danger)', fontSize: 14 }}>Error: {insightsError}</p>
+                <p className={styles.insightsError}>Error: {insightsError}</p>
               ) : insights ? (
                 <>
                   {(insights.trending ?? []).length > 0 && (
-                    <div style={{ marginBottom: 24 }}>
-                      <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>{t.insightsTrending} · {t.insightsRangeNames[shownRange].toUpperCase()}</div>
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <div className={styles.trending}>
+                      <div className={styles.sectionLabel}>{t.insightsTrending} · {t.insightsRangeNames[shownRange].toUpperCase()}</div>
+                      <div className={styles.trendChips}>
                         {insights.trending.map((item, i) => (
-                          <span key={i} style={{ background: 'var(--ground)', border: '1px solid var(--bronze-deep)', borderRadius: 20, padding: '4px 12px', fontSize: 13 }}>{item}</span>
+                          <span key={i} className={styles.trendChip}>{item}</span>
                         ))}
                       </div>
                     </div>
                   )}
-                  <p style={{ color: 'var(--ink-pale)', fontSize: isMobile ? 13 : 14, lineHeight: 1.55, margin: '0 0 24px' }}>{insights.summary}</p>
+                  <p className={styles.summary}>{insights.summary}</p>
                   <div>
-                    <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>{t.insightsRecommendations}</div>
-                    <ol style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                    <div className={styles.sectionLabel}>{t.insightsRecommendations}</div>
+                    <ol className={styles.recs}>
                       {(insights.recommendations ?? []).map((r, i) => {
                         const title = typeof r === 'string' ? null : r.title;
                         const detail = typeof r === 'string' ? r : r.detail;
                         return (
-                          <li key={i} style={{ display: 'flex', gap: 10, padding: '8px 0', borderTop: i === 0 ? 'none' : '1px solid var(--gray-850)' }}>
-                            <span style={{ flexShrink: 0, fontSize: isMobile ? 13 : 14, color: 'var(--bronze)', lineHeight: 1.4, minWidth: 12 }}>{i + 1}</span>
+                          <li key={i} className={styles.rec}>
+                            <span className={styles.recNumber}>{i + 1}</span>
                             <div>
-                              {title && <div style={{ color: 'var(--ink)', fontWeight: 500, fontSize: isMobile ? 13 : 14, lineHeight: 1.4 }}>{title}</div>}
-                              <div style={{ color: 'var(--ink-soft)', fontSize: isMobile ? 12 : 13, lineHeight: 1.5, marginTop: title ? 2 : 0 }}>{detail}</div>
+                              {title && <div className={styles.recTitle}>{title}</div>}
+                              <div className={styles.recDetail}>{detail}</div>
                             </div>
                           </li>
                         );
@@ -436,7 +390,7 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
                   </div>
                 </>
               ) : (
-                <p style={{ color: 'var(--ink-dim)', fontSize: isMobile ? 13 : 14 }}>{t.insightsEmpty}</p>
+                <p className={styles.insightsEmpty}>{t.insightsEmpty}</p>
               )}
             </div>
 
@@ -445,36 +399,33 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
                 incluida la insignia "Soon"): el título y el formulario
                 llevan su propia opacity para verse apagados, y "Soon" no
                 lleva ninguna, así que siempre se ve nítida. */}
-            <div style={{ ...tool, background: 'var(--ground)', border: '1px solid var(--line-soft)' }} data-tour="campaign-section">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <h3 style={{ ...toolTitle, margin: 0, opacity: 0.3 }}>{t.campaignTitle}</h3>
-                <span style={{
-                  fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px',
-                  color: 'var(--bronze-deep)', background: 'var(--bronze-wash)', border: '1px solid var(--bronze-deep)', borderRadius: 999, padding: '2px 8px',
-                }}>
+            <div className={cx(styles.tool, styles.campaignTool)} data-tour="campaign-section">
+              <div className={styles.campaignHeader}>
+                <h3 className={cx(styles.toolTitle, styles.dimmed)}>{t.campaignTitle}</h3>
+                <span className={styles.soon}>
                   {t.campaignSoon}
                 </span>
               </div>
-              <form onSubmit={handleCreateCampaign} style={{ opacity: 0.3 }}>
-              <fieldset disabled style={{ border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14, cursor: 'not-allowed' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
+              <form className={styles.dimmed} onSubmit={handleCreateCampaign}>
+              <fieldset className={styles.campaignFields} disabled>
+                <div className={styles.campaignGrid}>
                   <div>
-                    <label style={{ fontSize: isMobile ? 13 : undefined }}>{t.campaignTargetLabel}</label>
+                    <label>{t.campaignTargetLabel}</label>
                     <select value={form.targetCategory} onChange={e => setForm(f => ({ ...f, targetCategory: e.target.value }))}>
                       {CATEGORIES.map(c => <option key={c} value={c}>{catLabel[c]}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: isMobile ? 13 : undefined }}>{t.campaignMinLabel}</label>
+                    <label>{t.campaignMinLabel}</label>
                     <input type="number" min={1} value={form.minSignals} onChange={e => setForm(f => ({ ...f, minSignals: Number(e.target.value) }))} />
                   </div>
                 </div>
                 <div>
-                  <label style={{ fontSize: isMobile ? 13 : undefined }}>{t.campaignMessageLabel}</label>
+                  <label>{t.campaignMessageLabel}</label>
                   <input type="text" placeholder={t.campaignMessagePlaceholder} value={form.message}
                     onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
                 </div>
-                <button type="submit" disabled={creating} style={{ background: 'var(--bronze-deep)', color: 'var(--on-bronze)', width: isMobile ? '100%' : undefined, alignSelf: isMobile ? undefined : 'flex-start', fontSize: isMobile ? 14 : undefined }}>
+                <button className={styles.campaignSubmit} type="submit" disabled={creating}>
                   {creating ? t.campaignSubmitting : t.campaignSubmit}
                 </button>
               </fieldset>
@@ -483,32 +434,27 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
 
             {/* Campañas registradas */}
             {campaigns.length > 0 && (
-              <div style={tool}>
-                <h3 style={toolTitle}>{t.campaignListTitle}</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className={styles.tool}>
+                <h3 className={styles.toolTitle}>{t.campaignListTitle}</h3>
+                <div className={styles.campaignList}>
                   {campaigns.map(c => {
                     const match = matches[c.id];
                     return (
-                      <div key={c.id} style={{ background: 'var(--ground)', border: '1px solid var(--gray-900)', borderRadius: 8, padding: isMobile ? 12 : 16, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'flex-start', gap: isMobile ? 10 : 16 }}>
+                      <div key={c.id} className={styles.campaign}>
                         <div>
-                          <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, marginBottom: 4 }}>{c.message}</div>
-                          <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
+                          <div className={styles.campaignMessage}>{c.message}</div>
+                          <div className={styles.campaignMeta}>
                             {catLabel[c.targetCategory as Category]} · {t.campaignMinSuffix(c.minSignals)} · {t.campaignId(c.id)}
                           </div>
-                          {match && <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 8 }}>{match.reason}</div>}
+                          {match && <div className={styles.campaignReason}>{match.reason}</div>}
                         </div>
-                        <div style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', alignItems: isMobile ? 'center' : 'flex-end', gap: 8, flexShrink: 0 }}>
+                        <div className={styles.campaignSide}>
                           {match && (
-                            <span style={{
-                              background: match.matches ? '#064e3b' : 'var(--gray-900)',
-                              color: match.matches ? '#34d399' : 'var(--gray-600)',
-                              borderRadius: 20, padding: '4px 14px', fontSize: 13, fontWeight: 600,
-                            }}>
+                            <span className={cx(styles.matchBadge, match.matches && styles.matchBadgeOn)}>
                               {match.matches ? t.campaignActive : t.campaignNoMatch}
                             </span>
                           )}
-                          <button onClick={() => handleRefreshMatch(c.id)} disabled={refreshing === c.id}
-                            style={{ background: 'var(--surface-2)', border: '1px solid var(--gray-850)', color: 'var(--ink-soft)', fontSize: 12, padding: '5px 12px' }}>
+                          <button className={styles.refreshMatch} onClick={() => handleRefreshMatch(c.id)} disabled={refreshing === c.id}>
                             {refreshing === c.id ? '...' : t.campaignRefresh}
                           </button>
                         </div>
@@ -523,11 +469,7 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
         )}
       </div>
 
-      {/* Midnight branding */}
-      <div style={{ marginTop: isMobile ? 24 : 80, padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 25, width: '100%' }}>
-        <span className="builtOnLabel" style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
-        <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" className="midnight-logo" style={{ height: 28, opacity: 0.85 }} />
-      </div>
+      <BuiltOnMidnight className={styles.builtOn} />
     </>
   );
 }

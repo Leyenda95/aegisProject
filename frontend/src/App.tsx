@@ -7,6 +7,7 @@ import TourGuide from './components/TourGuide.tsx';
 import { type Campaign, type MatchResult, type Lang } from './api.ts';
 import { type ConnectedAPI, type WalletInfo, type ReceiptJSON, listWallets, connectWallet, deployViaLace, seedViaLace, registerStoreViaLace, checkStoreRegistered, getLocalContractAddress, getSponsorAvailable } from './lace.ts';
 import { T } from './i18n.ts';
+import { cx } from './cx.ts';
 import { useAggregateState } from './hooks/useAggregateState.ts';
 import { useVisibleInterval } from './hooks/useVisibleInterval.ts';
 import { CONTRACT_ADDRESS, NETWORK_ID } from './chainConfig.ts';
@@ -33,17 +34,6 @@ function initialLang(): Lang {
 
 // Tutorial guiado desactivado de momento. Poner a true para reactivarlo.
 const TOUR_ENABLED = false;
-
-const btnBase: React.CSSProperties = {
-  padding: '10px 22px', fontSize: 14, fontWeight: 600, letterSpacing: '0.3px', borderRadius: 8, cursor: 'pointer', border: 'none',
-};
-
-const pill: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', gap: 7,
-  fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.04em',
-  padding: '4px 11px', border: '1px solid var(--line)', borderRadius: 999,
-  color: 'var(--ink-dim)', whiteSpace: 'nowrap',
-};
 
 /** Los errores del SDK son larguísimos. Deja el detalle en la consola y muestra solo un código corto. */
 function briefError(label: string, e: unknown): string {
@@ -254,7 +244,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className={styles.app}>
       {!landed && <LandingScreen onEnter={() => setLanded(true)} />}
       {landed && tourActive && (
         <TourGuide lang={lang} onClose={() => setTourActive(false)} onSetTab={setTab} />
@@ -265,26 +255,26 @@ export default function App() {
             bajo el logo solo en móvil (ver .brandGroup en App.module.css) */}
         <div className={styles.brandGroup}>
           <div className={styles.brand}>
-            <img className={styles.logo} src="/images/Aegis_logo_original.png" alt="Aegis" style={{ objectFit: 'contain' }} />
+            <img className={styles.logo} src="/images/Aegis_logo_original.png" alt="Aegis" />
             {/* Móvil: wordmark con "AEGIS" integrado en vez de marca + <h1>
                 por separado, una variante por tema (ver .logo/.logoMobileWordmark
                 en el media query de móvil). */}
-            <img className={styles.logoMobileWordmarkLight} src="/images/AEGIS_logo_movil_black.png" alt="Aegis" style={{ objectFit: 'contain' }} />
-            <img className={styles.logoMobileWordmarkDark} src="/images/AEGIS_logo_movil_white.png" alt="Aegis" style={{ objectFit: 'contain' }} />
+            <img className={styles.logoMobileWordmarkLight} src="/images/AEGIS_logo_movil_black.png" alt="Aegis" />
+            <img className={styles.logoMobileWordmarkDark} src="/images/AEGIS_logo_movil_white.png" alt="Aegis" />
             <div className={styles.brandText}>
-              <h1 className={styles.brandName} style={{ fontWeight: 600, color: 'var(--ink-bright)', letterSpacing: 2.6, lineHeight: 1.1 }}>AEGIS</h1>
-              <p className={styles.brandTagline} style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 3 }}>{t.tagline}</p>
+              <h1 className={styles.brandName}>AEGIS</h1>
+              <p className={styles.brandTagline}>{t.tagline}</p>
             </div>
           </div>
 
           {landed && (
             <span className={styles.headerPills}>
-              <span style={pill}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: lace ? '#63B98A' : '#8a6440' }} />
+              <span className={styles.pill}>
+                <span className={cx(styles.dot, lace ? styles.dotOn : styles.dotIdle)} />
                 {networkId}
               </span>
-              <span style={pill} title={sponsored ? t.sponsorOnHint : t.sponsorOffHint}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: sponsored ? '#63B98A' : 'var(--ink-dim)' }} />
+              <span className={styles.pill} title={sponsored ? t.sponsorOnHint : t.sponsorOffHint}>
+                <span className={cx(styles.dot, sponsored && styles.dotOn)} />
                 {sponsored ? t.sponsorOn : t.sponsorOff}
               </span>
             </span>
@@ -295,25 +285,17 @@ export default function App() {
         <div className={styles.controls}>
           <div className={styles.controlsSecondary}>
             <button
+              className={styles.themeBtn}
               onClick={toggleTheme}
               title={theme === 'dark' ? t.lightMode : t.darkMode}
               aria-label={theme === 'dark' ? t.lightMode : t.darkMode}
-              style={{
-                background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--ink-dim)',
-                width: 34, height: 34, borderRadius: 8, padding: 0, fontSize: 15, lineHeight: 1,
-              }}
             >
               {theme === 'dark' ? '☀' : '☾'}
             </button>
 
-            <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: 8, padding: 3, border: '1px solid var(--line)' }}>
+            <div className={styles.langSwitch}>
               {(['es', 'en'] as Lang[]).map(l => (
-                <button key={l} onClick={() => chooseLang(l)} aria-pressed={lang === l} style={{
-                  background: lang === l ? 'var(--bronze-wash)' : 'transparent',
-                  color: lang === l ? 'var(--ink-bright)' : 'var(--ink-dim)',
-                  border: `1px solid ${lang === l ? 'var(--bronze-deep)' : 'transparent'}`,
-                  padding: '5px 14px', fontSize: 12, fontWeight: 700, borderRadius: 6,
-                }}>
+                <button key={l} className={styles.langBtn} onClick={() => chooseLang(l)} aria-pressed={lang === l}>
                   {l.toUpperCase()}
                 </button>
               ))}
@@ -322,80 +304,57 @@ export default function App() {
 
           <div className={styles.controlsWallet}>
           {!lace && availableWallets.length > 1 ? (
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div className={styles.walletChoices}>
               {availableWallets.map(w => (
-                <button key={w.key} onClick={() => handleConnectWallet(w.key)} disabled={laceLoading} style={{
-                  ...btnBase,
-                  background: 'var(--bronze-deep)', color: 'var(--on-bronze)',
-                  padding: '7px 13px', fontSize: 13,
-                  textTransform: 'capitalize',
-                }}>
+                <button key={w.key} className={cx(styles.btn, styles.btnPrimary, styles.walletChoice)} onClick={() => handleConnectWallet(w.key)} disabled={laceLoading}>
                   {w.name}
                 </button>
               ))}
             </div>
           ) : !lace ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-              <button onClick={() => handleConnectWallet()} disabled={laceLoading} style={{
-                ...btnBase,
-                background: 'var(--bronze-deep)', color: 'var(--on-bronze)',
-                padding: '7px 17px', fontSize: 14,
-              }}>
+            <div className={styles.stack}>
+              <button className={cx(styles.btn, styles.btnPrimary, styles.walletMain)} onClick={() => handleConnectWallet()} disabled={laceLoading}>
                 {laceLoading ? t.connecting : t.connectLace}
               </button>
               {laceSlow && (
-                <span style={{ fontSize: 11, color: '#888', maxWidth: 200, textAlign: 'right', lineHeight: 1.4 }}>
+                <span className={styles.slowHint}>
                   {t.laceSlowHint}
                 </span>
               )}
             </div>
           ) : !contractAddress ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-              <button onClick={handleDeploy} disabled={deploying || !!confirmingMsg} style={{
-                ...btnBase,
-                background: 'var(--bronze-deep)', color: 'var(--on-bronze)',
-                padding: '7px 17px', fontSize: 14,
-              }}>
+            <div className={styles.stack}>
+              <button className={cx(styles.btn, styles.btnPrimary, styles.walletMain)} onClick={handleDeploy} disabled={deploying || !!confirmingMsg}>
                 {deploying ? t.deploying : t.deployContract}
               </button>
               {deployError && (
-                <span style={{ fontSize: 11, color: 'var(--danger)', maxWidth: 220, textAlign: 'right' }}>{deployError}</span>
+                <span className={styles.setupError}>{deployError}</span>
               )}
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className={styles.walletRow}>
               {!storeRegistered && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                  <button onClick={handleRegisterStore} disabled={registeringStore || !!confirmingMsg} style={{
-                    ...btnBase,
-                    background: 'transparent', color: 'var(--bronze-deep)',
-                    border: '1px solid var(--bronze-deep)',
-                    padding: '9px 18px', fontSize: 13,
-                  }}>
+                <div className={styles.stack}>
+                  <button className={cx(styles.btn, styles.btnOutline, styles.setupBtn)} onClick={handleRegisterStore} disabled={registeringStore || !!confirmingMsg}>
                     {registeringStore ? t.registeringStore : t.registerStore}
                   </button>
                   {registerStoreError && (
-                    <span style={{ fontSize: 11, color: 'var(--danger)', maxWidth: 220, textAlign: 'right' }}>{registerStoreError}</span>
+                    <span className={styles.setupError}>{registerStoreError}</span>
                   )}
                 </div>
               )}
               {/* Datos de demo: visible tras desplegar, se oculta cuando ya se ha sembrado (flag local o isSeeded on-chain, que se resetea al redesplegar). */}
               {!seeded && Number(aggregateState?.isSeeded ?? 0) === 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                  <button onClick={handleSeed} disabled={seeding || !!confirmingMsg} style={{
-                    ...btnBase,
-                    background: 'transparent', color: 'var(--bronze-deep)',
-                    border: '1px solid var(--bronze-deep)',
-                    padding: '9px 18px', fontSize: 13,
-                  }}>
+                <div className={styles.stack}>
+                  <button className={cx(styles.btn, styles.btnOutline, styles.setupBtn)} onClick={handleSeed} disabled={seeding || !!confirmingMsg}>
                     {seeding ? t.seeding : t.seedData}
                   </button>
                   {seedError && (
-                    <span style={{ fontSize: 12, color: 'var(--danger)', maxWidth: 240, textAlign: 'right', lineHeight: 1.4 }}>{seedError}</span>
+                    <span className={styles.seedError}>{seedError}</span>
                   )}
                 </div>
               )}
-              <span style={pill}>Wallet · {walletAddress ? `…${walletAddress.slice(-6)}` : 'connected'}</span>
+              <span className={styles.pill}>Wallet · {walletAddress ? `…${walletAddress.slice(-6)}` : 'connected'}</span>
             </div>
           )}
           </div>
@@ -405,18 +364,13 @@ export default function App() {
               limitado al del propio botón de Connect Wallet en vez de a todo
               el bloque de controles. */}
           {laceError && (
-            <span className={styles.controlsError} style={{ fontSize: 12, color: 'var(--danger)', textAlign: 'right', lineHeight: 1.4 }}>{laceError}</span>
+            <span className={styles.controlsError}>{laceError}</span>
           )}
         </div>
       </header>
 
-      {/* Aviso global: una transacción ya se envió y se está esperando su confirmación on-chain antes de permitir la siguiente. */}
       {confirmingMsg && (
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          fontSize: 12, color: '#c9a468', background: 'var(--surface)',
-          borderBottom: '1px solid var(--line)', padding: '6px 12px',
-        }}>
+        <div className={styles.confirming}>
           <span className="aegis-spinner" />
           {confirmingMsg}
         </div>
@@ -431,24 +385,18 @@ export default function App() {
         />
       )}
       {landed && breakdownOpen && (
-        <div style={{ borderBottom: '1px solid var(--line)', background: 'var(--surface)', padding: '16px 24px' }}>
-          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+        <div className={styles.breakdown}>
+          <div className={styles.breakdownInner}>
             <SignalsBreakdown state={aggregateState} lang={lang} />
           </div>
         </div>
       )}
 
       {landed && (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 16px 0' }}>
-          <div style={{ display: 'inline-flex', gap: 3, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 10, padding: 3 }}>
+        <div className={styles.tabsWrap}>
+          <div className={styles.tabs}>
             {(['store', 'user'] as Tab[]).map(id => (
-              <button key={id} data-tour={id === 'user' ? 'tab-user' : undefined} onClick={() => setTab(id)} aria-pressed={tab === id} style={{
-                background: tab === id ? 'var(--bronze-wash)' : 'transparent',
-                color: tab === id ? 'var(--ink-bright)' : 'var(--ink-dim)',
-                border: `1px solid ${tab === id ? 'var(--bronze-deep)' : 'transparent'}`,
-                borderRadius: 7, padding: '8px 28px', fontSize: 13, fontWeight: 600,
-                fontFamily: 'var(--font-display)', cursor: 'pointer',
-              }}>
+              <button key={id} className={styles.tab} data-tour={id === 'user' ? 'tab-user' : undefined} onClick={() => setTab(id)} aria-pressed={tab === id}>
                 {id === 'store' ? t.tabStore : t.tabUser}
               </button>
             ))}
@@ -460,10 +408,10 @@ export default function App() {
           que una acción en curso en una pestaña (p. ej. esperando la confirmación de un
           checkout) no se pierda si cambias a la otra antes de que termine. */}
       <main className={styles.main}>
-        <div style={{ display: tab === 'store' ? 'block' : 'none' }}>
+        <div hidden={tab !== 'store'}>
           <StoreView lang={lang} lace={lace} sponsored={sponsored} contractAddress={contractAddress} campaigns={campaigns} setCampaigns={setCampaigns} matches={matches} setMatches={setMatches} aggregateState={aggregateState} onReceiptGenerated={setLastReceipt} confirmingMsg={confirmingMsg} setConfirmingMsg={setConfirmingMsg} onGoToUser={() => { setTab('user'); setGoToContributeSignal(n => n + 1); window.scrollTo({ top: 0 }); }} publishedReceiptNonce={publishedReceiptNonce} />
         </div>
-        <div style={{ display: tab === 'user' ? 'block' : 'none' }}>
+        <div hidden={tab !== 'user'}>
           <UserView lang={lang} lace={lace} sponsored={sponsored} contractAddress={contractAddress} lastReceipt={lastReceipt} onReceiptConsumed={() => setLastReceipt(null)} confirmingMsg={confirmingMsg} setConfirmingMsg={setConfirmingMsg} onSignalPublished={(receipt) => setPublishedReceiptNonce(receipt.nonce)} goToContributeSignal={goToContributeSignal} />
         </div>
       </main>

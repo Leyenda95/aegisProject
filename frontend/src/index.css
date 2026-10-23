@@ -199,15 +199,6 @@ label { font-size: 13px; color: var(--ink-dim); margin-bottom: 6px; display: blo
   animation: aegis-dot-pulse 1.4s ease-in-out infinite;
 }
 
-/* Chevrones de "hay más contenido, desliza" (StatsRibbon en móvil): un
-   ligero desplazamiento a la derecha justo cuando cada uno brilla más, el
-   `animation-delay` escalonado entre los dos hace que se note como una ola
-   avanzando, no solo iluminándose. */
-@keyframes aegis-chevron-flow {
-  0%, 100% { opacity: 0.25; transform: translateX(0); }
-  50% { opacity: 1; transform: translateX(1.5px); }
-}
-
 /* Pequeño spinner para "esperando confirmación en la red", en vez de un emoji fijo. */
 @keyframes aegis-spin { to { transform: rotate(360deg); } }
 .aegis-spinner {
@@ -219,13 +210,4 @@ label { font-size: 13px; color: var(--ink-dim); margin-bottom: 6px; display: blo
   border-top-color: var(--bronze);
   border-radius: 50%;
   animation: aegis-spin 0.7s linear infinite;
-}
-
-/* "+N" que aparece sobre una categoría de la cinta cuando entran señales
-   nuevas (ver StatsRibbon): entra, se mantiene y se desvanece subiendo. */
-@keyframes aegis-bump-float {
-  0% { opacity: 0; transform: translateY(4px); }
-  12% { opacity: 1; transform: translateY(0); }
-  65% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-5px); }
 }

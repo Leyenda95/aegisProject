@@ -1,0 +1,615 @@
+/* Tarjetas de la vista: punto de venta y herramientas de tienda. */
+.card {
+  margin-bottom: 16px;
+  padding: 26px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.cardTitle {
+  margin-bottom: 16px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Avisos de "despliega el contrato" / "conecta una wallet" en lugar de la caja. */
+.notice {
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+
+/* ---------- Punto de venta ---------- */
+
+/* Catálogo y cesta: una columna, y en escritorio la cesta a la derecha. */
+.pos {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* Con .aegis-hint (index.css): "¡Haz tu primera compra!". */
+.firstPurchase {
+  align-self: flex-start;
+  margin-bottom: 6px;
+}
+
+.catalogHint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+
+.categories {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.category {
+  padding: 10px 6px;
+  font-size: 12px;
+  color: var(--ink-dim);
+  background: var(--surface-2);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.category[aria-pressed="true"] {
+  color: var(--ink-bright);
+  background: #926a4510;
+  border-color: var(--bronze-deep);
+}
+
+.products {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.product {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.productInCart {
+  border-color: var(--bronze-deep);
+}
+
+.productName {
+  min-height: 32px;
+  font-size: 12px;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--ink-pale);
+}
+
+.productPrice {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--price);
+}
+
+.addBtn {
+  width: 100%;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--on-bronze);
+  background: var(--bronze-deep);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.stepBtn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--ink-pale);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.qty {
+  min-width: 18px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.basket {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--ground);
+  border: 1px solid var(--gray-800);
+  border-radius: 10px;
+}
+
+.basketTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-bright);
+}
+
+.basketLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-pale);
+}
+
+.basketItem {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.removeBtn {
+  padding: 0 4px;
+  font-size: 14px;
+  color: var(--ink-dim);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.basketTotal {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-bright);
+  border-top: 1px solid var(--gray-850);
+}
+
+.sealNote {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-dim);
+}
+
+.posError {
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.checkout {
+  width: 100%;
+  color: var(--on-bronze);
+  background: var(--bronze-deep);
+}
+
+/* Ticket ya sellado, con su QR. */
+.sold {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.scanHint {
+  font-size: 13px;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+/* Con .aegis-hint (index.css), en verde: "¡Ahora ve a la vista de Usuario!". */
+.hintSuccess {
+  --hint-accent: var(--success);
+  --hint-glow: rgba(100, 209, 169, 0.45);
+}
+
+.soldActions {
+  display: flex;
+  gap: 10px;
+}
+
+.goToUser,
+.newSale {
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.goToUser {
+  color: var(--on-bronze);
+  background: var(--bronze-deep);
+}
+
+.newSale {
+  color: var(--ink-soft);
+  background: var(--surface-2);
+  border: 1px solid var(--gray-850);
+}
+
+/* ---------- Herramientas de tienda ---------- */
+
+/* Plegada: tarjeta más baja, solo con su cabecera. */
+.card.toolsClosed {
+  padding: 14px 18px;
+}
+
+.toolsToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.toolsToggle[aria-expanded="true"] {
+  margin-bottom: 20px;
+}
+
+.toolsLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-dim);
+}
+
+.toolsChevron {
+  display: inline-block;
+  font-size: 16px;
+  color: var(--accent-blue);
+  transform: rotate(0deg);
+  transition: transform 0.2s;
+}
+
+.toolsToggle[aria-expanded="true"] .toolsChevron {
+  transform: rotate(180deg);
+}
+
+.toolsBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tool {
+  padding: 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.toolTitle {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink-bright);
+}
+
+.toolHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.toolHeader .toolTitle {
+  margin: 0;
+}
+
+/* Periodo que analizará el próximo informe (1S, 1M, 3M, 1A). */
+.ranges {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.range {
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-dim);
+  background: transparent;
+  border-radius: 6px;
+}
+
+.range[aria-pressed="true"] {
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.insightsForm {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.insightsInput {
+  flex: 1;
+}
+
+.generate {
+  white-space: nowrap;
+  color: var(--on-bronze);
+  background: var(--bronze-deep);
+}
+
+.insightsError {
+  font-size: 14px;
+  color: var(--danger);
+}
+
+.trending {
+  margin-bottom: 24px;
+}
+
+.sectionLabel {
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.trendChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.trendChip {
+  padding: 4px 12px;
+  font-size: 13px;
+  background: var(--ground);
+  border: 1px solid var(--bronze-deep);
+  border-radius: 20px;
+}
+
+.summary {
+  margin: 0 0 24px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-pale);
+}
+
+.recs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rec {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.rec + .rec {
+  border-top: 1px solid var(--gray-850);
+}
+
+.recNumber {
+  flex-shrink: 0;
+  min-width: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--bronze);
+}
+
+.recTitle {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.recDetail {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.recTitle + .recDetail {
+  margin-top: 2px;
+}
+
+.insightsEmpty {
+  font-size: 14px;
+  color: var(--ink-dim);
+}
+
+/* Crear campaña: desactivado por ahora (ver campaignSoon). */
+.campaignTool {
+  background: var(--ground);
+  border-color: var(--line-soft);
+}
+
+.campaignHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* El título y el formulario llevan su propia opacidad para verse apagados;
+   "Próximamente" no lleva ninguna, así que siempre se ve nítida. */
+.dimmed {
+  opacity: 0.3;
+}
+
+.campaignHeader .toolTitle {
+  margin: 0;
+}
+
+.soon {
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--bronze-deep);
+  background: var(--bronze-wash);
+  border: 1px solid var(--bronze-deep);
+  border-radius: 999px;
+}
+
+.campaignFields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: not-allowed;
+}
+
+.campaignGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.campaignSubmit {
+  align-self: flex-start;
+  color: var(--on-bronze);
+  background: var(--bronze-deep);
+}
+
+.campaignList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.campaign {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  background: var(--ground);
+  border: 1px solid var(--gray-900);
+  border-radius: 8px;
+}
+
+.campaignMessage {
+  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.campaignMeta {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.campaignReason {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.campaignSide {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.matchBadge {
+  padding: 4px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600);
+  background: var(--gray-900);
+  border-radius: 20px;
+}
+
+.matchBadgeOn {
+  color: #34d399;
+  background: #064e3b;
+}
+
+.refreshMatch {
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  background: var(--surface-2);
+  border: 1px solid var(--gray-850);
+}
+
+.builtOn {
+  width: 100%;
+  margin-top: 80px;
+  padding: 16px 0;
+}
+
+/* Desktop (>= 1080px): la cesta, a la derecha del catálogo y fija al bajar. */
+@media (min-width: 1080px) {
+  .pos { grid-template-columns: 1fr 320px; }
+  .basket { position: sticky; top: 84px; }
+}
+
+/* Mobile (< 680px) */
+@media (max-width: 679px) {
+  .card { padding: 14px; }
+  .cardTitle { margin-bottom: 12px; font-size: 15px; }
+  .firstPurchase { align-self: center; }
+  .categories { grid-template-columns: repeat(3, 1fr); }
+  .category { padding: 8px 4px; }
+  .products { grid-template-columns: repeat(2, 1fr); }
+  .basket { padding: 12px; }
+  .toolsToggle[aria-expanded="true"] { margin-bottom: 14px; }
+  .tool { padding: 14px; }
+  .toolTitle { font-size: 15px; }
+  .insightsForm { flex-direction: column; }
+  .summary { font-size: 13px; }
+  .recNumber { font-size: 13px; }
+  .recTitle { font-size: 13px; }
+  .recDetail { font-size: 12px; }
+  .insightsEmpty { font-size: 13px; }
+  .campaignGrid { grid-template-columns: 1fr; }
+  .campaignSubmit { align-self: auto; width: 100%; }
+  .campaign { flex-direction: column; gap: 10px; padding: 12px; }
+  .campaignMessage { font-size: 13px; }
+  .campaignSide { flex-direction: row; align-items: center; }
+  .builtOn { margin-top: 24px; }
+}

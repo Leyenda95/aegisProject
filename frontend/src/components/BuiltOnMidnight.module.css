@@ -1,0 +1,18 @@
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 25px;
+}
+
+/* El color lo pone .builtOnLabel (index.css), que cambia con el tema. */
+.label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.logo {
+  height: 28px;
+  opacity: 0.85;
+}

@@ -21,15 +21,12 @@ export default function LandingScreen({ onEnter }: { onEnter: () => void }) {
         </div>
       </div>
 
+      {/* No usa BuiltOnMidnight: el fondo de la portada es siempre oscuro y
+          aquí el texto y el logo no deben cambiar con el tema (ver .builtOn). */}
       <div className={styles.footer}>
-        <div style={{ textAlign: 'center', padding: '24px 0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 25 }}>
-          {/* Fondo siempre oscuro (ver LandingScreen.module.css .root): color fijo,
-              no var(--ink-dim) (que cambia con el tema y quedaba anaranjado
-              contra este fondo en modo claro), igual que el logo de abajo. */}
-          <span style={{ fontSize: 11, color: 'rgba(245,242,235,0.7)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
-          {/* Fondo siempre oscuro (ver LandingScreen.module.css .root), no lleva la clase
-              midnight-logo: el logo debe seguir en blanco pase lo que pase con el tema. */}
-          <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" style={{ height: 28, opacity: 0.85 }} />
+        <div className={styles.builtOn}>
+          <span className={styles.builtOnText}>Built on</span>
+          <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" className={styles.builtOnLogo} />
         </div>
       </div>
     </div>

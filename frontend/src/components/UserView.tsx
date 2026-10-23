@@ -5,9 +5,11 @@ import { decodeReceiptFromQr } from '../receiptCodec.ts';
 import QrScanner from './QrScanner.tsx';
 import RedactedTicket from './RedactedTicket.tsx';
 import { T } from '../i18n.ts';
-import { useBreakpoint } from '../hooks/useBreakpoint.ts';
+import { cx } from '../cx.ts';
 import { useDialog } from '../hooks/useDialog.ts';
 import UserPhone from './UserPhone.tsx';
+import BuiltOnMidnight from './BuiltOnMidnight.tsx';
+import styles from './UserView.module.css';
 import ProofLocationPicker, { type ProofServerStatus } from './ProofLocationPicker.tsx';
 import { isLocalProofServerUp, loadLocalProofPreference, saveLocalProofPreference } from '../localProofServer.ts';
 
@@ -38,8 +40,6 @@ function isReceiptJSON(v: any): v is ReceiptJSON {
 
 export default function UserView({ lang, lace, sponsored, contractAddress, lastReceipt, onReceiptConsumed, confirmingMsg, onSignalPublished, goToContributeSignal }: Props) {
   const t = T[lang];
-  const bp = useBreakpoint();
-  const isMobile = bp === 'mobile';
   // Recibos publicados como señal en esta sesión, para que pasen a la lista
   // de compras del móvil con su marca (solo en memoria, como el resto del perfil).
   const [published, setPublished] = useState<ReceiptJSON[]>([]);
@@ -150,9 +150,9 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
   }
 
   return (
-    <div style={{ maxWidth: 560, margin: '0 auto' }}>
-      <h2 style={{ fontSize: isMobile ? 17 : 20, fontWeight: 700, marginBottom: 4, textAlign: 'center' }}>{t.userTitle}</h2>
-      <p style={{ color: 'var(--ink-soft)', fontSize: isMobile ? 12 : 13, lineHeight: 1.6, textAlign: 'center', marginBottom: isMobile ? 16 : 24 }}>{t.userSubtitle}</p>
+    <div className={styles.root}>
+      <h2 className={styles.title}>{t.userTitle}</h2>
+      <p className={styles.subtitle}>{t.userSubtitle}</p>
 
       <UserPhone
         lang={lang}
@@ -165,10 +165,10 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
         onScan={() => { setScanError(null); setScanning(true); }}
         scrollTopSignal={goToContributeSignal}
         messages={(justPublished || (publishing && !scanned) || backgroundError || scanError) && <>
-          {justPublished && <p style={{ color: 'var(--success)', fontWeight: 600 }}>{t.userSentTitle} ✓{lastSponsored && ` · ${t.feePaidByAegis}`}</p>}
-          {publishing && !scanned && <p style={{ color: 'var(--ink-soft)' }}>{t.signalConfirming}</p>}
-          {backgroundError && <p style={{ color: 'var(--danger)' }}>{backgroundError}</p>}
-          {scanError && <p style={{ color: 'var(--danger)' }}>{scanError}</p>}
+          {justPublished && <p className={styles.sent}>{t.userSentTitle} ✓{lastSponsored && ` · ${t.feePaidByAegis}`}</p>}
+          {publishing && !scanned && <p className={styles.pending}>{t.signalConfirming}</p>}
+          {backgroundError && <p className={styles.error}>{backgroundError}</p>}
+          {scanError && <p className={styles.error}>{scanError}</p>}
         </>}
       />
 
@@ -198,56 +198,33 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
       )}
 
       {showExplainer && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.75)', zIndex: 1000,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-          }}
-        >
+        <div className={styles.explainerOverlay}>
           <div
             ref={explainerRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="explainer-title"
             tabIndex={-1}
-            style={{
-              position: 'relative', background: 'var(--surface)', border: '1px solid var(--line)',
-              borderRadius: 20, padding: 46, maxWidth: 580, width: '100%',
-              boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5)',
-            }}
+            className={styles.explainer}
           >
-            <button
-              onClick={() => setShowExplainer(false)}
-              aria-label={t.explainerClose}
-              style={{
-                position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none',
-                color: 'var(--ink-dim)', fontSize: 22, width: 32, height: 32, padding: 0, lineHeight: 1,
-              }}
-            >
+            <button className={styles.explainerClose} onClick={() => setShowExplainer(false)} aria-label={t.explainerClose}>
               ×
             </button>
-            <h3 id="explainer-title" style={{ fontFamily: 'var(--font-display)', fontSize: 19, color: 'var(--ink-bright)', marginBottom: 18, paddingRight: 24 }}>
+            <h3 id="explainer-title" className={styles.explainerTitle}>
               {t.explainerTitle}
             </h3>
-            <p style={{ fontSize: 14.5, color: 'var(--ink-pale)', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody1}</p>
-            <p style={{ fontSize: 14.5, color: 'var(--ink-pale)', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody2}</p>
-            <p style={{ fontSize: 14.5, color: 'var(--ink-pale)', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody3}</p>
-            <p style={{ fontSize: 14.5, color: 'var(--ink-pale)', lineHeight: 1.7, marginBottom: 26 }}>{t.explainerBody4}</p>
-            <button
-              onClick={() => setShowExplainer(false)}
-              style={{ display: 'block', margin: '12px auto 0', background: 'var(--bronze-deep)', color: 'var(--on-bronze)', padding: '10px 44px', fontSize: 14, fontWeight: 600 }}
-            >
+            <p className={styles.explainerText}>{t.explainerBody1}</p>
+            <p className={styles.explainerText}>{t.explainerBody2}</p>
+            <p className={styles.explainerText}>{t.explainerBody3}</p>
+            <p className={cx(styles.explainerText, styles.explainerTextLast)}>{t.explainerBody4}</p>
+            <button className={styles.explainerOk} onClick={() => setShowExplainer(false)}>
               {t.explainerClose}
             </button>
           </div>
         </div>
       )}
 
-      {/* Midnight branding */}
-      <div style={{ textAlign: 'center', marginTop: isMobile ? 40 : 80, padding: '24px 0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 25 }}>
-        <span className="builtOnLabel" style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase' }}>Built on</span>
-        <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" className="midnight-logo" style={{ height: 28, opacity: 0.85 }} />
-      </div>
+      <BuiltOnMidnight className={styles.builtOn} />
     </div>
   );
 }

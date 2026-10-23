@@ -1,0 +1,29 @@
+/* Recuadro cuadrado de la foto en el catálogo: 104 px, 84 px en móvil. */
+.frame {
+  flex-shrink: 0;
+  width: 104px;
+  height: 104px;
+  background: var(--surface-2);
+  border-radius: 10px;
+}
+
+/* La foto entera, sin recortar ni deformar, con un margen del 8 %. */
+.photo {
+  display: block;
+  padding: 8px;
+  object-fit: contain;
+}
+
+/* Sin foto: el emoji de la subcategoría, al 42 % del recuadro. */
+.emoji {
+  display: grid;
+  place-items: center;
+  font-size: 44px;
+}
+
+/* Mobile (< 680px) */
+@media (max-width: 679px) {
+  .frame { width: 84px; height: 84px; }
+  .photo { padding: 7px; }
+  .emoji { font-size: 35px; }
+}

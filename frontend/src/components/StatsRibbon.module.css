@@ -1,0 +1,201 @@
+/* Cinta fija bajo la cabecera: el agregado on-chain de un vistazo. */
+.root {
+  position: relative;
+}
+
+.ribbon {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+/* Todavía sin datos (primera carga). */
+.loading {
+  opacity: 0.55;
+}
+
+.totalGroup {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+}
+
+.total {
+  position: relative;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--ink-bright);
+}
+
+.unit {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--ink-dim);
+}
+
+.unitShort {
+  display: none;
+}
+
+.sparkline {
+  flex-shrink: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+/* Categoría con su contador. Cuando entran señales se enciende rápido
+   (.chipBump, 0,3 s) y luego se apaga despacio (1 s). */
+.chip {
+  position: relative;
+  padding: 4px 11px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  white-space: nowrap;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  transition: border-color 1s ease, background 1s ease;
+}
+
+.chipBump {
+  background: var(--bronze-wash);
+  border-color: var(--bronze);
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.chipValue {
+  margin-left: 6px;
+  color: var(--price);
+  transition: color 1s ease;
+}
+
+.chipBump .chipValue {
+  color: #C79A5E;
+}
+
+/* "+N" que aparece sobre un número cuando entran señales nuevas: entra, se
+   mantiene y se desvanece subiendo. La duración llega en línea (BUMP_MS). */
+.bump {
+  position: absolute;
+  top: -11px;
+  right: 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--bronze);
+  pointer-events: none;
+  animation-name: bumpFloat;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes bumpFloat {
+  0% { opacity: 0; transform: translateY(4px); }
+  12% { opacity: 1; transform: translateY(0); }
+  65% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-5px); }
+}
+
+.side {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+}
+
+.breakdownBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  background: var(--bronze-wash);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.breakdownBtn[aria-expanded="true"] {
+  border-color: var(--bronze-deep);
+}
+
+.breakdownChevron {
+  display: inline-block;
+  color: var(--accent-blue);
+  transition: transform 0.2s;
+}
+
+.breakdownBtn[aria-expanded="true"] .breakdownChevron {
+  transform: rotate(180deg);
+}
+
+.refresh {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  white-space: nowrap;
+  color: var(--ink-dim);
+}
+
+/* Aviso de "hay más contenido, desliza" en móvil. Va fuera de .ribbon (que
+   es la que se desplaza) para quedarse fijo en el borde. */
+.scrollHint {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 34px;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+  background: linear-gradient(to right, transparent, var(--surface) 65%);
+  pointer-events: none;
+}
+
+.chevrons {
+  display: flex;
+  gap: 1px;
+}
+
+/* Los dos chevrones se mueven a la vez: un ligero desplazamiento a la
+   derecha justo cuando brillan más, como una ola que avanza. */
+.chevrons svg {
+  animation: chevronFlow 1.8s ease-in-out infinite;
+}
+
+@keyframes chevronFlow {
+  0%, 100% { opacity: 0.25; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(1.5px); }
+}
+
+/* Mobile (< 680px) */
+@media (max-width: 679px) {
+  .ribbon { gap: 14px; padding: 10px 14px; }
+  .total { font-size: 20px; }
+  .unitLong { display: none; }
+  .unitShort { display: inline; }
+  .sparkline { display: none; }
+  .chips { flex-wrap: nowrap; }
+  .scrollHint { display: flex; }
+}

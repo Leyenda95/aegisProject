@@ -11,44 +11,12 @@
   overflow: hidden;
 }
 
-
-.root.noHalo {
-  background: #0A0A0A;
-}
-
 .root.exiting {
   animation: screenOut 0.7s ease forwards;
 }
 
 @keyframes screenOut {
   to { opacity: 0; }
-}
-
-
-/* Grain */
-.grain {
-  position: absolute;
-  inset: -50%;
-  width: 200%;
-  height: 200%;
-  pointer-events: none;
-  opacity: 0.06;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation: grainShift 0.5s steps(1) infinite;
-}
-
-@keyframes grainShift {
-  0%   { transform: translate(0,    0   ); }
-  10%  { transform: translate(-3%, -2% ); }
-  20%  { transform: translate( 2%,  3% ); }
-  30%  { transform: translate(-1%, -4% ); }
-  40%  { transform: translate( 4%,  1% ); }
-  50%  { transform: translate(-2%,  3% ); }
-  60%  { transform: translate( 3%, -3% ); }
-  70%  { transform: translate(-4%,  2% ); }
-  80%  { transform: translate( 1%, -1% ); }
-  90%  { transform: translate(-3%,  4% ); }
-  100% { transform: translate( 2%, -2% ); }
 }
 
 /* Logo hero (EFFECT 3) */
@@ -65,7 +33,6 @@
   width: 107vw;
   object-fit: contain;
   opacity: 0.3;
-  /* transform: translateX(-125px); */
 }
 
 .heroContent {
@@ -88,31 +55,9 @@
 
 }
 
-/* .heroContent .cta{
-  font-size: 17px;
-
-} */
-
-/* Content */
-.content {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  animation: contentIn 1s ease 0.2s both;
-}
-
 @keyframes contentIn {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-.logo {
-  width: 550px;
-  object-fit: contain;
-  margin-bottom: 35px;
-  /* margin-right: 90px; */
-  transform: translateX(-45px);
 }
 
 .title {
@@ -260,4 +205,29 @@
   align-items: center;
   gap: 10px;
   animation: contentIn 1s ease 0.6s both;
+}
+
+.builtOn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 25px;
+  padding: 24px 0 8px;
+  text-align: center;
+}
+
+/* Color fijo, no var(--ink-dim): esa cambia con el tema y en modo claro
+   quedaba anaranjada contra este fondo, que es siempre oscuro. */
+.builtOnText {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(245, 242, 235, 0.7);
+}
+
+/* Sin la clase global midnight-logo, que lo invierte en modo claro: aquí
+   tiene que seguir en blanco pase lo que pase con el tema. */
+.builtOnLogo {
+  height: 28px;
+  opacity: 0.85;
 }
