@@ -140,16 +140,20 @@ export default function MarketView({ lang }: { lang: Lang }) {
 
   const total = data ? Number(data.totals.current.totalSignals ?? 0) : 0;
   const previousTotal = data?.totals.previous ? Number(data.totals.previous.totalSignals ?? 0) : 0;
-  const change = previousTotal > 0 ? (total - previousTotal) / previousTotal : null;
+  // Señales de la carga de datos de demo en el periodo: cuentan, como en la
+  // cinta, pero se dice. Si la hay en este periodo o en el anterior, no se
+  // comparan: miles de señales de golpe falsearían la variación.
+  const demo = Number(data?.demo?.current ?? 0);
+  const comparable = demo === 0 && Number(data?.demo?.previous ?? 0) === 0;
+  const change = comparable && previousTotal > 0 ? (total - previousTotal) / previousTotal : null;
   // El contrato es más nuevo que el periodo: la serie empieza en su despliegue.
   const sinceDeploy = data && data.since !== null && data.since > data.to - data.span ? data.since : null;
-  const seeded = data ? Number(data.seeded) : 0;
 
   const categories = CATEGORIES.map(category => {
     const key = CATEGORY_STATE_KEY[category];
     const count = Number(data?.totals.current[key] ?? 0);
     const before = data?.totals.previous ? Number(data.totals.previous[key] ?? 0) : 0;
-    return { category, count, change: before > 0 ? (count - before) / before : null };
+    return { category, count, change: comparable && before > 0 ? (count - before) / before : null };
   }).sort((a, b) => b.count - a.count);
   const maxCount = Math.max(1, ...categories.map(c => c.count));
 
@@ -175,15 +179,17 @@ export default function MarketView({ lang }: { lang: Lang }) {
               <div className={styles.headline}>
                 <NumberFlow className={styles.figure} value={total} locales={t.locale} />
                 <div className={styles.figureLabel}>{t.marketPeriodLabel[range]}</div>
-                {change !== null ? (
+                {change !== null && (
                   <div className={styles.comparison}>
                     <Delta change={change} locale={t.locale} /> {t.marketVsPrevious[range]}
                   </div>
-                ) : sinceDeploy !== null && (
+                )}
+                {sinceDeploy !== null && (
                   <div className={styles.comparison}>
                     {t.marketSince(new Intl.DateTimeFormat(t.locale, { day: 'numeric', month: 'long' }).format(sinceDeploy))}
                   </div>
                 )}
+                {demo > 0 && <div className={styles.comparison}>{t.marketDemoIncluded(number.format(demo))}</div>}
               </div>
               <TrendChart current={data.current} previous={data.previous} range={data.range} lang={lang} stale={history.isPlaceholderData} />
             </>
@@ -211,7 +217,6 @@ export default function MarketView({ lang }: { lang: Lang }) {
               </li>
             ))}
           </ul>
-          {seeded > 0 && <p className={styles.note}>{t.marketDemoNote(number.format(seeded))}</p>}
         </section>}
 
         <LiveFeed lang={lang} />

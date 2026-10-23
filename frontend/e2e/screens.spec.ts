@@ -48,18 +48,20 @@ const INSIGHTS = {
 };
 
 // Historial del contrato para /history: desplegado hace 50 días (como el de
-// Preprod), con más señales de día que de noche y algo más de actividad
-// cada semana. Lo de la carga de demo (STATE) no cuenta como actividad.
+// Preprod), con la carga de demo (STATE) una hora después, más señales de
+// día que de noche y algo más de actividad cada semana.
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 const DEPLOYED = NOW.getTime() - 50 * DAY;
+const SEEDED_AT = DEPLOYED + HOUR;
 const HOURLY: number[] = [0];
 for (let t = DEPLOYED; t < NOW.getTime(); t += HOUR) {
   const daytime = 2 + 1.5 * Math.sin(((new Date(t).getUTCHours() - 9) / 24) * 2 * Math.PI);
   const growth = 1 + ((t - DEPLOYED) / (50 * DAY)) * 0.3;
   HOURLY.push(HOURLY[HOURLY.length - 1] + Math.round(daytime * growth));
 }
-const activityAt = (t: number) => (t < DEPLOYED ? 0 : HOURLY[Math.min(HOURLY.length - 1, Math.floor((t - DEPLOYED) / HOUR))]);
+const demoAt = (t: number) => (t >= SEEDED_AT ? Number(STATE.totalSignals) : 0);
+const activityAt = (t: number) => (t < DEPLOYED ? 0 : HOURLY[Math.min(HOURLY.length - 1, Math.floor((t - DEPLOYED) / HOUR))]) + demoAt(t);
 
 // Reparto por categoría en el periodo y en el anterior: unas suben y otras bajan.
 const SHARES_NOW: Record<string, number> = { Fashion: 0.29, Food: 0.25, Electronics: 0.17, Sports: 0.14, Home: 0.09, Other: 0.06 };
@@ -90,7 +92,10 @@ function historyFor(range: string) {
       current: split(current[current.length - 1][1], SHARES_NOW),
       previous: previous ? split(previous[previous.length - 1][1], SHARES_BEFORE) : null,
     },
-    seeded: STATE.totalSignals,
+    demo: {
+      current: String(demoAt(now) - demoAt(from)),
+      previous: previous ? String(demoAt(from) - demoAt(from - span)) : null,
+    },
   };
 }
 
@@ -308,6 +313,7 @@ for (const theme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: '3M', exact: true }).click();
       await expect(page.getByText('señales en los últimos 3 meses')).toBeVisible();
       await expect(page.getByText(/cuando se desplegó el contrato/)).toBeVisible();
+      await expect(page.getByText('incluye las 7253 señales de la carga de datos de demo')).toBeVisible();
       await shot(page, `${theme}-mercado-3m`);
     });
   });

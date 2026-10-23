@@ -48,8 +48,8 @@ export type Snapshot = {
   state: AegisState;
   /**
    * Lo que han sumado hasta aquí las cargas de datos de demo (el circuito
-   * seed): miles de señales de golpe que no son actividad del mercado, así
-   * que las series las restan (ver seededAfter).
+   * seed): miles de señales de golpe que no son actividad del mercado. Las
+   * series las cuentan, como los contadores, pero lo dicen (History.demo).
    */
   seeded: AegisState;
   /**
@@ -105,17 +105,19 @@ export function snapshotAt(snapshots: readonly Snapshot[], time: number): Snapsh
   return lo > 0 ? snapshots[lo - 1] : undefined;
 }
 
-/** Señales de actividad (sin las de las cargas de demo) acumuladas en ese momento, por contador. */
-function activityAt(snapshots: readonly Snapshot[], time: number): AegisState {
-  const s = snapshotAt(snapshots, time);
-  if (!s) return ZERO_COUNTERS;
-  const activity = { ...s.state };
-  for (const f of SIGNAL_FIELDS) activity[f] -= s.seeded[f];
-  return activity;
+/** Contadores en ese momento: los de la última transacción hasta entonces, o todo a cero antes del despliegue. */
+function stateAt(snapshots: readonly Snapshot[], time: number): AegisState {
+  return snapshotAt(snapshots, time)?.state ?? ZERO_COUNTERS;
 }
 
 function periodCounts(end: AegisState, start: AegisState): Counts {
   return Object.fromEntries(SIGNAL_FIELDS.map((f) => [f, (end[f] - start[f]).toString()]));
+}
+
+/** Señales de las cargas de datos de demo entre dos momentos. */
+function seededBetween(snapshots: readonly Snapshot[], start: number, end: number): string {
+  const seeded = (t: number) => snapshotAt(snapshots, t)?.seeded.totalSignals ?? 0n;
+  return (seeded(end) - seeded(start)).toString();
 }
 
 export type History = {
@@ -127,14 +129,18 @@ export type History = {
   span: number;
   /** Primera transacción del contrato (su despliegue), o null si no hay ninguna. */
   since: number | null;
-  /** Señales de actividad acumuladas desde `from`, como [instante, señales]. */
+  /** Señales acumuladas desde `from`, como [instante, señales]. Todas, como los contadores del contrato. */
   current: [number, number][];
   /** Lo mismo en el periodo anterior, en los mismos instantes; null si el contrato no existía en todo ese periodo. */
   previous: [number, number][] | null;
-  /** Señales de actividad por contador en el periodo y en el anterior. */
+  /** Señales por contador en el periodo y en el anterior. */
   totals: { current: Counts; previous: Counts | null };
-  /** Señales cargadas como datos de demo, que no cuentan en nada de lo anterior. */
-  seeded: string;
+  /**
+   * De ellas, las de una carga de datos de demo (miles de golpe al montar la
+   * demo): la web lo dice y no compara periodos cuando hay alguna, porque la
+   * comparación saldría falseada.
+   */
+  demo: { current: string; previous: string | null };
 };
 
 /**
@@ -156,10 +162,7 @@ export function buildHistory(snapshots: readonly Snapshot[], range: TimeRange, n
   for (let t = from; t <= gridEnd; t += step) times.push(t);
   if (now > gridEnd) times.push(now);
 
-  const total = (t: number) => {
-    const s = snapshotAt(snapshots, t);
-    return s ? s.state.totalSignals - s.seeded.totalSignals : 0n;
-  };
+  const total = (t: number) => stateAt(snapshots, t).totalSignals;
   const base = total(from);
   const current = times.map((t): [number, number] => [t, Number(total(t) - base)]);
 
@@ -172,7 +175,7 @@ export function buildHistory(snapshots: readonly Snapshot[], range: TimeRange, n
     ? times.map((t): [number, number] => [t, Number(total(Math.min(t - span, from)) - prevBase)])
     : null;
 
-  const atFrom = activityAt(snapshots, from);
+  const atFrom = stateAt(snapshots, from);
   return {
     range,
     from,
@@ -182,10 +185,13 @@ export function buildHistory(snapshots: readonly Snapshot[], range: TimeRange, n
     current,
     previous,
     totals: {
-      current: periodCounts(activityAt(snapshots, now), atFrom),
-      previous: hasPrevious ? periodCounts(atFrom, activityAt(snapshots, prevFrom)) : null,
+      current: periodCounts(stateAt(snapshots, now), atFrom),
+      previous: hasPrevious ? periodCounts(atFrom, stateAt(snapshots, prevFrom)) : null,
     },
-    seeded: (snapshots.at(-1)?.seeded.totalSignals ?? 0n).toString(),
+    demo: {
+      current: seededBetween(snapshots, from, now),
+      previous: hasPrevious ? seededBetween(snapshots, prevFrom, from) : null,
+    },
   };
 }
 

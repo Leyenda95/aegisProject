@@ -221,13 +221,6 @@
   text-align: right;
 }
 
-.note {
-  margin-top: 16px;
-  font-size: var(--text-xs);
-  line-height: 1.5;
-  color: var(--ink-dim);
-}
-
 /* Punto verde que late mientras hay directo, como en la cinta. */
 .live {
   display: inline-flex;

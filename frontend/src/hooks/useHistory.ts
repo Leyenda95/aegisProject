@@ -6,7 +6,7 @@ import { useChain } from '../app/ChainProvider.tsx';
 // volver a la página, o mientras el backend recién arrancado vuelve a leer
 // el historial del contrato (tarda minutos), se enseña al momento en vez de
 // una gráfica vacía, y se sustituye en cuanto llega la nueva.
-const CACHE_KEY = 'aegis-history';
+const CACHE_KEY = 'aegis-history-v2';
 
 type Cache = { contractAddress: string; series: Partial<Record<TimeRange, History>> };
 

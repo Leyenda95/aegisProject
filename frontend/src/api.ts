@@ -134,14 +134,14 @@ export type History = {
   span: number;
   /** Despliegue del contrato; si es posterior al principio del periodo, la serie empieza ahí. */
   since: number | null;
-  /** Señales acumuladas desde el principio del periodo, como [instante, señales]. */
+  /** Señales acumuladas desde el principio del periodo, como [instante, señales]. Todas, como los contadores. */
   current: [number, number][];
   /** Lo mismo en el periodo anterior, en los mismos instantes; null si el contrato aún no existía. */
   previous: [number, number][] | null;
   /** Señales por contador en el periodo y en el anterior. */
   totals: { current: Counts; previous: Counts | null };
-  /** Señales cargadas como datos de demo, que no cuentan en nada de lo anterior. */
-  seeded: string;
+  /** De ellas, las de una carga de datos de demo en cada periodo (falsearían una comparación). */
+  demo: { current: string; previous: string | null };
 };
 
 export async function getHistory(range: TimeRange): Promise<History> {

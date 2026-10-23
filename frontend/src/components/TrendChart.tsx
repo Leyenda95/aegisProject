@@ -19,7 +19,8 @@ type Props = {
 
 const HEIGHT = 200;
 const HEIGHT_NARROW = 170;
-// A la derecha, las cifras del eje vertical; abajo, las fechas.
+// A la derecha, las cifras del eje vertical (como mínimo este margen, ver
+// `right`); abajo, las fechas.
 const MARGIN = { top: 12, right: 44, bottom: 28, left: 0 };
 const DAY_MS = 86_400_000;
 // Ancho mínimo por etiqueta de fecha.
@@ -95,20 +96,24 @@ export default function TrendChart({ current, previous, range, lang, stale = fal
     return () => observer.disconnect();
   }, []);
 
+  const number = new Intl.NumberFormat(t.locale);
+  const compact = new Intl.NumberFormat(t.locale, { notation: 'compact', maximumFractionDigits: 2 });
+  const { max: yMax, ticks: yTicks } = niceScale(Math.max(...current.map(p => p[1]), ...(previous ?? []).map(p => p[1])));
+  const yLabels = yTicks.map(v => compact.format(v));
+  // Las cifras del eje van a la derecha: tanto margen como la más larga, en
+  // letra monoespaciada de 11 px (unos 6,7 px por carácter).
+  const right = Math.max(MARGIN.right, Math.ceil(Math.max(...yLabels.map(l => l.length)) * 6.7) + 12);
+
   const height = width < 520 ? HEIGHT_NARROW : HEIGHT;
-  const plotW = Math.max(0, width - MARGIN.left - MARGIN.right);
+  const plotW = Math.max(0, width - MARGIN.left - right);
   const plotH = height - MARGIN.top - MARGIN.bottom;
   const last = current.length - 1;
   const t0 = current[0][0];
   const t1 = current[last][0];
   const step = current.length > 2 ? current[1][0] - current[0][0] : DAY_MS;
-  const { max: yMax, ticks: yTicks } = niceScale(Math.max(...current.map(p => p[1]), ...(previous ?? []).map(p => p[1])));
   const x = (time: number) => MARGIN.left + ((time - t0) / (t1 - t0 || 1)) * plotW;
   const y = (value: number) => MARGIN.top + plotH - (value / yMax) * plotH;
   const path = (points: Point[]) => points.map(([time, value], i) => `${i ? 'L' : 'M'}${x(time).toFixed(1)},${y(value).toFixed(1)}`).join('');
-
-  const number = new Intl.NumberFormat(t.locale);
-  const compact = new Intl.NumberFormat(t.locale, { notation: 'compact', maximumFractionDigits: 2 });
   const tickLabel = new Intl.DateTimeFormat(t.locale, range === '7d' ? { weekday: 'short', day: 'numeric' } : { day: 'numeric', month: 'short' });
   const pointLabel = new Intl.DateTimeFormat(t.locale, step < DAY_MS
     ? { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }
@@ -166,10 +171,10 @@ export default function TrendChart({ current, previous, range, lang, stale = fal
               </linearGradient>
             </defs>
 
-            {yTicks.map(v => (
+            {yTicks.map((v, i) => (
               <g key={v}>
                 <line className={styles.grid} x1={MARGIN.left} x2={MARGIN.left + plotW} y1={y(v)} y2={y(v)} />
-                <text className={styles.yLabel} x={width - 2} y={y(v)} dy="0.32em" textAnchor="end">{compact.format(v)}</text>
+                <text className={styles.yLabel} x={width - 2} y={y(v)} dy="0.32em" textAnchor="end">{yLabels[i]}</text>
               </g>
             ))}
             {xTicks.map(time => {
