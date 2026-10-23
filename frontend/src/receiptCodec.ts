@@ -74,6 +74,13 @@ async function pipe(bytes: Uint8Array, transform: CompressionStream | Decompress
   return out;
 }
 
+/** Lo leído tiene forma de recibo de Aegis (del escáner o de un enlace /r#). */
+export function isReceiptJSON(v: any): v is ReceiptJSON {
+  return v && Array.isArray(v.lines) && v.lines.length > 0
+    && v.lines.every((l: any) => l && typeof l.subcategory === 'number' && typeof l.qty === 'number' && typeof l.amount === 'string')
+    && typeof v.timestamp === 'string' && typeof v.nonce === 'string';
+}
+
 /** ReceiptJSON -> texto para el QR (compacto + deflate + base64). */
 export async function encodeReceiptForQr(receipt: ReceiptJSON): Promise<string> {
   const json = JSON.stringify(toCompact(receipt));
@@ -81,9 +88,20 @@ export async function encodeReceiptForQr(receipt: ReceiptJSON): Promise<string> 
   return PREFIX + bytesToBase64(deflated);
 }
 
-/** Texto del QR -> ReceiptJSON. Acepta el formato comprimido y, por tolerancia, JSON plano. */
+/**
+ * El enlace que lleva el QR: la cámara normal del móvil abre la web con el
+ * ticket ya cargado (ver ImportReceiptPage). Lo que va detrás de # nunca se
+ * manda al servidor, así que el recibo no sale del móvil.
+ */
+export function receiptLink(code: string): string {
+  return `${window.location.origin}/r#${code}`;
+}
+
+/** Texto del QR -> ReceiptJSON. Acepta el enlace, el formato comprimido y, por tolerancia, JSON plano. */
 export async function decodeReceiptFromQr(data: string): Promise<ReceiptJSON> {
-  const trimmed = data.trim();
+  let trimmed = data.trim();
+  const inLink = trimmed.indexOf(`#${PREFIX}`);
+  if (inLink >= 0) trimmed = decodeURIComponent(trimmed.slice(inLink + 1));
   if (trimmed.startsWith(PREFIX)) {
     const inflated = await pipe(base64ToBytes(trimmed.slice(PREFIX.length)), new DecompressionStream('deflate-raw'));
     return fromCompact(JSON.parse(new TextDecoder().decode(inflated)) as Compact);

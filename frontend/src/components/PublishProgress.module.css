@@ -1,0 +1,189 @@
+/* Publicando una señal (PublishProgress.tsx), dentro del marco de móvil de
+   la ventana de publicar. */
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  padding: 8px 4px 4px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--ink-bright);
+}
+
+.sub {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ink-dim);
+}
+
+.error {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--danger);
+}
+
+/* Marca de hecho: el círculo y luego la ✓ se dibujan solos. */
+.check circle,
+.check path {
+  fill: none;
+  stroke: var(--success);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.check circle {
+  stroke-dasharray: 158;
+  stroke-dashoffset: 158;
+  animation: draw 0.5s ease-out forwards;
+}
+
+.check path {
+  stroke-dasharray: 34;
+  stroke-dashoffset: 34;
+  animation: draw 0.35s ease-out 0.4s forwards;
+}
+
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--text-sm);
+  color: var(--ink-faint);
+}
+
+.marker {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+}
+
+.done {
+  color: var(--ink);
+}
+
+.done .marker {
+  color: var(--surface);
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.active {
+  font-weight: 600;
+  color: var(--ink-bright);
+}
+
+/* El paso en marcha: el borde gira, como el spinner del resto de la web. */
+.active .marker {
+  border-color: var(--bronze-wash);
+  border-top-color: var(--bronze);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.primary,
+.secondary {
+  flex: 1;
+  padding: 9px 14px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.primary {
+  color: var(--on-bronze);
+  background: var(--bronze-deep);
+}
+
+.secondary {
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
+.explainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.explainerTitle {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--ink-bright);
+}
+
+.card {
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.cardTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-bright);
+}
+
+.cardText {
+  margin-top: 3px;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .check circle,
+  .check path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .active .marker {
+    animation: none;
+    border-color: var(--bronze);
+  }
+}

@@ -5,26 +5,33 @@ import {
 } from '../api.ts';
 import { SUBCAT_TO_CATEGORY, formatEUR } from '../catalog.ts';
 import type { ReceiptJSON } from '../lace.ts';
+import type { VaultEntry } from '../vault.ts';
 import { T } from '../i18n.ts';
+import { cx } from '../cx.ts';
 import styles from './UserPhone.module.css';
 
-// Historial de ejemplo: no hay perfil de usuario real todavía. `signaled`
-// marca las compras que ya se publicaron como señal, para que la lista
-// enseñe las dos situaciones.
+type Tab = 'tickets' | 'spending' | 'privacy';
+const TABS: Tab[] = ['tickets', 'spending', 'privacy'];
+
 type Purchase = { key: string; store: string; date: Date; cents: number; subcategory: string; signaled: boolean };
 
-const MOCK_PURCHASES: Purchase[] = [
-  { store: 'Mercadona',       date: '2026-05-21', cents: 14230, subcategory: 'groceries',  signaled: true },
-  { store: 'MediaMarkt',      date: '2026-05-19', cents: 8900,  subcategory: 'mobile',     signaled: false },
-  { store: 'Zara',            date: '2026-05-17', cents: 4500,  subcategory: 'tops',       signaled: true },
-  { store: 'Carrefour',       date: '2026-05-15', cents: 8950,  subcategory: 'groceries',  signaled: false },
-  { store: 'JD Sports',       date: '2026-05-12', cents: 8900,  subcategory: 'footwear',   signaled: true },
-  { store: 'El Corte Inglés', date: '2026-05-10', cents: 9500,  subcategory: 'decor',      signaled: false },
-  { store: 'MediaMarkt',      date: '2026-05-08', cents: 14900, subcategory: 'audio',      signaled: true },
-  { store: 'Pull&Bear',       date: '2026-05-05', cents: 3599,  subcategory: 'bottoms',    signaled: false },
-  { store: 'Fnac',            date: '2026-05-03', cents: 5900,  subcategory: 'gaming',     signaled: false },
-  { store: 'La Tagliatella',  date: '2026-05-01', cents: 4850,  subcategory: 'restaurant', signaled: false },
-].map((p, i) => ({ ...p, key: `mock-${i}`, date: new Date(p.date) }));
+const DAY_MS = 86_400_000;
+
+// Compras de ejemplo, para que la app no esté vacía la primera vez: tiendas
+// inventadas y marcadas como ejemplo en la lista. `signaled` marca las que
+// ya se publicaron como señal, para que se vean las dos situaciones.
+const EXAMPLES = [
+  { store: 'Mercado del Sol', daysAgo: 2, cents: 14230, subcategory: 'groceries', signaled: true },
+  { store: 'TecnoPunto', daysAgo: 4, cents: 8900, subcategory: 'mobile', signaled: false },
+  { store: 'Moda Norte', daysAgo: 6, cents: 4500, subcategory: 'tops', signaled: true },
+  { store: 'Súper Ahorro', daysAgo: 8, cents: 8950, subcategory: 'groceries', signaled: false },
+  { store: 'Deportes Cima', daysAgo: 11, cents: 8900, subcategory: 'footwear', signaled: true },
+  { store: 'Casa Lumen', daysAgo: 13, cents: 9500, subcategory: 'decor', signaled: false },
+  { store: 'Sonido Plus', daysAgo: 15, cents: 14900, subcategory: 'audio', signaled: true },
+  { store: 'Vaqueros & Co.', daysAgo: 18, cents: 3599, subcategory: 'bottoms', signaled: false },
+  { store: 'Arcade Center', daysAgo: 20, cents: 5900, subcategory: 'gaming', signaled: false },
+  { store: 'Trattoria Roma', daysAgo: 22, cents: 4850, subcategory: 'restaurant', signaled: false },
+];
 
 /** Total del recibo en céntimos: el desglose por producto si viene, si no las líneas selladas. */
 function receiptCents(r: ReceiptJSON): number {
@@ -38,49 +45,74 @@ function mainSubcategory(r: ReceiptJSON): string {
   return SUBCATEGORY_INDEX[r.lines[0]?.subcategory ?? -1] ?? 'other';
 }
 
-function purchaseFromReceipt(r: ReceiptJSON): Purchase {
+function purchaseFromEntry(e: VaultEntry): Purchase {
   return {
-    key: r.nonce, store: 'Aegis Store', date: new Date(Number(r.timestamp)),
-    cents: receiptCents(r), subcategory: mainSubcategory(r), signaled: true,
+    key: e.receipt.nonce, store: 'Aegis Store', date: new Date(Number(e.receipt.timestamp)),
+    cents: receiptCents(e.receipt), subcategory: mainSubcategory(e.receipt), signaled: Boolean(e.publishedAt),
   };
+}
+
+function TabIcon({ tab }: { tab: Tab }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {tab === 'tickets' && <path d="M5 3h14v18l-2.3-1.6L14.3 21 12 19.4 9.7 21l-2.4-1.6L5 21zM9 8h6M9 12h6" />}
+      {tab === 'spending' && <path d="M5 20V11M10 20V5M15 20v-7M20 20V8" />}
+      {tab === 'privacy' && <path d="M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3" />}
+    </svg>
+  );
 }
 
 type Props = {
   lang: Lang;
-  /** Ticket recién sellado en la tienda, pendiente de publicar. */
-  lastReceipt: ReceiptJSON | null;
-  /** Recibos ya publicados como señal en esta sesión, el más reciente primero. */
-  published: ReceiptJSON[];
+  /** Tickets del dispositivo, el más nuevo primero (ver vault.ts). */
+  entries: VaultEntry[];
   needsLace: boolean;
   needsDeploy: boolean;
+  /** Hay una señal publicándose: hasta que salga no se abre otra. */
   busy: boolean;
-  onPublishLast: () => void;
+  onOpenTicket: (receipt: ReceiptJSON) => void;
   onScan: () => void;
   /** Avisos del envío en curso (confirmando, publicado, error). */
   messages?: ReactNode;
-  /** Cambia cuando hay que volver al principio de la pantalla (p. ej. al llegar desde la tienda). */
+  /** Contenido de la pestaña Privacidad. */
+  privacy: ReactNode;
+  /** Cambia cuando hay que volver al ticket nuevo (p. ej. al llegar desde la caja). */
   scrollTopSignal?: number;
+  /** A pantalla completa, sin el marco del teléfono: la app en /app. */
+  bare?: boolean;
 };
 
 export default function UserPhone({
-  lang, lastReceipt, published, needsLace, needsDeploy, busy, onPublishLast, onScan, messages, scrollTopSignal,
+  lang, entries, needsLace, needsDeploy, busy, onOpenTicket, onScan, messages, privacy, scrollTopSignal, bare = false,
 }: Props) {
   const t = T[lang];
-  const locale = lang === 'es' ? 'es-ES' : 'en-GB';
   const screenRef = useRef<HTMLDivElement>(null);
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [tab, setTab] = useState<Tab>('tickets');
   const blocked = needsLace || needsDeploy;
 
   useEffect(() => {
-    if (scrollTopSignal) screenRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!scrollTopSignal) return;
+    setTab('tickets');
+    screenRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [scrollTopSignal]);
 
-  const purchases = [...published.map(purchaseFromReceipt), ...MOCK_PURCHASES];
-  const totalCents = purchases.reduce((s, p) => s + p.cents, 0);
-  const signals = purchases.filter(p => p.signaled).length;
+  function chooseTab(next: Tab) {
+    setTab(next);
+    screenRef.current?.scrollTo({ top: 0 });
+  }
+
+  const pending = entries.filter(e => !e.publishedAt);
+  const next = pending[0]?.receipt;
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  const examples: Purchase[] = EXAMPLES.map((p, i) => ({ ...p, key: `example-${i}`, date: new Date(today.getTime() - p.daysAgo * DAY_MS) }));
+  const mine = entries.filter(e => e.publishedAt).map(purchaseFromEntry);
+  const all = [...entries.map(purchaseFromEntry), ...examples];
+  const totalCents = all.reduce((s, p) => s + p.cents, 0);
+  const signals = all.filter(p => p.signaled).length;
 
   const byCategory = new Map<Category, number>();
-  for (const p of purchases) {
+  for (const p of all) {
     const cat = SUBCAT_TO_CATEGORY[p.subcategory] ?? 'other';
     byCategory.set(cat, (byCategory.get(cat) ?? 0) + p.cents);
   }
@@ -88,17 +120,30 @@ export default function UserPhone({
   const maxCat = categories[0]?.[1] ?? 1;
 
   // Resumen del ticket pendiente para la tarjeta.
-  const pending = lastReceipt && {
-    items: (lastReceipt.items ?? []).reduce((s, it) => s + it.qty, 0) || lastReceipt.lines.reduce((s, l) => s + l.qty, 0),
-    cats: [...new Set(lastReceipt.lines.map(l => CATEGORY_LABELS[lang][SUBCAT_TO_CATEGORY[SUBCATEGORY_INDEX[l.subcategory]] ?? 'other']))],
-    cents: receiptCents(lastReceipt),
-    time: new Date(Number(lastReceipt.timestamp)).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
+  const card = next && {
+    items: (next.items ?? []).reduce((s, it) => s + it.qty, 0) || next.lines.reduce((s, l) => s + l.qty, 0),
+    cats: [...new Set(next.lines.map(l => CATEGORY_LABELS[lang][SUBCAT_TO_CATEGORY[SUBCATEGORY_INDEX[l.subcategory]] ?? 'other']))],
+    cents: receiptCents(next),
+    time: new Date(Number(next.timestamp)).toLocaleTimeString(t.locale, { hour: '2-digit', minute: '2-digit' }),
   };
 
-  const now = new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+  const now = new Date().toLocaleTimeString(t.locale, { hour: '2-digit', minute: '2-digit' });
+  const purchaseRow = (p: Purchase, isNew: boolean) => (
+    <div key={p.key} className={cx(styles.purchase, isNew && styles.purchaseNew)}>
+      <span className={styles.purchaseIcon}>{SUBCATEGORY_ICONS[p.subcategory] ?? '📦'}</span>
+      <span className={styles.purchaseBody}>
+        <div className={styles.purchaseStore}>{p.store}</div>
+        <div className={styles.purchaseDate}>{p.date.toLocaleDateString(t.locale, { day: 'numeric', month: 'short' })}</div>
+      </span>
+      <span className={styles.purchaseRight}>
+        <div className={styles.purchaseAmount}>{formatEUR(p.cents, lang)}</div>
+        {p.signaled && <span className={styles.signalChip}>✓ {t.phoneSignalChip}</span>}
+      </span>
+    </div>
+  );
 
   return (
-    <div className={styles.phone} data-tour="profile-section">
+    <div className={cx(styles.phone, bare && styles.bare)}>
       <div className={styles.island} />
       <div className={styles.screen} ref={screenRef}>
         <div className={styles.statusBar}>
@@ -112,106 +157,115 @@ export default function UserPhone({
         </div>
 
         <div className={styles.header}>
-          <div className={styles.appTitle}>{t.phoneTitle}</div>
+          <div className={styles.appTitle}>{tab === 'tickets' ? t.phoneTitle : t.phoneTabs[tab]}</div>
           <span className={styles.privatePill}>{t.phonePrivate}</span>
         </div>
 
-        {needsLace && <div className={styles.notice}>{t.userNeedsLace}</div>}
-        {needsDeploy && <div className={`${styles.notice} ${styles.noticeWarn}`}>{t.userNeedsDeploy}</div>}
+        {tab === 'tickets' && (
+          <>
+            {needsLace && <div className={styles.notice}>{t.userNeedsLace}</div>}
+            {needsDeploy && <div className={cx(styles.notice, styles.noticeWarn)}>{t.userNeedsDeploy}</div>}
 
-        <div data-tour="contribute-section">
-          {pending ? (
-            <div className={styles.ticketCard} key={lastReceipt?.nonce}>
-              <div className={styles.ticketTop}>
-                <span>{t.phoneNewTicket} · {pending.time}</span>
-                <span className={styles.newBadge}>{t.newTicketBadge}</span>
-              </div>
-              <div className={styles.ticketStore}>Aegis Store</div>
-              <div className={styles.ticketMeta}>{t.phoneItems(pending.items)} · {pending.cats.join(', ')}</div>
-              <div className={styles.ticketFoot}>
-                <span className={styles.ticketTotal}>{formatEUR(pending.cents, lang)}</span>
-                <button className={styles.ticketBtn} onClick={onPublishLast} disabled={blocked || busy}>
-                  {t.publishSignal} <span className={styles.ticketArrow}>→</span>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className={styles.emptyCard}>
-              <div className={styles.emptyTitle}>{t.phoneEmptyTitle}</div>
-              <div className={styles.emptyHint}>{t.phoneEmptyHint}</div>
-            </div>
-          )}
-          {messages && <div className={styles.messages}>{messages}</div>}
-        </div>
-
-        <div className={styles.stats}>
-          <div className={styles.stat}>
-            <div className={styles.statValue}>{Math.round(totalCents / 100)}€</div>
-            <div className={styles.statLabel}>{t.profileStatSpent}</div>
-          </div>
-          <div className={styles.stat}>
-            <div className={styles.statValue}>{purchases.length}</div>
-            <div className={styles.statLabel}>{t.profileStatPurchases}</div>
-          </div>
-          <div className={styles.stat}>
-            <div className={styles.statValue}>{signals}</div>
-            <div className={styles.statLabel}>{t.phoneStatSignals}</div>
-          </div>
-        </div>
-
-        <div className={styles.collapsible}>
-          <button
-            type="button" className={styles.collapsibleHead}
-            onClick={() => setCategoriesOpen(o => !o)} aria-expanded={categoriesOpen}
-          >
-            <span className={styles.chartIcon} aria-hidden>
-              {[7, 12, 9, 15].map((h, i) => <span key={i} style={{ height: h }} />)}
-            </span>
-            <span className={styles.collapsibleTitle}>
-              {t.phoneAnalyticsTitle}
-              <span className={styles.collapsibleSub}>{t.phoneAnalyticsSub(categories.length)}</span>
-            </span>
-            <span className={styles.collapsibleSummary}>{formatEUR(totalCents, lang)}</span>
-            <span className={`${styles.chevron} ${categoriesOpen ? styles.chevronOpen : ''}`} />
-          </button>
-          {categoriesOpen && (
-            <div className={styles.categories}>
-              {categories.map(([cat, cents]) => (
-                <div key={cat} className={styles.catRow}>
-                  <span>{CATEGORY_ICONS[cat]} {CATEGORY_LABELS[lang][cat]}</span>
-                  <span className={styles.catAmount}>{Math.round(cents / 100)}€</span>
-                  <div className={styles.bar}><span style={{ width: `${(cents / maxCat) * 100}%` }} /></div>
+            {card && next ? (
+              <div className={styles.ticketCard} key={next.nonce} data-phone-ticket>
+                <div className={styles.ticketTop}>
+                  <span>{t.phoneNewTicket} · {card.time}</span>
+                  <span className={styles.newBadge}>{t.newTicketBadge}</span>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <div className={styles.ticketStore}>Aegis Store</div>
+                <div className={styles.ticketMeta}>{t.phoneItems(card.items)} · {card.cats.join(', ')}</div>
+                <div className={styles.ticketFoot}>
+                  <span className={styles.ticketTotal}>{formatEUR(card.cents, lang)}</span>
+                  <button className={styles.ticketBtn} onClick={() => onOpenTicket(next)} disabled={blocked || busy}>
+                    {t.publishSignal} <span className={styles.ticketArrow}>→</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.emptyCard}>
+                <div className={styles.emptyTitle}>{t.phoneEmptyTitle}</div>
+                <div className={styles.emptyHint}>{t.phoneEmptyHint}</div>
+              </div>
+            )}
+            {pending.length > 1 && <div className={styles.pendingMore}>{t.phonePendingMore(pending.length - 1)}</div>}
+            {messages && <div className={styles.messages}>{messages}</div>}
 
-        <div className={styles.sectionLabel}>{t.profileReceipts}</div>
-        <div className={styles.purchases}>
-          {purchases.map(p => (
-            <div key={p.key} className={`${styles.purchase} ${p.key.startsWith('mock-') ? '' : styles.purchaseNew}`}>
-              <span className={styles.purchaseIcon}>{SUBCATEGORY_ICONS[p.subcategory] ?? '📦'}</span>
-              <span className={styles.purchaseBody}>
-                <div className={styles.purchaseStore}>{p.store}</div>
-                <div className={styles.purchaseDate}>{p.date.toLocaleDateString(locale, { day: 'numeric', month: 'short' })}</div>
-              </span>
-              <span className={styles.purchaseRight}>
-                <div className={styles.purchaseAmount}>{formatEUR(p.cents, lang)}</div>
-                {p.signaled && <span className={styles.signalChip}>✓ {t.phoneSignalChip}</span>}
-              </span>
+            {mine.length > 0 && (
+              <>
+                <div className={styles.sectionLabel}>{t.profileReceipts}</div>
+                <div className={styles.purchases}>{mine.map(p => purchaseRow(p, true))}</div>
+              </>
+            )}
+            <div className={styles.examplesLabel}>
+              {t.phoneExamples}
+              <span>{t.phoneExamplesHint}</span>
             </div>
-          ))}
-        </div>
+            <div className={styles.purchases}>{examples.map(p => purchaseRow(p, false))}</div>
 
-        <p className={styles.footnote}>{t.profilePrivateSub}</p>
+            <p className={styles.footnote}>{t.profilePrivateSub}</p>
+          </>
+        )}
+
+        {tab === 'spending' && (
+          <>
+            <div className={styles.stats}>
+              <div className={styles.stat}>
+                <div className={styles.statValue}>{Math.round(totalCents / 100)}€</div>
+                <div className={styles.statLabel}>{t.profileStatSpent}</div>
+              </div>
+              <div className={styles.stat}>
+                <div className={styles.statValue}>{all.length}</div>
+                <div className={styles.statLabel}>{t.profileStatPurchases}</div>
+              </div>
+              <div className={styles.stat}>
+                <div className={styles.statValue}>{signals}</div>
+                <div className={styles.statLabel}>{t.phoneStatSignals}</div>
+              </div>
+            </div>
+
+            <div className={styles.collapsible}>
+              <div className={styles.collapsibleHead}>
+                <span className={styles.chartIcon} aria-hidden>
+                  {[7, 12, 9, 15].map((h, i) => <span key={i} style={{ height: h }} />)}
+                </span>
+                <span className={styles.collapsibleTitle}>
+                  {t.phoneAnalyticsTitle}
+                  <span className={styles.collapsibleSub}>{t.phoneAnalyticsSub(categories.length)}</span>
+                </span>
+                <span className={styles.collapsibleSummary}>{formatEUR(totalCents, lang)}</span>
+              </div>
+              <div className={styles.categories}>
+                {categories.map(([cat, cents]) => (
+                  <div key={cat} className={styles.catRow}>
+                    <span>{CATEGORY_ICONS[cat]} {CATEGORY_LABELS[lang][cat]}</span>
+                    <span className={styles.catAmount}>{Math.round(cents / 100)}€</span>
+                    <div className={styles.bar}><span style={{ width: `${(cents / maxCat) * 100}%` }} /></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <p className={styles.footnote}>{t.profilePrivateSub}</p>
+          </>
+        )}
+
+        {tab === 'privacy' && privacy}
       </div>
 
       <div className={styles.dock}>
-        <button className={styles.scanBtn} onClick={onScan} disabled={blocked || busy}>
-          <span className={styles.scanIcon} />
-          {t.scanButton}
-        </button>
+        {tab === 'tickets' && (
+          <button className={styles.scanBtn} onClick={onScan} disabled={blocked || busy}>
+            <span className={styles.scanIcon} />
+            {t.scanButton}
+          </button>
+        )}
+        <nav className={styles.tabBar} aria-label={t.phoneTitle}>
+          {TABS.map(id => (
+            <button key={id} className={styles.tabBtn} onClick={() => chooseTab(id)} aria-pressed={tab === id}>
+              <TabIcon tab={id} />
+              {t.phoneTabs[id]}
+            </button>
+          ))}
+        </nav>
       </div>
     </div>
   );

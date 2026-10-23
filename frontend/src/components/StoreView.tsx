@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useMutation } from '@tanstack/react-query';
 import QRCode from 'qrcode';
@@ -10,19 +10,21 @@ import {
 
 const TIME_RANGES: TimeRange[] = ['7d', '30d', '90d', '365d'];
 import { attestReceipt, explainTxError, type ReceiptJSON } from '../lace.ts';
-import { encodeReceiptForQr } from '../receiptCodec.ts';
+import { encodeReceiptForQr, receiptLink } from '../receiptCodec.ts';
 import {
   PRODUCTS, SUBCAT_TO_CATEGORY, cartLinesFrom, cartTotalCents, rollupBySubcategory, sealedLines, formatEUR,
 } from '../catalog.ts';
 import ProductImage from './ProductImage.tsx';
 import { preloadProductImages } from '../productImages.ts';
 import ReceiptTicket from './ReceiptTicket.tsx';
-import BuiltOnMidnight from './BuiltOnMidnight.tsx';
 import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
+import { addReceipt, useVault } from '../vault.ts';
+import { flyTicket } from '../flyTicket.ts';
 import { useWallet } from '../app/WalletProvider.tsx';
 import { useChain } from '../app/ChainProvider.tsx';
 import { useTx } from '../app/TxProvider.tsx';
+import { useReportFlow } from '../routes/demoFlow.ts';
 import styles from './StoreView.module.css';
 
 // Orden de las pestañas de categoría en el POS de la demo (moda primero).
@@ -32,15 +34,11 @@ const POS_CATEGORY_ORDER: Category[] = ['fashion', 'electronics', 'food', 'sport
 
 type Props = {
   lang: Lang;
-  /** Avisa del recibo sellado, para que el móvil pueda usarlo sin cámara/QR. */
-  onReceiptGenerated?: (receipt: ReceiptJSON) => void;
-  /** Cambia a la pestaña Usuario (guía el flujo cobro -> publicar señal). */
+  /** Cambia a la pestaña Usuario (en tableta y móvil, donde la caja y el móvil van en pestañas). */
   onGoToUser: () => void;
-  /** Nonce del último recibo ya publicado como señal (ver DemoPage). Si coincide con el ticket abierto aquí, se retira. */
-  publishedReceiptNonce: string | null;
 };
 
-export default function StoreView({ lang, onReceiptGenerated, onGoToUser, publishedReceiptNonce }: Props) {
+export default function StoreView({ lang, onGoToUser }: Props) {
   const t = T[lang];
   const catLabel = CATEGORY_LABELS[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
@@ -70,6 +68,9 @@ export default function StoreView({ lang, onReceiptGenerated, onGoToUser, publis
   const [posQr, setPosQr] = useState<string | null>(null);
   // Si el sellado del último recibo lo pagó el patrocinio (para decirlo junto al QR).
   const [posSponsored, setPosSponsored] = useState(false);
+  const ticketRef = useRef<HTMLDivElement>(null);
+  const vault = useVault();
+  const reportFlow = useReportFlow();
 
   const cartLines = cartLinesFrom(cart);
   const cartCount = cartLines.reduce((n, l) => n + l.qty, 0);
@@ -113,10 +114,12 @@ export default function StoreView({ lang, onReceiptGenerated, onGoToUser, publis
         ...receipt,
         items: cartLines.slice(0, 24).map(l => ({ name: l.product.name[lang], qty: l.qty, unitCents: l.product.priceCents })),
       };
-      setPosReceipt(receiptForQr);
       setPosSponsored(paidBySponsor);
-      setPosQr(await QRCode.toDataURL(await encodeReceiptForQr(receiptForQr), { margin: 1, width: 260 }));
-      onReceiptGenerated?.(receiptForQr);
+      setPosQr(await QRCode.toDataURL(receiptLink(await encodeReceiptForQr(receiptForQr)), { margin: 1, width: 260 }));
+      setPosReceipt(receiptForQr);
+      // En la demo, el cliente es este mismo navegador: el ticket llega a su
+      // móvil sin escanear, igual que si hubiera abierto el enlace del QR.
+      addReceipt(receiptForQr);
     } catch (e: any) {
       setPosError(e?.message ? explainTxError(e, lang) : t.posSealError);
     } finally {
@@ -132,16 +135,24 @@ export default function StoreView({ lang, onReceiptGenerated, onGoToUser, publis
     setCart({});
   }
 
-  // En cuanto la señal de este mismo ticket se publica (desde la pestaña
-  // Usuario), ya no tiene sentido seguir enseñándolo como si estuviera
-  // pendiente de escanear: se retira solo, como si se hubiera dado a
-  // "Nueva venta".
+  // En cuanto la señal de este mismo ticket se publica desde el móvil, ya no
+  // tiene sentido seguir enseñándolo como si estuviera pendiente de
+  // escanear: se retira solo, como si se hubiera dado a "Nueva venta".
+  const posPublished = Boolean(posReceipt && vault.some(e => e.receipt.nonce === posReceipt.nonce && e.publishedAt));
   useEffect(() => {
-    if (publishedReceiptNonce && posReceipt?.nonce === publishedReceiptNonce) {
-      handleResetPos();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [publishedReceiptNonce]);
+    if (posPublished) handleResetPos();
+  }, [posPublished]);
+
+  // Recién cobrado, una copia del ticket vuela hasta el móvil (si se ven los dos).
+  useEffect(() => {
+    if (!posReceipt) return;
+    const frame = requestAnimationFrame(() => flyTicket(ticketRef.current, document.querySelector<HTMLElement>('[data-phone-ticket]')));
+    return () => cancelAnimationFrame(frame);
+  }, [posReceipt]);
+
+  useEffect(() => {
+    reportFlow({ cartCount, sealing: posSelling, sealedNonce: posReceipt?.nonce ?? null });
+  }, [cartCount, posSelling, posReceipt, reportFlow]);
 
   async function handleRefreshMatch(id: string) {
     setRefreshing(id);
@@ -213,18 +224,18 @@ export default function StoreView({ lang, onReceiptGenerated, onGoToUser, publis
         ) : posQr && posReceipt ? (
           <div className={styles.sold}>
             <p className={styles.scanHint}>{t.posScanHint}{posSponsored && ` · ${t.feePaidByAegis}`}</p>
-            <ReceiptTicket
-              lang={lang}
-              lines={cartLines.map(l => ({ name: l.product.name[lang], qty: l.qty, unitCents: l.product.priceCents }))}
-              totalCents={totalCents}
-              receipt={posReceipt}
-              qr={posQr}
-            />
-            <div className={cx('aegis-hint', styles.hintSuccess)}>
-              {t.posGoToUserCallout}
+            <div ref={ticketRef}>
+              <ReceiptTicket
+                lang={lang}
+                lines={cartLines.map(l => ({ name: l.product.name[lang], qty: l.qty, unitCents: l.product.priceCents }))}
+                totalCents={totalCents}
+                receipt={posReceipt}
+                qr={posQr}
+              />
             </div>
             <div className={styles.soldActions}>
-              <button className={styles.goToUser} onClick={onGoToUser}>
+              {/* En escritorio el móvil está al lado: no hace falta ir a buscarlo. */}
+              <button className={cx(styles.goToUser, styles.tabsOnly)} onClick={onGoToUser}>
                 {t.posGoToUser}
               </button>
               <button className={styles.newSale} onClick={handleResetPos}>
@@ -235,9 +246,6 @@ export default function StoreView({ lang, onReceiptGenerated, onGoToUser, publis
         ) : (
           <div className={styles.pos}>
             <div className={styles.catalog}>
-              {cartLines.length === 0 && (
-                <div className={cx('aegis-hint', styles.firstPurchase)}>{t.posFirstPurchase}</div>
-              )}
               <p className={styles.catalogHint}>{t.posCatalogHint}</p>
 
               <div className={styles.categories}>
@@ -331,7 +339,7 @@ export default function StoreView({ lang, onReceiptGenerated, onGoToUser, publis
           <div className={styles.toolsBody}>
 
             {/* Market intelligence */}
-            <div className={styles.tool} data-tour="insights-section">
+            <div className={styles.tool}>
               <div className={styles.toolHeader}>
                 <h3 className={styles.toolTitle}>{t.insightsTitle}</h3>
                 {/* Periodo que analizará el próximo informe. Cambiarlo no genera
@@ -402,7 +410,7 @@ export default function StoreView({ lang, onReceiptGenerated, onGoToUser, publis
                 incluida la insignia "Soon"): el título y el formulario
                 llevan su propia opacity para verse apagados, y "Soon" no
                 lleva ninguna, así que siempre se ve nítida. */}
-            <div className={cx(styles.tool, styles.campaignTool)} data-tour="campaign-section">
+            <div className={cx(styles.tool, styles.campaignTool)}>
               <div className={styles.campaignHeader}>
                 <h3 className={cx(styles.toolTitle, styles.dimmed)}>{t.campaignTitle}</h3>
                 <span className={styles.soon}>
@@ -471,8 +479,6 @@ export default function StoreView({ lang, onReceiptGenerated, onGoToUser, publis
           </div>
         )}
       </div>
-
-      <BuiltOnMidnight className={styles.builtOn} />
     </>
   );
 }

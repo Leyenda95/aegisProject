@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import jsQR from 'jsqr';
 import { T } from '../i18n.ts';
 import type { Lang } from '../api.ts';
@@ -89,7 +90,8 @@ export default function QrScanner({ lang, onScan, onClose }: Props) {
     };
   }, []);
 
-  return (
+  // Al final de <body>, como la ventana de publicar (ver RedactedTicket).
+  return createPortal(
     <div ref={overlayRef} role="dialog" aria-modal="true" aria-label={t.scanButton} tabIndex={-1} className={styles.overlay}>
       {error ? (
         <div className={styles.error}>{error}</div>
@@ -100,6 +102,7 @@ export default function QrScanner({ lang, onScan, onClose }: Props) {
       <button className={styles.cancel} onClick={onClose}>
         {t.scannerCancel}
       </button>
-    </div>
+    </div>,
+    document.body,
   );
 }

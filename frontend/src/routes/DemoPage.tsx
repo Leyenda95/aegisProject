@@ -1,27 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router';
-import type { ReceiptJSON } from '../lace.ts';
 import { usePreferences } from '../app/PreferencesProvider.tsx';
 import { useChain } from '../app/ChainProvider.tsx';
+import { cx } from '../cx.ts';
 import LandingScreen from '../components/LandingScreen.tsx';
 import StatsRibbon from '../components/StatsRibbon.tsx';
 import SignalsBreakdown from '../components/SignalsBreakdown.tsx';
 import StoreView from '../components/StoreView.tsx';
 import UserView from '../components/UserView.tsx';
 import MarketView from '../components/MarketView.tsx';
-import TourGuide from '../components/TourGuide.tsx';
+import BuiltOnMidnight from '../components/BuiltOnMidnight.tsx';
+import DemoProgress from './DemoProgress.tsx';
+import { DemoFlowContext, INITIAL_FLOW, type DemoFlow } from './demoFlow.ts';
 import styles from './DemoPage.module.css';
 
 type Tab = 'store' | 'user';
 
-// Tutorial guiado desactivado de momento. Poner a true para reactivarlo.
-const TOUR_ENABLED = false;
-
 /**
- * La demo: cinta con el agregado, y las vistas de la tienda, del móvil del
- * cliente y del mercado. Con `landing` (en /), la pantalla de bienvenida va
- * encima; con `market` (en /market), se ve el mercado. Es la misma página en
- * las tres rutas, así que la cesta o un ticket abierto siguen al ir y volver.
+ * La demo: cinta con el agregado, la caja de la tienda y el móvil del
+ * cliente (lado a lado en escritorio, en pestañas en tableta y móvil) y el
+ * mercado. Con `landing` (en /), la pantalla de bienvenida va encima; con
+ * `market` (en /market), se ve el mercado. Es la misma página en las tres
+ * rutas, así que la cesta o un ticket abierto siguen al ir y volver.
  */
 export default function DemoPage({ landing = false, market = false }: { landing?: boolean; market?: boolean }) {
   const { t, lang } = usePreferences();
@@ -29,32 +29,20 @@ export default function DemoPage({ landing = false, market = false }: { landing?
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('store');
   const [breakdownOpen, setBreakdownOpen] = useState(false);
-  const [tourActive, setTourActive] = useState(false);
-  // Último recibo sellado en la pestaña Tienda de esta misma sesión de demo,
-  // para poder usarlo directamente en la pestaña Usuario sin pasar por
-  // cámara/QR (ver UserView "usar último recibo").
-  const [lastReceipt, setLastReceipt] = useState<ReceiptJSON | null>(null);
-  // Nonce del último recibo cuya señal se acaba de publicar (desde cualquier
-  // camino: escaneado o último recibo). StoreView lo usa para retirar su ticket/QR en
-  // cuanto ese mismo recibo queda publicado, en vez de dejarlo enseñado
-  // indefinidamente como si aún estuviera pendiente.
-  const [publishedReceiptNonce, setPublishedReceiptNonce] = useState<string | null>(null);
   // Se incrementa cada vez que se pulsa "Ir a la vista de Usuario" desde la
-  // tienda: el móvil vuelve arriba, donde está el ticket nuevo.
+  // caja: el móvil vuelve al ticket nuevo.
   const [goToContributeSignal, setGoToContributeSignal] = useState(0);
+  const [flow, setFlow] = useState<DemoFlow>(INITIAL_FLOW);
+  const reportFlow = useCallback((patch: Partial<DemoFlow>) => setFlow(f => ({ ...f, ...patch })), []);
 
-  useEffect(() => {
-    if (!TOUR_ENABLED || landing) return;
-    const timer = setTimeout(() => setTourActive(true), 800);
-    return () => clearTimeout(timer);
-  }, [landing]);
+  function showTab(next: Tab) {
+    setTab(next);
+    if (market) navigate('/demo');
+  }
 
   return (
-    <>
+    <DemoFlowContext value={reportFlow}>
       {landing && <LandingScreen onEnter={() => navigate('/demo')} />}
-      {tourActive && (
-        <TourGuide lang={lang} onClose={() => setTourActive(false)} onSetTab={setTab} />
-      )}
 
       <StatsRibbon
         state={state}
@@ -70,16 +58,15 @@ export default function DemoPage({ landing = false, market = false }: { landing?
         </div>
       )}
 
+      {/* En escritorio, "Demo" enseña la caja y el móvil a la vez; en tableta
+          y móvil, cada uno tiene su pestaña (ver .wideOnly y .narrowOnly). */}
       <div className={styles.tabsWrap}>
         <div className={styles.tabs}>
+          <button className={cx(styles.tab, styles.wideOnly)} onClick={() => showTab(tab)} aria-pressed={!market}>
+            {t.tabDemo}
+          </button>
           {(['store', 'user'] as Tab[]).map(id => (
-            <button
-              key={id}
-              className={styles.tab}
-              data-tour={id === 'user' ? 'tab-user' : undefined}
-              onClick={() => { setTab(id); if (market) navigate('/demo'); }}
-              aria-pressed={!market && tab === id}
-            >
+            <button key={id} className={cx(styles.tab, styles.narrowOnly)} onClick={() => showTab(id)} aria-pressed={!market && tab === id}>
               {id === 'store' ? t.tabStore : t.tabUser}
             </button>
           ))}
@@ -89,30 +76,28 @@ export default function DemoPage({ landing = false, market = false }: { landing?
         </div>
       </div>
 
-      {/* La tienda y el móvil se quedan montados siempre (solo se oculta lo
-          que no toca): así una acción en curso (un cobro esperando
-          confirmación, p. ej.) no se pierde al cambiar de pestaña, y la cesta
-          o el ticket abierto siguen como estaban al volver. */}
-      <main className={styles.main}>
+      {/* La caja y el móvil se quedan montados siempre (solo se oculta lo que
+          no toca): así una acción en curso (un cobro esperando confirmación,
+          p. ej.) no se pierde al cambiar de pestaña, y la cesta o el ticket
+          abierto siguen como estaban al volver. */}
+      <main className={cx(styles.main, !market && styles.mainDemo)}>
         {market && <MarketView lang={lang} />}
-        <div hidden={market || tab !== 'store'}>
-          <StoreView
-            lang={lang}
-            onReceiptGenerated={setLastReceipt}
-            onGoToUser={() => { setTab('user'); setGoToContributeSignal(n => n + 1); window.scrollTo({ top: 0 }); }}
-            publishedReceiptNonce={publishedReceiptNonce}
-          />
+        <div hidden={market}>
+          <DemoProgress lang={lang} flow={flow} onViewMarket={() => navigate('/market')} />
+          <div className={styles.split} data-tab={tab}>
+            <div className={styles.storeCol}>
+              <StoreView
+                lang={lang}
+                onGoToUser={() => { setTab('user'); setGoToContributeSignal(n => n + 1); window.scrollTo({ top: 0 }); }}
+              />
+            </div>
+            <div className={styles.userCol}>
+              <UserView lang={lang} goToContributeSignal={goToContributeSignal} />
+            </div>
+          </div>
         </div>
-        <div hidden={market || tab !== 'user'}>
-          <UserView
-            lang={lang}
-            lastReceipt={lastReceipt}
-            onReceiptConsumed={() => setLastReceipt(null)}
-            onSignalPublished={receipt => setPublishedReceiptNonce(receipt.nonce)}
-            goToContributeSignal={goToContributeSignal}
-          />
-        </div>
+        <BuiltOnMidnight className={styles.builtOn} />
       </main>
-    </>
+    </DemoFlowContext>
   );
 }

@@ -1,0 +1,119 @@
+/* Línea de progreso de la demo (DemoProgress.tsx): seis puntos unidos por
+   una línea fina, en bronce lo hecho. */
+.progress {
+  max-width: 760px;
+  margin: 0 auto 28px;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--text-xs);
+  text-align: center;
+  color: var(--ink-faint);
+}
+
+/* El tramo de línea que llega a cada punto desde el anterior. */
+.step + .step::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--line);
+}
+
+.done + .step::before {
+  background: var(--bronze);
+}
+
+.dot {
+  position: relative;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  background: var(--ground);
+  border: 2px solid var(--line);
+  border-radius: 50%;
+}
+
+.done {
+  color: var(--ink-soft);
+}
+
+.done .dot {
+  background: var(--bronze);
+  border-color: var(--bronze);
+}
+
+.current {
+  font-weight: 600;
+  color: var(--ink-bright);
+}
+
+.current .dot {
+  border-color: var(--bronze);
+  box-shadow: 0 0 0 4px var(--bronze-wash);
+}
+
+/* El paso en marcha late despacio mientras la red trabaja. */
+.busy .dot {
+  animation: working 1.4s ease-in-out infinite;
+}
+
+@keyframes working {
+  50% { box-shadow: 0 0 0 7px var(--bronze-wash); }
+}
+
+.hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px 8px;
+  margin-top: 12px;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.stepOf {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--ink-dim);
+}
+
+.link {
+  padding: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--bronze-deep);
+  background: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .busy .dot { animation: none; }
+}
+
+/* Mobile (< 680px): solo la etiqueta del paso actual. */
+@media (max-width: 679px) {
+  .progress { margin-bottom: 20px; }
+  .label { display: none; }
+  .current .label { display: block; white-space: nowrap; }
+  .hint { font-size: var(--text-xs); }
+}

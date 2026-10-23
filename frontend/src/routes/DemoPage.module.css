@@ -52,6 +52,47 @@
   box-sizing: border-box;
 }
 
+.storeCol,
+.userCol {
+  min-width: 0;
+}
+
+/* Un solo "Built on Midnight", al pie de la demo y del mercado. */
+.builtOn {
+  margin-top: 80px;
+  padding: 16px 0 8px;
+}
+
+/* Escritorio (>= 1180px): la caja y el móvil del cliente, lado a lado. El
+   móvil se queda a la vista al bajar por la caja. */
+@media (min-width: 1180px) {
+  .narrowOnly { display: none; }
+
+  .mainDemo { max-width: 1260px; }
+
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .userCol {
+    position: sticky;
+    top: 24px;
+  }
+}
+
+/* Tableta y móvil: una pestaña para cada uno. */
+@media (max-width: 1179px) {
+  .wideOnly { display: none; }
+
+  .split[data-tab="store"] .userCol,
+  .split[data-tab="user"] .storeCol {
+    display: none;
+  }
+}
+
 /* Tablet (680px - 1080px) */
 @media (max-width: 1080px) {
   .main {
@@ -63,5 +104,9 @@
 @media (max-width: 680px) {
   .main {
     padding: 16px;
+  }
+
+  .builtOn {
+    margin-top: 40px;
   }
 }

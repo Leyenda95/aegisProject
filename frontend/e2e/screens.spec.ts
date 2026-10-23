@@ -214,7 +214,9 @@ for (const theme of ['light', 'dark'] as const) {
       await shot(page, `${theme}-portada`, { fullPage: false, threshold: 0.2 });
     });
 
-    test('compra, ticket, móvil, publicar y explicación', async ({ page }) => {
+    test('compra, ticket, móvil, publicar y explicación', async ({ page }, info) => {
+      // En escritorio la caja y el móvil van lado a lado; en tableta y móvil, en pestañas.
+      const sideBySide = info.project.name === 'escritorio';
       await open(page, theme);
       await enter(page);
       const add = page.getByRole('button', { name: 'Añadir', exact: true });
@@ -224,10 +226,14 @@ for (const theme of ['light', 'dark'] as const) {
 
       await page.getByRole('button', { name: 'Cobrar y generar QR' }).click();
       await expect(page.getByRole('img', { name: 'QR' })).toBeVisible();
+      // El ticket que vuela de la caja al móvil, ya aterrizado.
+      await page.waitForTimeout(1000);
       await shot(page, `${theme}-ticket`);
 
-      await page.getByRole('button', { name: 'Ir a la vista de Usuario' }).click();
-      await shot(page, `${theme}-movil`);
+      if (!sideBySide) {
+        await page.getByRole('button', { name: 'Ir a la vista de Usuario' }).click();
+        await shot(page, `${theme}-movil`);
+      }
 
       await page.getByRole('button', { name: /Publicar señal/ }).click();
       const dialog = page.getByRole('dialog');
@@ -239,9 +245,47 @@ for (const theme of ['light', 'dark'] as const) {
       await dialog.getByLabel('Tu edad').check();
       await shot(page, `${theme}-publicar-opciones`, { fullPage: false });
 
+      // Publicada: los pasos y, por ser la primera vez, qué acaba de pasar.
       await dialog.getByRole('button', { name: 'Publicar señal' }).click();
-      await expect(page.getByRole('dialog', { name: '¿Qué acaba de pasar?' })).toBeVisible();
+      await expect(dialog.getByText('Señal publicada')).toBeVisible();
+      await expect(dialog.getByText('¿Qué acaba de pasar?')).toBeVisible();
       await shot(page, `${theme}-explicacion`, { fullPage: false });
+    });
+
+    test('pestañas del móvil', async ({ page }, info) => {
+      test.skip(info.project.name === 'escritorio', 'en escritorio el móvil ya sale en las demás');
+      await open(page, theme);
+      await enter(page);
+      await page.getByRole('button', { name: 'Usuario', exact: true }).click();
+      const phone = page.getByRole('navigation', { name: 'Mi Aegis' });
+      await phone.getByRole('button', { name: 'Gastos' }).click();
+      await shot(page, `${theme}-movil-gastos`);
+      await phone.getByRole('button', { name: 'Privacidad' }).click();
+      await shot(page, `${theme}-movil-privacidad`);
+    });
+
+    test('app a pantalla completa', async ({ page }, info) => {
+      test.skip(info.project.name !== 'movil', 'es lo que se abre en un teléfono');
+      await open(page, theme, { path: '/app' });
+      await expect(page.getByText('Mi Aegis')).toBeVisible();
+      await shot(page, `${theme}-app`);
+    });
+
+    test('enlace del QR', async ({ page }, info) => {
+      test.skip(info.project.name !== 'movil', 'es lo que abre la cámara del teléfono');
+      await open(page, theme, { path: '/app' });
+      // El enlace que lleva el QR de un ticket, hecho con el mismo código que la caja.
+      const link = await page.evaluate(async receipt => {
+        const { encodeReceiptForQr, receiptLink } = await import('/src/receiptCodec.ts');
+        return receiptLink(await encodeReceiptForQr(receipt));
+      }, RECEIPT);
+      await page.goto(link);
+      await expect(page).toHaveURL(/\/app$/);
+      await expect(page.getByText(/Nuevo ticket/)).toBeVisible();
+      // Se queda guardado en el móvil.
+      await page.reload();
+      await expect(page.getByText(/Nuevo ticket/)).toBeVisible();
+      await shot(page, `${theme}-app-ticket`);
     });
 
     test('cabecera con wallet', async ({ page }) => {
@@ -249,16 +293,19 @@ for (const theme of ['light', 'dark'] as const) {
       await open(page, theme, { fresh: true });
       await enter(page);
       const header = page.locator('header');
+      // El borde de las píldoras varía unos pocos píxeles de suavizado entre
+      // pasadas cuando corren varias pruebas a la vez: un poco más de margen.
+      const options = { maxDiffPixels: 60 };
 
       await page.getByRole('button', { name: 'Conectar Billetera' }).click();
       await expect(header.getByRole('button', { name: 'lace' })).toBeVisible();
       await settle(page);
-      await expect.soft(header).toHaveScreenshot(`${theme}-cabecera-wallets.png`);
+      await expect.soft(header).toHaveScreenshot(`${theme}-cabecera-wallets.png`, options);
 
       await header.getByRole('button', { name: 'lace' }).click();
       await expect(header.getByText(/Wallet · /)).toBeVisible();
       await settle(page);
-      await expect.soft(header).toHaveScreenshot(`${theme}-cabecera-conectada.png`);
+      await expect.soft(header).toHaveScreenshot(`${theme}-cabecera-conectada.png`, options);
     });
 
     test('preparar demo', async ({ page }) => {

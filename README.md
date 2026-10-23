@@ -28,11 +28,11 @@ Everything runs against Midnight's **Preprod** testnet. There are two ways to tr
 Open **[aegis-midnight.vercel.app](https://aegis-midnight.vercel.app/)**. It's connected to a shared contract on Preprod that already has a registered store and signals, so you only need a Midnight wallet extension (Lace or 1AM) on the Preprod network.
 
 1. **Connect Wallet**.
-2. In the **Store** tab, add a couple of products to the cart and check out. This seals a receipt on-chain and shows it as a QR.
+2. At the till, add a couple of products to the cart and check out. This seals a receipt on-chain and shows it as a QR.
 3. Publish the signal, in either of these ways:
-   - Scan the QR with your phone (open the same site on it and tap **Scan receipt**). While sponsorship is on, the phone doesn't need a wallet.
-   - Or switch to the **User** tab on the same computer: the receipt you just sealed shows up in the phone as a new ticket. Tap **Publish signal**.
-4. Review what will be shared, choose where the proof is generated (see below) and publish. Watch the category counter bump in the stats ribbon.
+   - Scan the QR with your phone's camera: it opens the Aegis phone app (`/app`) with the ticket ready, and you can add it to your home screen. While sponsorship is on, the phone doesn't need a wallet.
+   - Or use the phone next to the till on the same computer (the **User** tab on smaller screens): the receipt you just sealed shows up as a new ticket. Tap **Publish signal**.
+4. Review what will be shared, choose where the proof is generated (see below) and publish. The publish sheet follows the real steps until the signal lands in the public aggregate, and the **Market** tab lists it among the latest signals.
 
 On the hosted version, Aegis can sponsor the signal's transaction fee, so the customer doesn't need DUST to publish.
 
@@ -67,7 +67,7 @@ npm run dev                # starts the frontend, open the printed URL
 3. Start the backend against Preprod: `cd backend && npm run start:preprod` (set `ANTHROPIC_API_KEY` in `backend/.env` first if you want insights). No contract is deployed yet at this point, that happens from the browser next.
 4. Start the frontend: `cd frontend && npm run dev`, then open the printed URL.
 5. In the browser, open `/setup` (once your wallet is connected, the header links to it as **Set up demo** while something is missing): **Connect Wallet** (Lace or 1AM, Preprod network) → **Deploy contract** (this deploys a fresh instance and makes your wallet its store admin; the backend remembers it for next time) → **Register demo store** → **Load demo data** (seeds baseline counters so the store insights have something to talk about).
-6. Try the flow: in the **Store** tab, check out a cart. Switch to the **User** tab, tap **Publish signal** on the new ticket, review what will be shared and publish.
+6. Try the flow: check out a cart at the till, tap **Publish signal** on the new ticket in the phone (the **User** tab on smaller screens), review what will be shared and publish.
 
 ### Prove on your own device (optional)
 
@@ -147,6 +147,7 @@ sequenceDiagram
 - [x] Sponsored signal transactions: Aegis can pay the fee so customers don't need DUST
 - [x] Aggregate state goes through the backend (`GET /state`): the Preprod indexer is served by Blockfrost and its token must stay server-side. The frontend no longer loads the contract's ~11MB WASM runtime just to read the counters.
 - [x] Live market page (`/market`): signals per period against the previous one, by category, and the latest signals as they land on chain.
+- [x] The receipt QR is a link (`/r#…`): the phone's camera opens the Aegis app with the ticket, and what follows `#` never reaches the server. The phone app (`/app`) is installable, keeps tickets on the device, and has privacy defaults and a delete-my-data button.
 - [ ] Optional age/spend disclosure tied to a pseudonym: previewed in the UI, not wired into the contract yet. `submitPurchase` today only ever reveals subcategory and quantity, regardless of what's toggled in the preview.
 
 ## What's next

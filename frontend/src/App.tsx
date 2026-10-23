@@ -7,6 +7,8 @@ import { TxProvider } from './app/TxProvider.tsx';
 import Layout from './app/Layout.tsx';
 import DemoPage from './routes/DemoPage.tsx';
 import SetupPage from './routes/SetupPage.tsx';
+import AppPage from './routes/AppPage.tsx';
+import ImportReceiptPage from './routes/ImportReceiptPage.tsx';
 
 // Si el backend no responde, se espera a la siguiente consulta periódica en
 // vez de reintentar en el acto (lo mismo que se hacía antes a mano).
@@ -18,8 +20,9 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false 
  * portada y el mercado son la misma demo, con la pantalla de bienvenida
  * encima o con la pestaña del mercado: así la demo ya está dibujada (fotos
  * incluidas) cuando se entra, e ir y volver no la redibuja ni pierde la
- * cesta. El estado compartido (preferencias, red, wallet, transacciones)
- * vive por encima de las rutas.
+ * cesta. Fuera de la web, sin su cabecera: la app del móvil (/app) y lo que
+ * abre el QR de un ticket (/r#...). El estado compartido (preferencias, red,
+ * wallet, transacciones) vive por encima de las rutas.
  */
 export default function App() {
   return (
@@ -36,6 +39,8 @@ export default function App() {
                     <Route path="/market" element={<DemoPage market />} />
                     <Route path="/setup" element={<SetupPage />} />
                   </Route>
+                  <Route path="/app" element={<AppPage />} />
+                  <Route path="/r" element={<ImportReceiptPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </BrowserRouter>

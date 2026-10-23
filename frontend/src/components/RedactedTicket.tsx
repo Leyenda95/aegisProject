@@ -1,10 +1,14 @@
 ﻿import { useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { SUBCATEGORY_INDEX, SUBCATEGORY_LABELS, CATEGORY_LABELS, type Lang } from '../api.ts';
 import { SUBCAT_TO_CATEGORY, formatEUR } from '../catalog.ts';
 import type { ReceiptJSON } from '../lace.ts';
+import type { ShareField } from '../sharePrefs.ts';
+import type { PublishStep } from '../routes/demoFlow.ts';
 import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
 import { useDialog } from '../hooks/useDialog.ts';
+import PublishProgress from './PublishProgress.tsx';
 import styles from './ReceiptTicket.module.css';
 
 // Campos ya presentes en el ticket: al marcarlos, se resalta la fila que ya
@@ -13,7 +17,7 @@ import styles from './ReceiptTicket.module.css';
 // dentro del sello. Ninguno de los dos casos toca el contrato todavía: es
 // una vista previa del diseño de revelación selectiva. Edad y ticket medio
 // van con un valor de ejemplo fijo (no hay perfil de usuario real todavía).
-type OptionalField = 'amount' | 'datetime' | 'products' | 'age' | 'avgTicket';
+type OptionalField = ShareField;
 const DEMO_AGE = 25;
 const DEMO_AVG_TICKET_CENTS = 7990;
 
@@ -28,47 +32,64 @@ const KEEP_AFTER_MS = 900; // margen tras arrancar el último trozo antes del se
 const MIDTAG_AFTER_KEEP_MS = 350; // la etiqueta "↑ ESTO VA ON-CHAIN" tras el resalte
 // ========================================================================================
 
+/** Por dónde va la publicación, una vez pulsado el botón (ver UserView). */
+export type PublishProgressState = {
+  step: PublishStep;
+  signed: boolean;
+  sponsored: boolean;
+  error: string | null;
+};
+
 type Props = {
   lang: Lang;
   receipt: ReceiptJSON;
   onConfirm: () => void;
   onCancel: () => void;
-  /** Sobrescribe el texto del botón de confirmación (por defecto t.publishSignal). */
-  confirmLabel?: string;
-  /** Deshabilita ambos botones, p. ej. mientras se firma/envía una transacción. */
+  /** Deshabilita los botones, p. ej. mientras otra transacción espera confirmación. */
   confirmDisabled?: boolean;
-  error?: string | null;
-  /** Aviso de progreso bajo los botones (no es un error), p. ej. mientras se genera la prueba. */
-  status?: string | null;
+  /** Lo que se comparte por defecto (pestaña Privacidad): sale ya marcado. */
+  initialShare?: ShareField[];
   /** Contenido extra al final del menú lateral (p. ej. dónde se genera la prueba). */
   sideMenuExtra?: ReactNode;
+  /** Ya se ha pulsado Publicar: en lugar del ticket, los pasos de la publicación. */
+  progress?: PublishProgressState | null;
+  /** La prueba se genera en el equipo del usuario. */
+  localProof?: boolean;
+  /** La primera vez, las tarjetas de qué acaba de pasar. */
+  explain?: boolean;
+  onViewMarket?: () => void;
 };
 
 /**
  * Al escanear el QR: reconstruye el ticket original. Arranca en modo "con
  * censura" (todo lo no publicado se difumina y se apaga, dejando nítidas
  * solo las subcategorías selladas) y dos botones alternan con la vista "sin
- * censura" y repiten la animación.
+ * censura" y repiten la animación. Al publicar, enseña los pasos de verdad.
  */
-export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, confirmLabel, confirmDisabled, error, status, sideMenuExtra }: Props) {
+export default function RedactedTicket({
+  lang, receipt, onConfirm, onCancel, confirmDisabled, initialShare = [], sideMenuExtra,
+  progress = null, localProof = false, explain = false, onViewMarket = () => {},
+}: Props) {
   const t = T[lang];
-  // Esc hace lo mismo que "Descartar", que no se puede pulsar mientras se publica.
+  // Esc hace lo mismo que "Descartar", que no se puede pulsar mientras otra
+  // transacción espera confirmación. Publicando, Esc cierra (sigue por detrás).
   const stageRef = useRef<HTMLDivElement>(null);
-  useDialog(stageRef, () => { if (!confirmDisabled) onCancel(); });
+  useDialog(stageRef, () => { if (progress || !confirmDisabled) onCancel(); });
   const [redacted, setRedacted] = useState(true);
   // Cambia al pulsar "Con censura" para reiniciar la animación (fuerza el
   // remontaje del ticket, con lo que los @keyframes vuelven a correr).
   const [playKey, setPlayKey] = useState(0);
 
-  // Qué campos opcionales ha marcado el usuario en el menú lateral. Es solo
-  // vista previa: no cambia lo que de verdad se publica (ver comentario del
-  // tipo OptionalField más arriba).
-  const [revealed, setRevealed] = useState<Set<OptionalField>>(new Set());
+  // Qué campos opcionales ha marcado el usuario en el menú lateral (de
+  // partida, los de la pestaña Privacidad). Es solo vista previa: no cambia
+  // lo que de verdad se publica (ver comentario del tipo OptionalField).
+  const [revealed, setRevealed] = useState<Set<OptionalField>>(() => new Set(initialShare));
   // Campos que el usuario ya ha tocado al menos una vez: a partir de ahí
   // dejan de depender de la animación automática por keyframes (pensada
   // solo para la censura inicial) y pasan a una transición CSS normal, así
-  // marcar/desmarcar puede desvanecerse en cualquier dirección.
-  const [touched, setTouched] = useState<Set<OptionalField>>(new Set());
+  // marcar/desmarcar puede desvanecerse en cualquier dirección. Los marcados
+  // por defecto cuentan como tocados: se ven desde el principio.
+  const [touched, setTouched] = useState<Set<OptionalField>>(() => new Set(initialShare));
   function toggle(field: OptionalField) {
     setRevealed(prev => {
       const next = new Set(prev);
@@ -133,10 +154,25 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
   const keepDelayMs = READ_MS + Math.min(censorsBeforeSeal - 1, MAX_STEPS) * STAGGER_MS + KEEP_AFTER_MS;
   const midTagDelayMs = keepDelayMs + MIDTAG_AFTER_KEEP_MS;
 
-  return (
+  // Al final de <body>: el móvil de la demo va fijo al bajar (sticky), y
+  // dentro de él la ventana quedaría por debajo de la cabecera.
+  return createPortal(
     <div className={styles.overlay} onClick={onCancel}>
       <div ref={stageRef} role="dialog" aria-modal="true" aria-label={t.publishSignal} tabIndex={-1} className={styles.stage} onClick={e => e.stopPropagation()}>
       <div className={styles.panel}>
+        {progress ? (
+          <PublishProgress
+            lang={lang}
+            step={progress.step}
+            local={localProof}
+            signed={progress.signed}
+            sponsored={progress.sponsored}
+            error={progress.error}
+            explain={explain}
+            onClose={onCancel}
+            onViewMarket={onViewMarket}
+          />
+        ) : <>
         <div className={`${styles.wrap} ${styles.enter}`}>
           <div
             key={`${redacted ? 'r' : 'p'}-${playKey}`}
@@ -235,14 +271,13 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
         </div>
 
         <div className={styles.actions}>
-          <button className={styles.confirmBtn} onClick={onConfirm} disabled={confirmDisabled}>{confirmLabel ?? t.publishSignal}</button>
+          <button className={styles.confirmBtn} onClick={onConfirm} disabled={confirmDisabled}>{t.publishSignal}</button>
           <button className={styles.discardBtn} onClick={onCancel} disabled={confirmDisabled}>{t.redactDiscard}</button>
         </div>
-        {error && <p className={cx(styles.message, styles.messageError)}>{error}</p>}
-        {!error && status && <p className={styles.message}>{status}</p>}
+        </>}
       </div>
 
-      <div className={styles.sideMenu}>
+      {!progress && <div className={styles.sideMenu}>
         <div className={styles.sideMenuTitle}>{t.shareTitle}</div>
         <div className={styles.previewNote}>{t.sharePreviewNote}</div>
 
@@ -305,8 +340,9 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
         </div>
 
         {sideMenuExtra}
+      </div>}
       </div>
-      </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

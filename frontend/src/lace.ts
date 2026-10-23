@@ -250,11 +250,18 @@ export async function getSponsorAvailable(): Promise<boolean> {
  * Las rutas que construyen una transacción con `sponsor: true` la devuelven
  * ya pagada y enviada (`sponsored`), o, si el patrocinio no está disponible,
  * la devuelven sin pagar (`tx`) para que la pague la wallet conectada.
- * Devuelve true si la pagó el patrocinio.
+ * Devuelve true si la pagó el patrocinio. `onSigning` avisa justo antes de
+ * pedir la firma a la wallet.
  */
-async function payIfNotSponsored(lace: ConnectedAPI | null, built: { sponsored?: boolean; tx?: string }, lang: Lang): Promise<boolean> {
+async function payIfNotSponsored(
+  lace: ConnectedAPI | null,
+  built: { sponsored?: boolean; tx?: string },
+  lang: Lang,
+  onSigning?: () => void,
+): Promise<boolean> {
   if (built.sponsored) return true;
   if (!lace || !built.tx) throw new Error(T[lang].sponsorUnavailable);
+  onSigning?.();
   await laceBalanceAndSubmit(lace, built.tx);
   return false;
 }
@@ -302,13 +309,17 @@ export async function attestReceipt(
  * Con `localProof`, la transacción se construye y se prueba en este
  * navegador contra el proof server del usuario (ver localProver.ts) y el
  * recibo no llega al backend: solo la transacción ya probada, si la paga el
- * patrocinio.
+ * patrocinio. `onSigning` avisa cuando la prueba ya está y falta la firma de
+ * la wallet (sin patrocinio).
  */
 export async function submitSignal(
   lace: ConnectedAPI | null,
   receipt: ReceiptJSON,
   lang: Lang,
-  { localProof = false, sponsored = false, contractAddress = null as string | null } = {},
+  {
+    localProof = false, sponsored = false, contractAddress = null as string | null,
+    onSigning = undefined as (() => void) | undefined,
+  } = {},
 ): Promise<boolean> {
   if (localProof) {
     if (!contractAddress) throw new Error('Contract not deployed yet');
@@ -328,7 +339,7 @@ export async function submitSignal(
         throw new Error(error || T[lang].sponsorUnavailable);
       }
     }
-    return payIfNotSponsored(lace, { tx }, lang);
+    return payIfNotSponsored(lace, { tx }, lang, onSigning);
   }
 
   const r = await fetch(`${API_BASE}/build-tx/signal`, {
@@ -340,5 +351,5 @@ export async function submitSignal(
     const { error } = await r.json().catch(() => ({ error: r.statusText }));
     throw new Error(error || `Backend error ${r.status}`);
   }
-  return payIfNotSponsored(lace, await r.json(), lang);
+  return payIfNotSponsored(lace, await r.json(), lang, onSigning);
 }

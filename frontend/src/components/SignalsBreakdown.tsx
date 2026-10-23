@@ -23,7 +23,7 @@ export default function SignalsBreakdown({ state, lang }: Props) {
   const total = Number(state?.totalSignals ?? 0);
 
   return (
-    <div data-tour="categories-grid" className={styles.grid}>
+    <div className={styles.grid}>
       {CATEGORIES.map(cat => {
         const catVal = Number(state?.[CATEGORY_STATE_KEY[cat]] ?? 0);
         const catPct = total > 0 ? (catVal / total) * 100 : 0;

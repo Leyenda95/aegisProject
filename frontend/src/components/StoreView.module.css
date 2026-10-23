@@ -1,10 +1,13 @@
 /* Tarjetas de la vista: punto de venta y herramientas de tienda. */
+/* Contenedor: el punto de venta se adapta al ancho de la tarjeta, que no es
+   el de la ventana cuando la caja comparte fila con el móvil (DemoPage). */
 .card {
   margin-bottom: 16px;
   padding: 26px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
+  container-type: inline-size;
 }
 
 .cardTitle {
@@ -41,12 +44,7 @@
   flex-direction: column;
   gap: 14px;
   min-width: 0;
-}
-
-/* Con .aegis-hint (index.css): "¡Haz tu primera compra!". */
-.firstPurchase {
-  align-self: flex-start;
-  margin-bottom: 6px;
+  container-type: inline-size;
 }
 
 .catalogHint {
@@ -227,12 +225,6 @@
   font-size: var(--text-sm);
   text-align: center;
   color: var(--ink-soft);
-}
-
-/* Con .aegis-hint (index.css), en verde: "¡Ahora ve a la vista de Usuario!". */
-.hintSuccess {
-  --hint-accent: var(--success);
-  --hint-glow: rgba(100, 209, 169, 0.45);
 }
 
 .soldActions {
@@ -581,26 +573,33 @@
   border: 1px solid var(--gray-850);
 }
 
-.builtOn {
-  width: 100%;
-  margin-top: 80px;
-  padding: 16px 0;
-}
-
-/* Desktop (>= 1080px): la cesta, a la derecha del catálogo y fija al bajar. */
-@media (min-width: 1080px) {
+/* La cesta, a la derecha del catálogo y fija al bajar, cuando cabe: en
+   escritorio, también junto al móvil (unos 734 px), pero no en tableta (710). */
+@container (min-width: 720px) {
   .pos { grid-template-columns: 1fr 320px; }
   .basket { position: sticky; top: 84px; }
+}
+
+/* Catálogo estrecho: las categorías en dos filas y los productos de dos en dos. */
+@container (max-width: 500px) {
+  .categories { grid-template-columns: repeat(3, 1fr); }
+}
+
+@container (max-width: 380px) {
+  .products { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* En escritorio el móvil del cliente está al lado (ver DemoPage): lo que
+   lleva a su pestaña sobra. */
+@media (min-width: 1180px) {
+  .tabsOnly { display: none; }
 }
 
 /* Mobile (< 680px) */
 @media (max-width: 679px) {
   .card { padding: 14px; }
   .cardTitle { margin-bottom: 12px; }
-  .firstPurchase { align-self: center; }
-  .categories { grid-template-columns: repeat(3, 1fr); }
   .category { padding: 8px 4px; }
-  .products { grid-template-columns: repeat(2, 1fr); }
   .basket { padding: 12px; }
   .toolsToggle[aria-expanded="true"] { margin-bottom: 14px; }
   .tool { padding: 14px; }
@@ -615,5 +614,4 @@
   .campaign { flex-direction: column; gap: 10px; padding: 12px; }
   .campaignMessage { font-size: var(--text-sm); }
   .campaignSide { flex-direction: row; align-items: center; }
-  .builtOn { margin-top: 24px; }
 }

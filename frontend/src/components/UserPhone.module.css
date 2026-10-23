@@ -29,7 +29,8 @@
   height: 640px;
   overflow-y: auto;
   scrollbar-width: none;
-  padding: 0 15px 88px;
+  /* Sitio para el botón de escanear y la barra de pestañas (ver .dock). */
+  padding: 0 15px 150px;
 }
 
 .screen::-webkit-scrollbar {
@@ -290,11 +291,18 @@
   margin-top: 10px;
 }
 
-/* Resumen */
+.pendingMore {
+  margin-top: 8px;
+  font-size: var(--text-xs);
+  text-align: center;
+  color: var(--ink-dim);
+}
+
+/* Resumen (pestaña Gastos) */
 .stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  margin: 20px 0 22px;
+  margin: 4px 0 18px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -330,29 +338,42 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--ink-soft);
-  margin-bottom: 10px;
+  margin: 22px 0 10px;
 }
 
-/* Gasto por categoría, desplegable */
+/* Las compras de ejemplo van aparte y dicen que son de ejemplo. */
+.examplesLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 22px 0 8px;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ink-faint);
+}
+
+.examplesLabel span {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink-dim);
+}
+
+/* Gasto por categoría */
 .collapsible {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
 }
 
 .collapsibleHead {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
   padding: 12px 14px;
-  border: none;
-  border-radius: 16px;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
 }
 
 .chartIcon {
@@ -395,31 +416,11 @@
   color: var(--price);
 }
 
-.chevron {
-  flex: none;
-  width: 7px;
-  height: 7px;
-  border-right: 1.5px solid var(--ink-soft);
-  border-bottom: 1.5px solid var(--ink-soft);
-  transform: rotate(45deg) translate(-2px, -2px);
-  transition: transform 0.2s ease;
-}
-
-.chevronOpen {
-  transform: rotate(225deg) translate(-2px, -2px);
-}
-
 .categories {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 2px 14px 14px;
-  animation: reveal 0.2s ease;
-}
-
-@keyframes reveal {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: none; }
 }
 
 .catRow {
@@ -534,18 +535,48 @@
   margin-top: 18px;
 }
 
-/* Botón de escanear fijo abajo, sobre un degradado para que el contenido
-   se pierda por debajo en vez de cortarse en seco. */
+/* Abajo, fijos: el botón de escanear (en Tickets), sobre un degradado para
+   que el contenido se pierda por debajo en vez de cortarse en seco, y la
+   barra de pestañas. */
 .dock {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
   display: flex;
-  justify-content: center;
-  padding: 26px 0 18px;
-  background: linear-gradient(to bottom, transparent, var(--ground) 45%);
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-top: 26px;
+  background: linear-gradient(to bottom, transparent, var(--ground) 32px);
   pointer-events: none;
+}
+
+.tabBar {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 6px 10px 10px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  pointer-events: auto;
+}
+
+.tabBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 0 4px;
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--ink-faint);
+  background: transparent;
+  border-radius: 10px;
+}
+
+.tabBtn[aria-pressed="true"] {
+  color: var(--bronze-deep);
 }
 
 .scanBtn {
@@ -612,6 +643,44 @@
 
   .dock {
     position: sticky;
-    padding: 18px 0 14px;
+    padding-top: 18px;
   }
+}
+
+/* La app a pantalla completa (/app): sin marco ni barra de estado (las pone
+   el propio teléfono), y la barra de pestañas pegada abajo de la pantalla. */
+.bare {
+  max-width: none;
+  min-height: 100dvh;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.bare .island,
+.bare .statusBar {
+  display: none;
+}
+
+.bare .screen {
+  height: auto;
+  max-width: 520px;
+  margin: 0 auto;
+  overflow: visible;
+  padding: env(safe-area-inset-top, 0px) 18px calc(150px + env(safe-area-inset-bottom, 0px));
+}
+
+.bare .header {
+  margin-top: 20px;
+}
+
+.bare .dock {
+  position: fixed;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.bare .tabBar {
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 }
