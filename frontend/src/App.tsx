@@ -1,4 +1,4 @@
-﻿import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import StoreView from './components/StoreView.tsx';
 import UserView from './components/UserView.tsx';
@@ -8,6 +8,7 @@ import { type Campaign, type MatchResult, type Lang } from './api.ts';
 import { type ConnectedAPI, type WalletInfo, type ReceiptJSON, listWallets, connectWallet, deployViaLace, seedViaLace, registerStoreViaLace, checkStoreRegistered, getLocalContractAddress, getSponsorAvailable } from './lace.ts';
 import { T } from './i18n.ts';
 import { useAggregateState } from './hooks/useAggregateState.ts';
+import { useVisibleInterval } from './hooks/useVisibleInterval.ts';
 import { CONTRACT_ADDRESS, NETWORK_ID } from './chainConfig.ts';
 import StatsRibbon from './components/StatsRibbon.tsx';
 import SignalsBreakdown from './components/SignalsBreakdown.tsx';
@@ -17,6 +18,18 @@ type Tab = 'store' | 'user';
 type Theme = 'dark' | 'light';
 
 const THEME_KEY = 'aegis-theme';
+const LANG_KEY = 'aegis-lang';
+
+/** Idioma al entrar: el último que se eligió o, si nunca se eligió, el del navegador (si no es español, inglés). */
+function initialLang(): Lang {
+  const saved = localStorage.getItem(LANG_KEY);
+  if (saved === 'es' || saved === 'en') return saved;
+  for (const l of [...navigator.languages, navigator.language]) {
+    if (l.startsWith('es')) return 'es';
+    if (l.startsWith('en')) return 'en';
+  }
+  return 'en';
+}
 
 // Tutorial guiado desactivado de momento. Poner a true para reactivarlo.
 const TOUR_ENABLED = false;
@@ -50,7 +63,7 @@ export default function App() {
   const [lace, setLace] = useState<ConnectedAPI | null>(null);
   const [contractAddress, setContractAddress] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [lang, setLang] = useState<Lang>('en');
+  const [lang, setLang] = useState<Lang>(initialLang);
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(THEME_KEY) as Theme | null) ?? 'light');
   const [laceLoading, setLaceLoading] = useState(false);
   const [laceError, setLaceError] = useState<string | null>(null);
@@ -131,6 +144,16 @@ export default function App() {
     });
   }
 
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  /** Solo se recuerda el idioma elegido a mano, no el que se deduce del navegador. */
+  function chooseLang(l: Lang) {
+    setLang(l);
+    localStorage.setItem(LANG_KEY, l);
+  }
+
   const t = T[lang];
 
   useEffect(() => {
@@ -149,13 +172,9 @@ export default function App() {
 
   // El patrocinio puede ir y venir (el bot se reinicia o tarda en tener la
   // wallet lista), así que se vuelve a comprobar cada minuto en vez de solo
-  // al cargar la página.
-  useEffect(() => {
-    const refresh = () => { getSponsorAvailable().then(setSponsored); };
-    refresh();
-    const id = setInterval(refresh, 60_000);
-    return () => clearInterval(id);
-  }, []);
+  // al cargar la página, y en cuanto se vuelve a la pestaña.
+  const refreshSponsor = useCallback(() => { getSponsorAvailable().then(setSponsored); }, []);
+  useVisibleInterval(refreshSponsor, 60_000);
 
   async function handleConnectWallet(walletKey?: string) {
     setLaceError(null);
@@ -278,6 +297,7 @@ export default function App() {
             <button
               onClick={toggleTheme}
               title={theme === 'dark' ? t.lightMode : t.darkMode}
+              aria-label={theme === 'dark' ? t.lightMode : t.darkMode}
               style={{
                 background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--ink-dim)',
                 width: 34, height: 34, borderRadius: 8, padding: 0, fontSize: 15, lineHeight: 1,
@@ -288,7 +308,7 @@ export default function App() {
 
             <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: 8, padding: 3, border: '1px solid var(--line)' }}>
               {(['es', 'en'] as Lang[]).map(l => (
-                <button key={l} onClick={() => setLang(l)} style={{
+                <button key={l} onClick={() => chooseLang(l)} aria-pressed={lang === l} style={{
                   background: lang === l ? 'var(--bronze-wash)' : 'transparent',
                   color: lang === l ? 'var(--ink-bright)' : 'var(--ink-dim)',
                   border: `1px solid ${lang === l ? 'var(--bronze-deep)' : 'transparent'}`,
@@ -422,7 +442,7 @@ export default function App() {
         <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 16px 0' }}>
           <div style={{ display: 'inline-flex', gap: 3, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 10, padding: 3 }}>
             {(['store', 'user'] as Tab[]).map(id => (
-              <button key={id} data-tour={id === 'user' ? 'tab-user' : undefined} onClick={() => setTab(id)} style={{
+              <button key={id} data-tour={id === 'user' ? 'tab-user' : undefined} onClick={() => setTab(id)} aria-pressed={tab === id} style={{
                 background: tab === id ? 'var(--bronze-wash)' : 'transparent',
                 color: tab === id ? 'var(--ink-bright)' : 'var(--ink-dim)',
                 border: `1px solid ${tab === id ? 'var(--bronze-deep)' : 'transparent'}`,

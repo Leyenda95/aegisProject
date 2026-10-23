@@ -2,6 +2,7 @@
 import jsQR from 'jsqr';
 import { T } from '../i18n.ts';
 import type { Lang } from '../api.ts';
+import { useDialog } from '../hooks/useDialog.ts';
 
 type Props = {
   lang: Lang;
@@ -13,6 +14,8 @@ export default function QrScanner({ lang, onScan, onClose }: Props) {
   const t = T[lang];
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useDialog(overlayRef, onClose);
   const [error, setError] = useState<string | null>(null);
   // onScan llega como función nueva en cada render del padre (que se
   // redibuja cada pocos segundos al refrescar el estado). Si el efecto de la
@@ -86,7 +89,7 @@ export default function QrScanner({ lang, onScan, onClose }: Props) {
   }, []);
 
   return (
-    <div style={{
+    <div ref={overlayRef} role="dialog" aria-modal="true" aria-label={t.scanButton} tabIndex={-1} style={{
       position: 'fixed', inset: 0, background: '#000000ee', zIndex: 1000,
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 16,
     }}>

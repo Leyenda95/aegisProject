@@ -110,7 +110,7 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
           }}
         >
           {t.signalsBreakdown}
-          <span style={{ display: 'inline-block', transition: 'transform 0.2s', transform: breakdownOpen ? 'rotate(180deg)' : 'none', color: 'var(--accent-blue)' }}>▼</span>
+          <span aria-hidden="true" style={{ display: 'inline-block', transition: 'transform 0.2s', transform: breakdownOpen ? 'rotate(180deg)' : 'none', color: 'var(--accent-blue)' }}>▼</span>
         </button>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-dim)', whiteSpace: 'nowrap' }}>
           {t.signalsRefresh}

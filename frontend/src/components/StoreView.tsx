@@ -258,7 +258,7 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
 
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)', gap: 8 }}>
                 {POS_CATEGORY_ORDER.map(cat => (
-                  <button key={cat} onClick={() => setBrowseCat(cat)} style={{
+                  <button key={cat} onClick={() => setBrowseCat(cat)} aria-pressed={browseCat === cat} style={{
                     background: browseCat === cat ? '#926a4510' : 'var(--surface-2)',
                     border: `2px solid ${browseCat === cat ? 'var(--bronze-deep)' : 'var(--line)'}`,
                     borderRadius: 10, padding: isMobile ? '8px 4px' : '10px 6px',
@@ -287,9 +287,9 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
                         </button>
                       ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center' }}>
-                          <button onClick={() => setQty(prod.id, qty - 1)} style={stepBtn}>−</button>
+                          <button onClick={() => setQty(prod.id, qty - 1)} aria-label={t.posLess(prod.name[lang])} style={stepBtn}>−</button>
                           <span style={{ fontSize: 14, fontWeight: 700, minWidth: 18, textAlign: 'center' }}>{qty}</span>
-                          <button onClick={() => setQty(prod.id, qty + 1)} style={stepBtn}>+</button>
+                          <button onClick={() => setQty(prod.id, qty + 1)} aria-label={t.posMore(prod.name[lang])} style={stepBtn}>+</button>
                         </div>
                       )}
                     </div>
@@ -314,7 +314,7 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
                         {l.qty}× {l.product.name[lang]}
                       </span>
                       <span style={{ color: 'var(--ink-pale)' }}>{formatEUR(l.product.priceCents * l.qty, lang)}</span>
-                      <button onClick={() => setQty(l.product.id, 0)} style={{ background: 'transparent', border: 'none', color: 'var(--ink-dim)', cursor: 'pointer', fontSize: 14, padding: '0 4px' }}>✕</button>
+                      <button onClick={() => setQty(l.product.id, 0)} aria-label={t.posRemove(l.product.name[lang])} style={{ background: 'transparent', border: 'none', color: 'var(--ink-dim)', cursor: 'pointer', fontSize: 14, padding: '0 4px' }}>✕</button>
                     </div>
                   ))}
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--gray-850)', paddingTop: 8, fontSize: 15, fontWeight: 700, color: 'var(--ink-bright)' }}>
@@ -343,6 +343,7 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
       <div style={{ ...card, padding: storeToolsOpen ? (isMobile ? 14 : 26) : '14px 18px' }}>
         <button
           onClick={() => setStoreToolsOpen(o => !o)}
+          aria-expanded={storeToolsOpen}
           style={{
             width: '100%', background: 'transparent', border: 'none', padding: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer',
@@ -359,7 +360,7 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
             </svg>
             {t.storeTools}
           </span>
-          <span style={{ fontSize: 16, color: 'var(--accent-blue)', transition: 'transform 0.2s', display: 'inline-block', transform: storeToolsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+          <span aria-hidden="true" style={{ fontSize: 16, color: 'var(--accent-blue)', transition: 'transform 0.2s', display: 'inline-block', transform: storeToolsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
         </button>
 
         {storeToolsOpen && (
@@ -375,6 +376,7 @@ export default function StoreView({ lang, lace, sponsored, contractAddress, camp
                   {TIME_RANGES.map(r => (
                     <button key={r} disabled={loadingInsights}
                       onClick={() => setInsightsRange(r)}
+                      aria-pressed={insightsRange === r}
                       style={{
                         background: insightsRange === r ? 'var(--surface)' : 'transparent',
                         color: insightsRange === r ? 'var(--ink)' : 'var(--ink-dim)',

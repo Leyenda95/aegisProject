@@ -22,7 +22,7 @@ const L = {
     total: 'TOTAL',
     sealed: 'SELLADO EN MIDNIGHT',
     proof: 'Prueba anti doble gasto',
-    note: 'On-chain solo se registran las categorías y subcategorías. El resto de información publicada la decides tú!',
+    note: 'On-chain solo se registran las categorías y subcategorías. ¡El resto de información publicada la decides tú!',
     scan: 'Escanéalo con tu app Aegis',
     thanks: '¡GRACIAS POR SU COMPRA!',
     locale: 'es-ES',

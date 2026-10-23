@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { type AegisState } from '../api.ts';
+import { useVisibleInterval } from './useVisibleInterval.ts';
 
 // Último estado recibido, guardado en el navegador: al volver a abrir la
 // página se enseña al instante, sin esperar a la primera respuesta del
@@ -29,7 +30,8 @@ function writeCache(contractAddress: string, state: AegisState): void {
 
 /**
  * Estado agregado del contrato (los contadores públicos). Se consulta al
- * montar y cada 10 s a través del backend (ver chainState.ts). Lo comparten
+ * montar y cada 10 s con la pestaña visible (ver useVisibleInterval), a
+ * través del backend (ver chainState.ts). Lo comparten
  * la cinta de estadísticas (App) y el desglose por categoría (StoreView),
  * así que vive aquí en vez de dentro de una sola vista.
  */
@@ -51,10 +53,9 @@ export function useAggregateState(contractAddress: string | null, intervalMs = 1
     // Si la dirección llega después del primer render, se enseña ya lo guardado para ella.
     const cached = readCache(contractAddress);
     if (cached) setState(cached);
-    refresh();
-    const id = setInterval(refresh, intervalMs);
-    return () => clearInterval(id);
-  }, [refresh, intervalMs, contractAddress]);
+  }, [contractAddress]);
+
+  useVisibleInterval(refresh, intervalMs);
 
   return { state, refresh };
 }

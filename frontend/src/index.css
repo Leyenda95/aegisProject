@@ -146,6 +146,16 @@ input, select {
 input::placeholder { color: var(--ink-faint); }
 input:focus, select:focus { outline: 2px solid var(--bronze); border-color: transparent; }
 
+/* Anillo de foco al navegar con el teclado (con ratón o con el dedo no sale). */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: 2px;
+}
+/* Los modales reciben el foco al abrirse (ver useDialog), pero no son un
+   control que se pulse: sin anillo. */
+[role="dialog"]:focus { outline: none; }
+
 label { font-size: 13px; color: var(--ink-dim); margin-bottom: 6px; display: block; }
 
 /* Números tabulares y monoespaciados donde se pida por clase */

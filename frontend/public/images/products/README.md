@@ -4,7 +4,8 @@ Deja aquí una imagen por producto con el **id del producto** como nombre de
 fichero. El id de cada producto está en [`frontend/src/catalog.ts`](../../../src/catalog.ts)
 (campo `id` de cada entrada de `PRODUCTS`).
 
-- Formatos admitidos: `.jpg`, `.webp`, `.png` (se prueban en ese orden).
+- Formatos admitidos: `.png`, `.webp`, `.jpg` (se prueban en ese orden, así
+  que con `.png` no hay peticiones fallidas antes de dar con la imagen).
 - Recomendado: cuadradas o 4:3, ~400×400 px, optimizadas para web.
 - Ejemplos: `smartphone-61.jpg`, `zapatillas-urbanas.webp`, `cafetera-espresso.png`.
 

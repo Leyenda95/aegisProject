@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { type Lang } from '../api.ts';
 import { submitSignal, explainTxError, type ConnectedAPI, type ReceiptJSON } from '../lace.ts';
 import { decodeReceiptFromQr } from '../receiptCodec.ts';
@@ -6,6 +6,7 @@ import QrScanner from './QrScanner.tsx';
 import RedactedTicket from './RedactedTicket.tsx';
 import { T } from '../i18n.ts';
 import { useBreakpoint } from '../hooks/useBreakpoint.ts';
+import { useDialog } from '../hooks/useDialog.ts';
 import UserPhone from './UserPhone.tsx';
 import ProofLocationPicker, { type ProofServerStatus } from './ProofLocationPicker.tsx';
 import { isLocalProofServerUp, loadLocalProofPreference, saveLocalProofPreference } from '../localProofServer.ts';
@@ -57,6 +58,8 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
   // Si la última señal publicada la pagó el patrocinio (para decirlo en el mensaje de éxito).
   const [lastSponsored, setLastSponsored] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);
+  const explainerRef = useRef<HTMLDivElement>(null);
+  useDialog(explainerRef, () => setShowExplainer(false), showExplainer);
   // Probar la señal con el proof server del propio usuario (ver localProver.ts).
   const [localProof, setLocalProof] = useState(loadLocalProofPreference);
   const [proofServer, setProofServer] = useState<ProofServerStatus>('checking');
@@ -202,6 +205,11 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
           }}
         >
           <div
+            ref={explainerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="explainer-title"
+            tabIndex={-1}
             style={{
               position: 'relative', background: 'var(--surface)', border: '1px solid var(--line)',
               borderRadius: 20, padding: 46, maxWidth: 580, width: '100%',
@@ -218,7 +226,7 @@ export default function UserView({ lang, lace, sponsored, contractAddress, lastR
             >
               ×
             </button>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 19, color: 'var(--ink-bright)', marginBottom: 18, paddingRight: 24 }}>
+            <h3 id="explainer-title" style={{ fontFamily: 'var(--font-display)', fontSize: 19, color: 'var(--ink-bright)', marginBottom: 18, paddingRight: 24 }}>
               {t.explainerTitle}
             </h3>
             <p style={{ fontSize: 14.5, color: 'var(--ink-pale)', lineHeight: 1.7, marginBottom: 14 }}>{t.explainerBody1}</p>

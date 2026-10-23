@@ -39,6 +39,7 @@ export default function SignalsBreakdown({ state, lang }: Props) {
           <div key={cat} style={{ gridColumn: isOpen ? '1 / -1' : undefined }}>
             <button
               onClick={() => setExpandedCat(isOpen ? null : cat)}
+              aria-expanded={isOpen}
               style={{
                 width: '100%', background: isOpen ? '#926a4513' : 'var(--surface-2)',
                 border: `1px solid ${isOpen ? 'var(--bronze-deep)' : 'var(--line)'}`,
@@ -53,7 +54,7 @@ export default function SignalsBreakdown({ state, lang }: Props) {
                 </span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 15 : 18, fontWeight: 500, color: 'var(--price)' }}>{catVal}</span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 500, color: isOpen ? 'var(--ink-bright)' : 'var(--ink)', width: 34, textAlign: 'right' }}>{catPct.toFixed(0)}%</span>
-                <span style={{ fontSize: 12, color: 'var(--accent-blue)', marginLeft: 4 }}>{isOpen ? '▲' : '▼'}</span>
+                <span aria-hidden="true" style={{ fontSize: 12, color: 'var(--accent-blue)', marginLeft: 4 }}>{isOpen ? '▲' : '▼'}</span>
               </div>
               <div style={{ background: 'var(--line)', height: 3, borderRadius: isOpen ? 0 : '0 0 4px 4px' }}>
                 <div style={{ width: `${catPct}%`, height: '100%', background: 'var(--bronze-deep)', borderRadius: 3, transition: 'width 0.4s' }} />

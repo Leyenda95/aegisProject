@@ -1,8 +1,9 @@
-﻿import { useState, type ReactNode } from 'react';
+﻿import { useRef, useState, type ReactNode } from 'react';
 import { SUBCATEGORY_INDEX, SUBCATEGORY_LABELS, CATEGORY_LABELS, type Lang } from '../api.ts';
 import { SUBCAT_TO_CATEGORY, formatEUR } from '../catalog.ts';
 import type { ReceiptJSON } from '../lace.ts';
 import { useBreakpoint } from '../hooks/useBreakpoint.ts';
+import { useDialog } from '../hooks/useDialog.ts';
 import styles from './ReceiptTicket.module.css';
 
 // Campos ya presentes en el ticket: al marcarlos, se resalta la fila que ya
@@ -108,6 +109,9 @@ const L = {
 export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, confirmLabel, confirmDisabled, error, status, sideMenuExtra }: Props) {
   const tt = L[lang];
   const isMobile = useBreakpoint() === 'mobile';
+  // Esc hace lo mismo que "Descartar", que no se puede pulsar mientras se publica.
+  const stageRef = useRef<HTMLDivElement>(null);
+  useDialog(stageRef, () => { if (!confirmDisabled) onCancel(); });
   const [redacted, setRedacted] = useState(true);
   // Cambia al pulsar "Con censura" para reiniciar la animación (fuerza el
   // remontaje del ticket, con lo que los @keyframes vuelven a correr).
@@ -193,7 +197,7 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
 
   return (
     <div className={styles.overlay} onClick={onCancel}>
-      <div className={styles.stage} style={{ flexDirection: isMobile ? 'column' : 'row', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+      <div ref={stageRef} role="dialog" aria-modal="true" aria-label={tt.add} tabIndex={-1} className={styles.stage} style={{ flexDirection: isMobile ? 'column' : 'row', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
       <div className={styles.panel}>
         <div className={`${styles.wrap} ${styles.enter}`}>
           <div
@@ -273,12 +277,14 @@ export default function RedactedTicket({ lang, receipt, onConfirm, onCancel, con
           <button
             className={`${styles.modeBtn} ${!redacted ? styles.modeBtnOn : ''}`}
             onClick={() => setRedacted(false)}
+            aria-pressed={!redacted}
           >
             {tt.showPlain}
           </button>
           <button
             className={`${styles.modeBtn} ${redacted ? styles.modeBtnOn : ''}`}
             onClick={() => { setRedacted(true); setPlayKey(k => k + 1); }}
+            aria-pressed={redacted}
           >
             {tt.showRedacted}
           </button>

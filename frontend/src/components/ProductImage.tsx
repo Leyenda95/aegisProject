@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { SUBCATEGORY_ICONS } from '../api.ts';
 import { stockImageUrl, type Product } from '../catalog.ts';
 
-const EXTS = ['.jpg', '.jpeg', '.webp', '.png'];
+// .png primero porque es el formato de todas las imágenes que hay ahora: cada
+// extensión que se prueba y no existe es una petición fallida más.
+const EXTS = ['.png', '.webp', '.jpg', '.jpeg'];
 
 /**
  * Imagen de un producto del catálogo. Prueba en orden: la imagen local que
- * suba el usuario (frontend/public/images/products/<id>.jpg|jpeg|webp|png),
+ * suba el usuario (frontend/public/images/products/<id>.png|webp|jpg|jpeg),
  * luego una foto de stock temporal, y por último un emoji de la subcategoría.
  *
  * La imagen se muestra entera dentro de un recuadro cuadrado (object-fit:
