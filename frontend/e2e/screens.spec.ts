@@ -171,8 +171,10 @@ async function mockWallets(page: Page) {
 
 /** Pasa la portada y espera a que la cinta tenga los contadores. */
 async function enter(page: Page) {
-  await page.getByRole('button', { name: 'Explore' }).click();
-  await expect(page.getByRole('button', { name: 'Explore' })).toHaveCount(0);
+  // El primero: el otro está al final de "Cómo funciona".
+  const tryDemo = page.getByRole('button', { name: 'Probar la demo' });
+  await tryDemo.first().click();
+  await expect(tryDemo).toHaveCount(0);
   await expect(page.getByText(STATE.totalSignals, { exact: true }).first()).toBeVisible();
 }
 
@@ -206,12 +208,33 @@ async function shot(page: Page, name: string, { fullPage = true, threshold }: { 
 
 for (const theme of ['light', 'dark'] as const) {
   test.describe(theme, () => {
-    test('portada', async ({ page }) => {
+    test('portada y cómo funciona', async ({ page }) => {
       await open(page, theme);
+      await expect(page.getByText('señales anónimas en Midnight · en directo')).toBeVisible();
       // El logo enorme y translúcido de la portada sale en cada pasada con
       // variaciones mínimas de color (cientos de píxeles casi iguales): aquí
       // se toleran los cambios de color pequeños, como hace Playwright por defecto.
       await shot(page, `${theme}-portada`, { fullPage: false, threshold: 0.2 });
+
+      // Baja hasta los pasos. Sin shot(): settle() volvería arriba.
+      await page.getByRole('button', { name: 'Cómo funciona' }).click();
+      const how = page.getByRole('heading', { name: 'Cómo funciona' });
+      const top = () => how.evaluate(el => Math.round(el.getBoundingClientRect().top));
+      await expect.poll(async () => {
+        const before = await top();
+        await page.waitForTimeout(150);
+        return before === await top() && before < 200;
+      }).toBe(true);
+      // El ratón se ha quedado donde estaba el enlace, que ahora puede caer
+      // encima del botón del final.
+      await page.mouse.move(0, 0);
+      await expect.soft(page).toHaveScreenshot(`${theme}-como-funciona.png`, { threshold: 0.2 });
+
+      // La otra entrada lleva al mercado, y la página vuelve a desplazarse.
+      await page.getByRole('button', { name: /Ver el mercado/ }).click();
+      await expect(page).toHaveURL(/\/market$/);
+      await expect(page.getByText('señales en la última semana')).toBeVisible();
+      await expect(page.locator('html')).not.toHaveClass(/landing-open/);
     });
 
     test('compra, ticket, móvil, publicar y explicación', async ({ page }, info) => {

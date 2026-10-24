@@ -42,7 +42,7 @@ export default function DemoPage({ landing = false, market = false }: { landing?
 
   return (
     <DemoFlowContext value={reportFlow}>
-      {landing && <LandingScreen onEnter={() => navigate('/demo')} />}
+      {landing && <LandingScreen onEnter={path => navigate(path)} />}
 
       <StatsRibbon
         state={state}

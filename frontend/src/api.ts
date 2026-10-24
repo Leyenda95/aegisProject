@@ -20,19 +20,6 @@ export type Insights = {
   recommendations: ({ title: string; detail: string } | string)[];
 };
 
-export type Campaign = {
-  id: string;
-  targetCategory: string;
-  minSignals: number;
-  message: string;
-};
-
-export type MatchResult = {
-  campaignId: string;
-  matches: boolean;
-  reason: string;
-};
-
 export const CATEGORIES = ['electronics', 'fashion', 'food', 'sports', 'home', 'other'] as const;
 export type Category = typeof CATEGORIES[number];
 
@@ -152,16 +139,4 @@ export async function getInsights(storeProfile?: string, lang: Lang = 'en', rang
   const params = new URLSearchParams({ lang, range });
   if (storeProfile) params.set('store', storeProfile);
   return handleJson<Insights>(await fetch(`${API_BASE}/insights?${params}`));
-}
-
-export async function postCampaign(data: Omit<Campaign, 'id'>): Promise<{ id: string }> {
-  return handleJson<{ id: string }>(await fetch(`${API_BASE}/campaigns`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  }));
-}
-
-export async function getMatch(id: string): Promise<MatchResult> {
-  return handleJson<MatchResult>(await fetch(`${API_BASE}/match/${id}`));
 }

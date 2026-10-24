@@ -28,9 +28,9 @@ import { ledger } from '../../contract/managed/aegis/contract/index.js';
 import type { AegisState } from './contract.js';
 import type { NetworkConfig } from './config.js';
 import {
-  COUNTER_FIELDS, DAY_MS, HOUR_MS, NON_PURCHASE_FIELDS, RANGE_DAYS,
-  buildHistory, compactSnapshots, deltaCounts, parseSnapshots, recentChanges, seededAfter, serializeSnapshots,
-  snapshotAt, toCounts,
+  COUNTER_FIELDS, DAY_MS, HOUR_MS, RANGE_DAYS,
+  buildHistory, compactSnapshots, deltaCounts, fromCounts, parseSnapshots, recentChanges, seededAfter, serializeSnapshots,
+  toCounts,
   type Change, type Counts, type History, type Snapshot, type TimeRange,
 } from './series.js';
 
@@ -351,23 +351,17 @@ export function latestCounters(contractAddress: string): AegisState | null {
   return snapshots.at(-1)?.state ?? null;
 }
 
-function subtract(end: AegisState, start: AegisState | null): AegisState {
-  const result: Record<string, bigint> = {};
-  for (const [key, value] of Object.entries(end)) {
-    if (typeof value !== 'bigint') continue;
-    result[key] = NON_PURCHASE_FIELDS.has(key) || !start
-      ? value
-      : value - (start[key as keyof AegisState] as bigint);
-  }
-  return result as AegisState;
-}
-
 export type PeriodStates = {
   range: TimeRange;
-  /** Compras dentro del periodo elegido (de hace N días hasta ahora). */
+  /** Compras dentro del periodo elegido, las mismas que cuenta el mercado (ver buildHistory). */
   current: AegisState;
-  /** Compras en el periodo anterior de la misma duración, para comparar. */
-  previous: AegisState;
+  /**
+   * Las del periodo anterior de la misma duración, para comparar, o null si no
+   * se puede: el contrato aún no existía en todo ese periodo, o en alguno de
+   * los dos hay una carga de datos de demo, que falsearía la comparación (la
+   * misma regla que la web, ver periodFigures).
+   */
+  previous: AegisState | null;
 };
 
 /**
@@ -396,20 +390,13 @@ export async function readPeriodStates(
   range: TimeRange,
   waitMs: number,
 ): Promise<PeriodStates | null> {
-  if (!await waitForHistory(indexer, contractAddress, waitMs)) return null;
-  const now = snapshots.at(-1)?.state;
-  if (!now) throw new Error('Contract state not found');
-
-  // Antes de desplegarse el contrato no hay estado: cuenta como todo a cero,
-  // así "último año" muestra todo lo que hay aunque el contrato sea más nuevo.
-  const span = RANGE_DAYS[range] * DAY_MS;
-  const start = snapshotAt(snapshots, Date.now() - span)?.state ?? null;
-  const prevStart = snapshotAt(snapshots, Date.now() - 2 * span)?.state ?? null;
-
+  const history = await readHistory(indexer, contractAddress, range, waitMs);
+  if (!history) return null;
+  const { totals, demo } = history;
   return {
     range,
-    current: subtract(now, start),
-    previous: start ? subtract(start, prevStart) : subtract(now, now),
+    current: fromCounts(totals.current),
+    previous: totals.previous && demo.current === '0' && demo.previous === '0' ? fromCounts(totals.previous) : null,
   };
 }
 

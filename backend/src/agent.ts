@@ -202,7 +202,7 @@ export async function generateInsights(period: PeriodStates, storeProfile?: stri
 
   let trendingRule = '';
   let stateDescription: string;
-  let previousDescription: string;
+  let previousDescription = '';
   let scopeRule = '';
 
   if (sector && SECTOR_SUBCATS[sector]) {
@@ -214,18 +214,18 @@ export async function generateInsights(period: PeriodStates, storeProfile?: stri
     const trendingData = sorted.map(e => `${e.name}: ${e.count}`).join('\n');
     trendingRule = `trending: use EXACTLY these entries in this exact order (already sorted for you):\n${trendingData}\nCopy them verbatim into the JSON array. Do NOT add or remove entries.`;
     stateDescription = buildSectorStateDescription(state, lang, sector);
-    previousDescription = buildSectorStateDescription(period.previous, lang, sector);
+    if (period.previous) previousDescription = buildSectorStateDescription(period.previous, lang, sector);
     scopeRule = `\n- This store only sells ${l[sector as keyof typeof l]}. The data above is the only category you have, do not mention or compare it against other product categories.`;
   } else {
     trendingRule = `trending: list the top 6 subcategories by signal count (highest first). Format: "Name: N".`;
     stateDescription = buildStateDescription(state, lang);
-    previousDescription = buildStateDescription(period.previous, lang);
+    if (period.previous) previousDescription = buildStateDescription(period.previous, lang);
   }
 
-  // Sin compras en el periodo anterior no hay con qué comparar (pasa, por
-  // ejemplo, con "último año" si el contrato es más nuevo): mejor no darle
-  // un periodo vacío que la IA podría leer como un crecimiento enorme.
-  const comparison = period.previous.totalSignals > 0n
+  // Sin periodo anterior comparable (ver PeriodStates) o sin compras en él no
+  // hay con qué comparar: mejor no darle un periodo vacío o una carga de demo
+  // de golpe, que la IA podría leer como un crecimiento enorme.
+  const comparison = period.previous && period.previous.totalSignals > 0n
     ? `\n\nFor comparison, the same numbers in the period just before it (same length):\n${previousDescription}`
     : '';
 

@@ -2,15 +2,17 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import NumberFlow from '@number-flow/react';
 import {
-  CATEGORIES, CATEGORY_LABELS, CATEGORY_STATE_KEY, SUBCATEGORIES, SUBCATEGORY_LABELS,
+  CATEGORIES, CATEGORY_LABELS, SUBCATEGORIES, SUBCATEGORY_LABELS,
   type AegisState, type Category, type Change, type Lang, type TimeRange,
 } from '../api.ts';
+import { periodFigures } from '../periodFigures.ts';
 import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
 import { useChain } from '../app/ChainProvider.tsx';
 import { useHistory } from '../hooks/useHistory.ts';
 import { useNow } from '../hooks/useNow.ts';
 import TrendChart from './TrendChart.tsx';
+import Delta from './Delta.tsx';
 import styles from './MarketView.module.css';
 
 const TIME_RANGES: TimeRange[] = ['7d', '30d', '90d', '365d'];
@@ -41,22 +43,6 @@ function timeAgo(timestamp: number, now: number, format: Intl.RelativeTimeFormat
   if (seconds > -3600) return format.format(Math.round(seconds / 60), 'minute');
   if (seconds > -86400) return format.format(Math.round(seconds / 3600), 'hour');
   return format.format(Math.round(seconds / 86400), 'day');
-}
-
-/** Variación frente al periodo anterior: ▲ 8 %, ▼ 3 %. */
-function Delta({ change, locale }: { change: number; locale: string }) {
-  const percent = new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format(Math.abs(change));
-  const up = change >= 0.005;
-  const down = change <= -0.005;
-  return (
-    <span className={styles.delta}>
-      <span aria-hidden="true" className={cx(styles.deltaGlyph, up && styles.up, down && styles.down)}>
-        {up ? '▲' : down ? '▼' : '='}
-      </span>
-      <span className={styles.srOnly}>{up ? '+' : down ? '−' : ''}</span>
-      {percent}
-    </span>
-  );
 }
 
 /** Últimas señales que han entrado, en directo, con lo único que se sabe de ellas. */
@@ -138,23 +124,11 @@ export default function MarketView({ lang }: { lang: Lang }) {
     );
   }
 
-  const total = data ? Number(data.totals.current.totalSignals ?? 0) : 0;
-  const previousTotal = data?.totals.previous ? Number(data.totals.previous.totalSignals ?? 0) : 0;
-  // Señales de la carga de datos de demo en el periodo: cuentan, como en la
-  // cinta, pero se dice. Si la hay en este periodo o en el anterior, no se
-  // comparan: miles de señales de golpe falsearían la variación.
-  const demo = Number(data?.demo?.current ?? 0);
-  const comparable = demo === 0 && Number(data?.demo?.previous ?? 0) === 0;
-  const change = comparable && previousTotal > 0 ? (total - previousTotal) / previousTotal : null;
+  // Las señales de una carga de datos de demo cuentan, como en la cinta, pero
+  // se dice, y entonces no se compara con el periodo anterior (periodFigures).
+  const { total, change, demo, categories } = data ? periodFigures(data) : { total: 0, change: null, demo: 0, categories: [] };
   // El contrato es más nuevo que el periodo: la serie empieza en su despliegue.
   const sinceDeploy = data && data.since !== null && data.since > data.to - data.span ? data.since : null;
-
-  const categories = CATEGORIES.map(category => {
-    const key = CATEGORY_STATE_KEY[category];
-    const count = Number(data?.totals.current[key] ?? 0);
-    const before = data?.totals.previous ? Number(data.totals.previous[key] ?? 0) : 0;
-    return { category, count, change: comparable && before > 0 ? (count - before) / before : null };
-  }).sort((a, b) => b.count - a.count);
   const maxCount = Math.max(1, ...categories.map(c => c.count));
 
   return (

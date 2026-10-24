@@ -17,7 +17,7 @@ Aegis is a privacy-preserving market intelligence system built on Midnight Netwo
 - The proof can be generated on Aegis servers or on the customer's own local proof server, so the receipt never has to leave their device.
 - The aggregate state (total signals per category) is public and verifiable on-chain.
 - An LLM agent reads the aggregate and generates market intelligence, trending categories, insights, and recommendations tailored to each store over the last week, month, 3 months or year, without ever accessing individual user data.
-- Stores create targeted campaigns with a minimum signal threshold. When enough signals accumulate in a category, their campaign activates.
+- Coming soon: stores create targeted campaigns with a minimum signal threshold. When enough signals accumulate in a category, their campaign activates.
 
 ## Try it
 
@@ -27,7 +27,7 @@ Everything runs against Midnight's **Preprod** testnet. There are two ways to tr
 
 Open **[aegis-midnight.vercel.app](https://aegis-midnight.vercel.app/)**. It's connected to a shared contract on Preprod that already has a registered store and signals, so you only need a Midnight wallet extension (Lace or 1AM) on the Preprod network.
 
-1. **Connect Wallet**.
+1. On the landing page, choose **Try the demo**, then **Connect Wallet**.
 2. At the till, add a couple of products to the cart and check out. This seals a receipt on-chain and shows it as a QR.
 3. Publish the signal, in either of these ways:
    - Scan the QR with your phone's camera: it opens the Aegis phone app (`/app`) with the ticket ready, and you can add it to your home screen. While sponsorship is on, the phone doesn't need a wallet.
@@ -116,8 +116,8 @@ sequenceDiagram
 1. A store checks out a cart in the frontend; the backend builds the `attestReceipt` circuit call (proof of membership in the registered-stores tree, no store identity revealed) and generates the ZK proof. The customer's receipt (subcategory lines, amounts, timestamp) is never published as plaintext, only its commitment gets sealed on-chain.
 2. From that receipt, the customer builds and submits `submitPurchase`: either the backend or the customer's own local proof server proves the circuit, and the connected wallet (Lace or 1AM, via the Midnight DApp Connector API) balances, signs, and submits it to the Midnight node. Only the subcategory and quantity are revealed, no identity, no amount, no store.
 3. Aggregate state (`GET /state`) is public ledger data. The backend reads it from the Preprod indexer, served by Blockfrost (its token stays server-side), and decodes it with the contract's own `ledger()` function. No proof, no key, no privileged access involved. The backend also follows every contract transaction live: `GET /events` (Server-Sent Events) pushes each change to the browser as it lands, and `GET /history?range=7d` returns the signals over a period next to the previous one, for the market charts. The market counts every signal, like the on-chain counters; a period that includes the demo data load says so and isn't compared with the previous one. What the backend has read is kept on disk (`.history-<network>.json`), so a restart only fetches the transactions it hasn't seen.
-4. For the store side, the backend feeds the aggregate counters to Claude (Anthropic API), which returns trending categories and actionable recommendations over 1W, 1M, 3M and 1Y windows. The model only ever sees aggregate numbers, never individual signals or user data.
-5. Stores register campaigns on-chain (`registerCampaign`) through the same build-tx-then-wallet-submit flow, and the backend matches campaign thresholds against live state (`/match/:id`), again using Claude to explain the reasoning.
+4. For the store side, the backend feeds the aggregate counters to Claude (Anthropic API), which returns trending categories and actionable recommendations over 1W, 1M, 3M and 1Y windows. The counters are the same ones the market shows for that period, and the previous period is only passed along when the two can be compared (neither includes the demo data load). The model only ever sees aggregate numbers, never individual signals or user data.
+5. Campaigns are ready in the backend but not in the store screen yet, which shows them as coming soon: `POST /campaigns` registers one on-chain (`registerCampaign`) and `GET /match/:id` checks its threshold against the live aggregate, again using Claude to explain the result.
 
 ## Stack
 
@@ -148,6 +148,9 @@ sequenceDiagram
 - [x] Aggregate state goes through the backend (`GET /state`): the Preprod indexer is served by Blockfrost and its token must stay server-side. The frontend no longer loads the contract's ~11MB WASM runtime just to read the counters.
 - [x] Live market page (`/market`): signals per period against the previous one, by category, and the latest signals as they land on chain.
 - [x] The receipt QR is a link (`/r#…`): the phone's camera opens the Aegis app with the ticket, and what follows `#` never reaches the server. The phone app (`/app`) is installable, keeps tickets on the device, and has privacy defaults and a delete-my-data button.
+- [x] Landing page in English and Spanish, with the live signal count and how it works in three steps.
+- [x] Store market report: the period's figures against the previous one (the same as the market), trends and three recommendations, ready to copy.
+- [ ] Campaigns in the store screen: the backend endpoints work, the screen shows them as coming soon.
 - [ ] Optional age/spend disclosure tied to a pseudonym: previewed in the UI, not wired into the contract yet. `submitPurchase` today only ever reveals subcategory and quantity, regardless of what's toggled in the preview.
 
 ## What's next

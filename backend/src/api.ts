@@ -322,9 +322,7 @@ async function handleRequest(
       let period = await readPeriodStates(ctx.config, ctx.contractAddress, range, 10_000);
       if (!period) {
         console.log('[api] /insights: history still loading, using the current state');
-        const current = await stateFromIndexer(ctx.providers, ctx.contractAddress);
-        const empty = Object.fromEntries(COUNTER_FIELDS.map((k) => [k, 0n])) as unknown as typeof current;
-        period = { range, current, previous: empty };
+        period = { range, current: await stateFromIndexer(ctx.providers, ctx.contractAddress), previous: null };
       }
       const insights = await generateInsights(period, storeProfile, lang);
       return json(res, 200, insights);

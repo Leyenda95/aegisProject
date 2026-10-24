@@ -1,32 +1,86 @@
-/* Root */
+/* Portada (LandingScreen). Es oscura con cualquier tema, así que sus colores
+   van fijos y no con las variables del tema, y su escala de letra va aparte
+   de la de la interfaz (ver index.css). */
 .root {
   position: fixed;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 45%, #0e1825 0%, #0A0A0A 65%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   z-index: 50;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Al llegar al final no se desplaza la página de debajo. */
+  overscroll-behavior: contain;
+  /* Barra de desplazamiento oscura, como el fondo. */
+  color-scheme: dark;
+  color: #ffffff;
+  background: #0A0A0A;
 }
 
 .root.exiting {
   animation: screenOut 0.7s ease forwards;
+  pointer-events: none;
 }
 
 @keyframes screenOut {
   to { opacity: 0; }
 }
 
-/* Logo hero (EFFECT 3) */
+@keyframes contentIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Primera pantalla ---------- */
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 45%, #0e1825 0%, #0A0A0A 65%);
+}
+
+/* Idioma, arriba a la derecha. */
+.langs {
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top, 0px));
+  right: max(24px, env(safe-area-inset-right, 0px));
+  z-index: 1;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  animation: contentIn 1s ease 0.6s both;
+}
+
+.lang {
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: rgba(245, 242, 235, 0.55);
+  background: transparent;
+  border-radius: 6px;
+}
+
+.lang[aria-pressed="true"] {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Logo enorme y translúcido con el texto encima. */
 .heroWrap {
   position: relative;
+  bottom: 5vh;
   display: flex;
   align-items: center;
   justify-content: center;
   animation: contentIn 1s ease 0.2s both;
-  bottom: 5%;
 }
 
 .heroLogo {
@@ -41,65 +95,92 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
   font-family: var(--font-display);
-}
-
-.heroContent .tagline{
-  font-size: 21px;
-
-}
-
-.heroContent .sub{
-  font-size: 20px;
-
-}
-
-@keyframes contentIn {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 .title {
+  margin-bottom: 50px;
+  font-family: var(--font-display);
   font-size: 65px;
   font-weight: 500;
-  color: #ffffff;
-  letter-spacing: 20px;
   line-height: 1;
-  margin-bottom: 50px;
-  /* bottom: 0%; */
-  font-family: var(--font-display);
-
+  letter-spacing: 20px;
+  color: #ffffff;
 }
 
 .tagline {
-  font-size: 19px;
-  color: rgb(255, 255, 255);
-  text-transform: uppercase;
-  letter-spacing: 2px;
   margin-bottom: 20px;
+  font-size: 21px;
   font-weight: 500;
-}
-
-.sub {
-  font-size: 16px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
   color: #ffffff;
-  text-align: center;
-  max-width: 400px;
-  line-height: 1;
-  margin-bottom: 48px;
 }
 
-/* CTA */
+/* Qué es Aegis, en una frase. */
+.headline {
+  max-width: 640px;
+  font-size: 20px;
+  line-height: 1.35;
+  text-align: center;
+  text-wrap: balance;
+  color: #ffffff;
+}
+
+/* Cuántas señales hay ya en Midnight, en directo. Texto seguido, para que en
+   móvil parta en dos líneas iguales. */
+.counter {
+  margin: 18px 0 30px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  text-align: center;
+  text-wrap: balance;
+  color: rgba(245, 242, 235, 0.7);
+}
+
+.counterPending {
+  visibility: hidden;
+}
+
+.counterValue {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+}
+
+.liveDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: #64d1a9;
+  animation: livePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
 .cta {
-  background: linear-gradient(135deg, rgba(69,109,146,0.25) 0%, rgba(42,80,120,0.15) 100%);
-  color: #fff;
-  border: 1px solid rgba(69, 109, 146, 0.8);
-  border-radius: 8px;
   padding: 14px 48px;
   font-size: 16px;
   font-weight: 500;
   letter-spacing: 1px;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(69,109,146,0.25) 0%, rgba(42,80,120,0.15) 100%);
+  border: 1px solid rgba(69, 109, 146, 0.8);
+  border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
   animation: ctaPulse 3s ease-in-out infinite;
@@ -117,94 +198,71 @@
   50%       { box-shadow: 0 0 20px rgba(69, 109, 146, 0.55), 0 0 45px rgba(69, 109, 146, 0.2); }
 }
 
-
-/* Tablet (680px - 1080px) */
-@media (max-width: 1080px) {
-  .title {
-    font-size: 52px;
-    letter-spacing: 14px;
-    margin-bottom: 40px;
-  }
-
-  .heroContent .tagline {
-    font-size: 17px;
-  }
-
-  .heroContent .sub {
-    font-size: 16px;
-  }
+/* "Ver el mercado": la segunda entrada, sin caja. */
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 22px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: rgba(245, 242, 235, 0.78);
+  background: transparent;
+  transition: color 0.2s;
 }
 
-/* Mobile (< 680px) */
-@media (max-width: 680px) {
-  .heroWrap {
-    flex-direction: column;
-    /* flex-start + padding-top en vez de center: con center sobraba hueco
-       arriba (el conjunto logo+texto no llena los 100vh, así que quedaba
-       centrado más abajo de lo que se ve bien). */
-    justify-content: flex-start;
-    align-items: center;
-    width: 100%;
-    min-height: 100vh;
-    bottom: 0;
-    padding: 20vh 28px 0;
-    box-sizing: border-box;
-    gap: 8px;
-  }
-
-  .heroLogo {
-    width: 120vw;
-  }
-
-  .heroContent {
-    position: relative;
-    bottom: auto;
-    text-align: center;
-    width: 100%;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .title {
-    font-size: 26px;
-    letter-spacing: 6px;
-    margin-bottom: 0px;
-    transform: translateY(-27vw) translateX(3vw);
-    position: relative;
-    z-index: 1;
-  }
-
-  .heroContent .tagline {
-    font-size: 14px;
-    letter-spacing: 2px;
-    margin-bottom: 8px;
-  }
-
-  .heroContent .sub {
-    font-size: 14px;
-    margin-bottom: 28px;
-  }
-
-  .cta {
-    padding: 12px 40px;
-    font-size: 14px;
-  }
-
-  .footer {
-    bottom: 20px;
-  }
+.secondary:hover:not(:disabled) {
+  color: #ffffff;
+  opacity: 1;
 }
 
-/* Midnight footer */
+.arrow {
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.secondary:hover .arrow {
+  transform: translateX(3px);
+}
+
+/* Abajo: "Cómo funciona" y Built on Midnight. */
 .footer {
   position: absolute;
   bottom: 32px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
   animation: contentIn 1s ease 0.6s both;
+}
+
+.howLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(245, 242, 235, 0.7);
+  background: transparent;
+  transition: color 0.2s;
+}
+
+.howLink:hover:not(:disabled) {
+  color: #ffffff;
+  opacity: 1;
+}
+
+.howArrow {
+  display: inline-block;
+  animation: nudge 2.2s ease-in-out infinite;
+}
+
+@keyframes nudge {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(3px); }
 }
 
 .builtOn {
@@ -212,7 +270,7 @@
   align-items: center;
   justify-content: center;
   gap: 25px;
-  padding: 24px 0 8px;
+  padding: 18px 0 8px;
   text-align: center;
 }
 
@@ -230,4 +288,377 @@
 .builtOnLogo {
   height: 28px;
   opacity: 0.85;
+}
+
+/* ---------- Cómo funciona ---------- */
+
+.how {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 56px;
+  padding-block: 96px 120px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px));
+  padding-right: max(24px, env(safe-area-inset-right, 0px));
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.howTitle {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  width: 100%;
+  max-width: 1080px;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Cada paso entra al llegar a él, donde el navegador lo sabe hacer solo. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .step {
+      animation: stepIn linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+  }
+}
+
+@keyframes stepIn {
+  from { opacity: 0; transform: translateY(32px); }
+  to { opacity: 1; transform: none; }
+}
+
+.art {
+  display: grid;
+  place-items: center;
+  height: 240px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+}
+
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.stepNumber {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  color: #6a9bb8;
+}
+
+.stepTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.3;
+  text-wrap: balance;
+  color: #ffffff;
+}
+
+.stepText {
+  max-width: 42ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(245, 242, 235, 0.7);
+}
+
+/* El ticket de las ilustraciones: el mismo papel que el de la caja
+   (ReceiptTicket), en pequeño. */
+.paper {
+  position: relative;
+  width: 240px;
+  padding: 16px 16px 18px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #1c1c1c;
+  background: #f6f1e7;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+
+/* Bordes dentados de papel de caja, arriba y abajo. */
+.paper::before,
+.paper::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background:
+    linear-gradient(45deg, transparent 33.333%, #f6f1e7 33.333% 66.667%, transparent 66.667%),
+    linear-gradient(-45deg, transparent 33.333%, #f6f1e7 33.333% 66.667%, transparent 66.667%);
+  background-size: 11px 16px;
+}
+
+.paper::before { top: -8px; }
+.paper::after { bottom: -8px; transform: scaleY(-1); }
+
+.paperSealed { transform: rotate(-2deg); }
+.paperRedacted { transform: rotate(1.5deg); }
+
+.paperLines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Lo que no se publica, difuminado como en el móvil. */
+.paperRedacted .paperLines {
+  filter: blur(2.5px);
+  opacity: 0.35;
+}
+
+.paperRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.paperItem {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.paperTotal {
+  margin-top: 6px;
+  padding-top: 6px;
+  font-weight: 700;
+  border-top: 1px dashed #9a9084;
+}
+
+.seal {
+  margin-top: 12px;
+  padding: 8px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-align: center;
+  background: #ece3d0;
+  border: 1px dashed #9a9084;
+}
+
+/* Lo único que se publica: nítido y con el realce bronce de la app. */
+.keep {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.keepLine {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  background: rgba(176, 129, 63, 0.12);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1.5px #926A45;
+}
+
+.midTag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-align: center;
+  color: #926A45;
+}
+
+/* El agregado: las barras por categoría del mercado, como en modo oscuro. */
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 290px;
+  padding: 0 12px;
+  list-style: none;
+}
+
+.barRow {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #ECE7DE;
+}
+
+.barTrack {
+  display: block;
+  height: 8px;
+}
+
+/* Crece desde la izquierda, con el extremo de la derecha redondeado. */
+.bar {
+  display: block;
+  height: 100%;
+  background: #B0813F;
+  border-radius: 0 4px 4px 0;
+}
+
+.barValue {
+  position: relative;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: #ffffff;
+}
+
+.bump {
+  position: absolute;
+  top: -13px;
+  right: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: #B0813F;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta,
+  .liveDot,
+  .howArrow { animation: none; }
+}
+
+/* Tablet (680px - 1080px) */
+@media (max-width: 1080px) {
+  .title {
+    margin-bottom: 40px;
+    font-size: 52px;
+    letter-spacing: 14px;
+  }
+
+  .tagline { font-size: 17px; }
+  .headline { max-width: 520px; font-size: 17px; }
+}
+
+/* Pasos uno debajo de otro, con el dibujo al lado. */
+@media (max-width: 899px) {
+  .steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+    max-width: 680px;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    align-items: center;
+    gap: 32px;
+  }
+}
+
+/* Mobile (< 680px) */
+@media (max-width: 680px) {
+  .hero { justify-content: flex-start; }
+
+  .langs {
+    top: max(16px, env(safe-area-inset-top, 0px));
+    right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  .heroWrap {
+    flex-direction: column;
+    /* flex-start + padding-top en vez de center: con center sobraba hueco
+       arriba (el conjunto logo+texto no llena la pantalla, así que quedaba
+       centrado más abajo de lo que se ve bien). */
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    bottom: 0;
+    padding: 20vh 28px 0;
+    gap: 8px;
+  }
+
+  .heroLogo { width: 120vw; }
+
+  .heroContent {
+    position: relative;
+    bottom: auto;
+    width: 100%;
+    text-align: center;
+  }
+
+  .title {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 0;
+    font-size: 26px;
+    letter-spacing: 6px;
+    transform: translateY(-27vw) translateX(3vw);
+  }
+
+  .tagline {
+    margin-bottom: 8px;
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+
+  .headline { font-size: 15px; }
+
+  .counter {
+    margin: 14px 0 24px;
+    font-size: 12px;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .cta {
+    padding: 12px 40px;
+    font-size: 14px;
+  }
+
+  .secondary {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+
+  /* En la columna, abajo del todo sin pisar lo de encima en pantallas bajas. */
+  .footer {
+    position: static;
+    margin-top: auto;
+    padding: 40px 0 20px;
+  }
+
+  .how {
+    gap: 40px;
+    padding-block: 72px 88px;
+  }
+
+  .howTitle { font-size: 26px; }
+
+  .step {
+    display: flex;
+    align-items: stretch;
+    gap: 20px;
+  }
+
+  .art { height: 220px; }
+  .stepTitle { font-size: 18px; }
 }

@@ -67,6 +67,11 @@ export function toCounts(state: AegisState): Counts {
   return Object.fromEntries(COUNTER_FIELDS.map((f) => [f, state[f].toString()]));
 }
 
+/** Lo contrario de toCounts; los contadores que falten, a cero. */
+export function fromCounts(counts: Counts): AegisState {
+  return Object.fromEntries(COUNTER_FIELDS.map((f) => [f, BigInt(counts[f] ?? 0)])) as AegisState;
+}
+
 /** Los contadores que cambian de `before` a `after`, con la diferencia. */
 export function deltaCounts(after: AegisState, before: AegisState): Counts {
   const delta: Counts = {};

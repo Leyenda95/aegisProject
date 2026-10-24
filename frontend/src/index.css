@@ -132,6 +132,9 @@
 }
 
 html { overflow-y: scroll; }
+/* Con la portada encima (LandingScreen), la que se desplaza es ella: la página
+   de debajo ni se mueve ni enseña su barra junto a la de la portada. */
+html.landing-open { overflow: hidden; }
 
 body {
   font-family: var(--font-body);

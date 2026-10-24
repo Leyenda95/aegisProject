@@ -1,14 +1,7 @@
 ﻿import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { useMutation } from '@tanstack/react-query';
 import QRCode from 'qrcode';
-import {
-  getInsights, postCampaign, getMatch,
-  CATEGORIES, CATEGORY_LABELS, CATEGORY_STATE_KEY as CAT_KEY, SUBCATEGORY_LABELS,
-  type Insights, type Campaign, type MatchResult, type Category, type Lang, type TimeRange,
-} from '../api.ts';
-
-const TIME_RANGES: TimeRange[] = ['7d', '30d', '90d', '365d'];
+import { CATEGORY_LABELS, SUBCATEGORY_LABELS, type Category, type Lang } from '../api.ts';
 import { attestReceipt, explainTxError, type ReceiptJSON } from '../lace.ts';
 import { encodeReceiptForQr, receiptLink } from '../receiptCodec.ts';
 import {
@@ -17,6 +10,7 @@ import {
 import ProductImage from './ProductImage.tsx';
 import { preloadProductImages } from '../productImages.ts';
 import ReceiptTicket from './ReceiptTicket.tsx';
+import InsightsReport from './InsightsReport.tsx';
 import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
 import { addReceipt, useVault } from '../vault.ts';
@@ -43,21 +37,9 @@ export default function StoreView({ lang, onGoToUser }: Props) {
   const catLabel = CATEGORY_LABELS[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
   const { wallet: lace } = useWallet();
-  const { sponsored, contractAddress, state } = useChain();
+  const { sponsored, contractAddress } = useChain();
   // Lock global: hay una transacción de otra pestaña/acción esperando confirmación.
   const { confirming: confirmingMsg, setConfirming: setConfirmingMsg } = useTx();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [matches, setMatches] = useState<Record<string, MatchResult>>({});
-
-  const [insights, setInsights] = useState<Insights | null>(null);
-  const [storeProfile, setStoreProfile] = useState('');
-  const [insightsRange, setInsightsRange] = useState<TimeRange>('7d');
-  // Periodo del informe que se está mostrando, que puede no coincidir con el
-  // seleccionado mientras se genera el nuevo.
-  const [shownRange, setShownRange] = useState<TimeRange>('7d');
-  const [form, setForm] = useState({ targetCategory: 'electronics', minSignals: 2, message: '' });
-  const [creating, setCreating] = useState(false);
-  const [refreshing, setRefreshing] = useState<string | null>(null);
   const [storeToolsOpen, setStoreToolsOpen] = useState(false);
 
   const [browseCat, setBrowseCat] = useState<Category>('fashion');
@@ -154,62 +136,8 @@ export default function StoreView({ lang, onGoToUser }: Props) {
     reportFlow({ cartCount, sealing: posSelling, sealedNonce: posReceipt?.nonce ?? null });
   }, [cartCount, posSelling, posReceipt, reportFlow]);
 
-  async function handleRefreshMatch(id: string) {
-    setRefreshing(id);
-    try {
-      const match = await getMatch(id);
-      setMatches(prev => ({ ...prev, [id]: match }));
-    } finally {
-      setRefreshing(null);
-    }
-  }
-
   // Las fotos de las demás categorías, en segundo plano: cambiar de categoría es instantáneo.
   useEffect(() => preloadProductImages(), []);
-
-  // El agregado lo consulta ChainProvider. Aquí solo reevaluamos qué
-  // campañas cumplen su umbral cuando cambia el estado.
-  useEffect(() => {
-    if (!state) return;
-    setMatches(prev => {
-      const updated = { ...prev };
-      for (const c of campaigns) {
-        const signals = Number(state[CAT_KEY[c.targetCategory as Category] ?? 'signalsOther'] ?? 0);
-        if (updated[c.id]) updated[c.id] = { ...updated[c.id], matches: signals >= c.minSignals };
-      }
-      return updated;
-    });
-  }, [state, campaigns, setMatches]);
-
-  // El informe anterior se sigue enseñando mientras se genera el nuevo.
-  const insightsRequest = useMutation({
-    mutationFn: (range: TimeRange) => getInsights(storeProfile || undefined, lang, range),
-    onSuccess: (report, range) => {
-      setInsights(report);
-      setShownRange(range);
-    },
-  });
-  const loadingInsights = insightsRequest.isPending;
-  const insightsError = insightsRequest.error ? (insightsRequest.error.message || t.errorUnknown) : null;
-
-  function handleInsights(range = insightsRange) {
-    insightsRequest.mutate(range);
-  }
-
-  async function handleCreateCampaign(e: React.FormEvent) {
-    e.preventDefault();
-    setCreating(true);
-    try {
-      const { id } = await postCampaign(form);
-      const campaign = { id, ...form };
-      setCampaigns(prev => [...prev, campaign]);
-      const match = await getMatch(id);
-      setMatches(prev => ({ ...prev, [id]: match }));
-      setForm(f => ({ ...f, message: '' }));
-    } finally {
-      setCreating(false);
-    }
-  }
 
   return (
     <>
@@ -337,145 +265,16 @@ export default function StoreView({ lang, onGoToUser }: Props) {
 
         {storeToolsOpen && (
           <div className={styles.toolsBody}>
+            <InsightsReport lang={lang} />
 
-            {/* Market intelligence */}
+            {/* Campañas: todavía no se pueden crear (ver campaignSoonText). */}
             <div className={styles.tool}>
-              <div className={styles.toolHeader}>
-                <h3 className={styles.toolTitle}>{t.insightsTitle}</h3>
-                {/* Periodo que analizará el próximo informe. Cambiarlo no genera
-                    nada por sí solo: hay que pulsar el botón. */}
-                <div className={styles.ranges}>
-                  {TIME_RANGES.map(r => (
-                    <button key={r} className={styles.range} disabled={loadingInsights}
-                      onClick={() => setInsightsRange(r)}
-                      aria-pressed={insightsRange === r}>
-                      {t.insightsRanges[r]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className={styles.insightsForm}>
-                <input
-                  className={styles.insightsInput}
-                  type="text"
-                  placeholder={t.insightsPlaceholder}
-                  value={storeProfile}
-                  onChange={e => setStoreProfile(e.target.value)}
-                />
-                <button className={styles.generate} onClick={() => handleInsights()} disabled={loadingInsights}>
-                  {loadingInsights ? t.insightsGenerating : t.insightsGenerate}
-                </button>
-              </div>
-              {insightsError ? (
-                <p className={styles.insightsError}>Error: {insightsError}</p>
-              ) : insights ? (
-                <>
-                  {(insights.trending ?? []).length > 0 && (
-                    <div className={styles.trending}>
-                      <div className={styles.sectionLabel}>{t.insightsTrending} · {t.insightsRangeNames[shownRange].toUpperCase()}</div>
-                      <div className={styles.trendChips}>
-                        {insights.trending.map((item, i) => (
-                          <span key={i} className={styles.trendChip}>{item}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <p className={styles.summary}>{insights.summary}</p>
-                  <div>
-                    <div className={styles.sectionLabel}>{t.insightsRecommendations}</div>
-                    <ol className={styles.recs}>
-                      {(insights.recommendations ?? []).map((r, i) => {
-                        const title = typeof r === 'string' ? null : r.title;
-                        const detail = typeof r === 'string' ? r : r.detail;
-                        return (
-                          <li key={i} className={styles.rec}>
-                            <span className={styles.recNumber}>{i + 1}</span>
-                            <div>
-                              {title && <div className={styles.recTitle}>{title}</div>}
-                              <div className={styles.recDetail}>{detail}</div>
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  </div>
-                </>
-              ) : (
-                <p className={styles.insightsEmpty}>{t.insightsEmpty}</p>
-              )}
-            </div>
-
-            {/* Crear campaña: desactivado por ahora, ver campaignSoon. Sin
-                opacity en el contenedor (afectaría a todo el subárbol,
-                incluida la insignia "Soon"): el título y el formulario
-                llevan su propia opacity para verse apagados, y "Soon" no
-                lleva ninguna, así que siempre se ve nítida. */}
-            <div className={cx(styles.tool, styles.campaignTool)}>
               <div className={styles.campaignHeader}>
-                <h3 className={cx(styles.toolTitle, styles.dimmed)}>{t.campaignTitle}</h3>
-                <span className={styles.soon}>
-                  {t.campaignSoon}
-                </span>
+                <h3 className={styles.toolTitle}>{t.campaignTitle}</h3>
+                <span className={styles.soon}>{t.campaignSoon}</span>
               </div>
-              <form className={styles.dimmed} onSubmit={handleCreateCampaign}>
-              <fieldset className={styles.campaignFields} disabled>
-                <div className={styles.campaignGrid}>
-                  <div>
-                    <label>{t.campaignTargetLabel}</label>
-                    <select value={form.targetCategory} onChange={e => setForm(f => ({ ...f, targetCategory: e.target.value }))}>
-                      {CATEGORIES.map(c => <option key={c} value={c}>{catLabel[c]}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label>{t.campaignMinLabel}</label>
-                    <input type="number" min={1} value={form.minSignals} onChange={e => setForm(f => ({ ...f, minSignals: Number(e.target.value) }))} />
-                  </div>
-                </div>
-                <div>
-                  <label>{t.campaignMessageLabel}</label>
-                  <input type="text" placeholder={t.campaignMessagePlaceholder} value={form.message}
-                    onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
-                </div>
-                <button className={styles.campaignSubmit} type="submit" disabled={creating}>
-                  {creating ? t.campaignSubmitting : t.campaignSubmit}
-                </button>
-              </fieldset>
-              </form>
+              <p className={styles.campaignText}>{t.campaignSoonText}</p>
             </div>
-
-            {/* Campañas registradas */}
-            {campaigns.length > 0 && (
-              <div className={styles.tool}>
-                <h3 className={styles.toolTitle}>{t.campaignListTitle}</h3>
-                <div className={styles.campaignList}>
-                  {campaigns.map(c => {
-                    const match = matches[c.id];
-                    return (
-                      <div key={c.id} className={styles.campaign}>
-                        <div>
-                          <div className={styles.campaignMessage}>{c.message}</div>
-                          <div className={styles.campaignMeta}>
-                            {catLabel[c.targetCategory as Category]} · {t.campaignMinSuffix(c.minSignals)} · {t.campaignId(c.id)}
-                          </div>
-                          {match && <div className={styles.campaignReason}>{match.reason}</div>}
-                        </div>
-                        <div className={styles.campaignSide}>
-                          {match && (
-                            <span className={cx(styles.matchBadge, match.matches && styles.matchBadgeOn)}>
-                              {match.matches ? t.campaignActive : t.campaignNoMatch}
-                            </span>
-                          )}
-                          <button className={styles.refreshMatch} onClick={() => handleRefreshMatch(c.id)} disabled={refreshing === c.id}>
-                            {refreshing === c.id ? '...' : t.campaignRefresh}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
           </div>
         )}
       </div>
