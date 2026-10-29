@@ -27,7 +27,7 @@ Everything runs against Midnight's **Preprod** testnet. There are two ways to tr
 
 Open **[aegis-midnight.vercel.app](https://aegis-midnight.vercel.app/)**. It's connected to a shared contract on Preprod that already has a registered store and signals, so you only need a Midnight wallet extension (Lace or 1AM) on the Preprod network.
 
-1. On the landing page, choose **Try the demo**, then **Connect Wallet**.
+1. On the landing page, choose **Explore**, then **Connect Wallet**.
 2. At the till, add a couple of products to the cart and check out. This seals a receipt on-chain and shows it as a QR.
 3. Publish the signal, in either of these ways:
    - Scan the QR with your phone's camera: it opens the Aegis phone app (`/app`) with the ticket ready, and you can add it to your home screen. While sponsorship is on, the phone doesn't need a wallet.
@@ -76,6 +76,8 @@ By default the backend generates the signal's proof, which means the receipt tra
 ```bash
 docker run -p 6300:6300 midnightntwrk/proof-server:8.1.3
 ```
+
+The page picks it up on its own as soon as it answers on `127.0.0.1:6300`. If the browser asks whether the page may access your local network, allow it: that is how it reaches the proof server.
 
 The backend then only serves the public contract state (`GET /contract-states`) and, if sponsorship is on, forwards the already proven transaction (`POST /sponsor-signal`, which only accepts a single `submitPurchase` call to this contract).
 

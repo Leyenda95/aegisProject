@@ -82,22 +82,25 @@ const en = {
   insightsCopy: 'Copy report',
   insightsCopied: 'Copied',
 
-  // StoreView, campañas (todavía no)
-  campaignTitle: 'Campaigns',
+  // StoreView, campañas: el formulario se enseña apagado, aún no funciona
+  campaignTitle: 'Create campaign',
   campaignSoon: 'Soon',
-  campaignSoonText: 'Pick a category and a minimum number of signals, and the campaign switches on by itself when the market gets there. It will arrive together with selective disclosure, to reward the customers who choose to share more.',
+  campaignTargetLabel: 'Target category',
+  campaignMinLabel: 'Minimum signals required',
+  campaignMessageLabel: 'Campaign message',
+  campaignMessagePlaceholder: 'e.g. 20% off all laptops this weekend',
+  campaignSubmit: 'Register campaign',
   storeTools: 'Store tools',
 
   // Portada (LandingScreen)
-  landingHeadline: 'Stores see what sells. Nobody sees who bought it.',
+  landingHeadline: 'Take on the giants. Zero surveillance.',
   landingLiveUnit: 'anonymous signals on Midnight',
-  landingTryDemo: 'Try the demo',
-  landingSeeMarket: 'See the market',
+  landingExplore: 'Explore',
   landingHowLink: 'How it works',
   landingSteps: [
-    { title: 'The store seals the receipt', text: 'At checkout, the store seals the receipt on Midnight and hands it to you as a QR. Nobody can tell which store it was.' },
-    { title: 'You choose what to share', text: 'From your phone, you publish a signal with only the subcategory and the quantity. The amount, the date and the store never reach the chain.' },
-    { title: 'Stores see the market', text: 'Signals add up in a public aggregate. Stores read the trends, and nobody can tell who bought what.' },
+    { title: 'The store seals the receipt', text: 'At checkout, the store seals your receipt on Midnight and hands it to you as a QR.' },
+    { title: 'You choose what to share', text: 'From your phone, you publish an anonymous signal with only what you decide to share.' },
+    { title: 'Stores see the market', text: 'Signals add up to a public view of the market. Any store can go head to head with the giants.' },
   ],
   landingLanguage: 'Language',
 
@@ -123,7 +126,12 @@ const en = {
   sponsorOnHint: 'Aegis pays the network fees of your transactions. No DUST or wallet needed.',
   sponsorOffHint: 'Right now you need a wallet with DUST to pay the network fees.',
   feePaidByAegis: 'Fee paid by Aegis',
-  posGoToUser: 'Go to User view',
+  // Recién cobrado, el siguiente paso es en el móvil: junto a él en
+  // escritorio (PhoneNudge) y bajo el recibo en tableta y móvil.
+  nudgeEyebrow: 'Ticket scanned',
+  nudgePhone: 'It is on your phone. Tap "Publish signal".',
+  nudgeTabs: 'It is on your phone.',
+  nudgeGo: 'Go to the phone',
 
   // UserView
   userTitle: 'User device',
@@ -275,7 +283,7 @@ const en = {
     up: 'Proof server ready at 127.0.0.1:6300',
     down: 'Proof server not found',
   },
-  proofHelp: 'Start it with Docker and check again:',
+  proofHelp: 'Start it with Docker and it will be detected automatically:',
   proofCopy: 'Copy',
   proofCopied: 'Copied',
   proofRetry: 'Check again',
@@ -358,20 +366,23 @@ const es: typeof en = {
   insightsCopy: 'Copiar informe',
   insightsCopied: 'Copiado',
 
-  campaignTitle: 'Campañas',
+  campaignTitle: 'Crear campaña',
   campaignSoon: 'Próximamente',
-  campaignSoonText: 'Eliges una categoría y un número mínimo de señales, y la campaña se activa sola cuando el mercado llega a ese punto. Llegará junto con la revelación selectiva, para premiar a los clientes que decidan compartir más.',
+  campaignTargetLabel: 'Categoría objetivo',
+  campaignMinLabel: 'Señales mínimas requeridas',
+  campaignMessageLabel: 'Mensaje de campaña',
+  campaignMessagePlaceholder: 'ej: 20% de descuento en portátiles este fin de semana',
+  campaignSubmit: 'Registrar campaña',
   storeTools: 'Herramientas de tienda',
 
-  landingHeadline: 'Las tiendas ven qué se vende. Nadie ve quién lo compró.',
+  landingHeadline: 'Compite con los grandes. Sin espiar a nadie.',
   landingLiveUnit: 'señales anónimas en Midnight',
-  landingTryDemo: 'Probar la demo',
-  landingSeeMarket: 'Ver el mercado',
+  landingExplore: 'Explorar',
   landingHowLink: 'Cómo funciona',
   landingSteps: [
-    { title: 'La tienda sella el ticket', text: 'Al cobrar, la tienda sella el recibo en Midnight y te lo da en un QR. Nadie puede saber qué tienda fue.' },
-    { title: 'Tú eliges qué compartir', text: 'Desde tu móvil publicas una señal con solo la subcategoría y la cantidad. El importe, la fecha y la tienda nunca llegan a la cadena.' },
-    { title: 'Las tiendas ven el mercado', text: 'Las señales se suman en un agregado público. Las tiendas leen las tendencias y nadie puede saber quién compró qué.' },
+    { title: 'La tienda sella el ticket', text: 'Al cobrar, la tienda sella el recibo en Midnight y te lo da en un QR.' },
+    { title: 'Tú eliges qué compartir', text: 'Desde tu móvil publicas una señal anónima, solo con lo que tú decidas.' },
+    { title: 'Las tiendas ven el mercado', text: 'Las señales se suman en un mercado público. Cualquier tienda compite de tú a tú con los grandes.' },
   ],
   landingLanguage: 'Idioma',
 
@@ -396,7 +407,10 @@ const es: typeof en = {
   sponsorOnHint: 'Aegis paga las comisiones de red de tus transacciones. No necesitas DUST ni billetera.',
   sponsorOffHint: 'Ahora mismo necesitas una billetera con DUST para pagar las comisiones de red.',
   feePaidByAegis: 'Comisión pagada por Aegis',
-  posGoToUser: 'Ir a la vista de Usuario',
+  nudgeEyebrow: 'Ticket escaneado',
+  nudgePhone: 'Ya está en tu móvil. Pulsa «Publicar señal».',
+  nudgeTabs: 'Ya está en tu móvil.',
+  nudgeGo: 'Ir al móvil',
 
   userTitle: 'Dispositivo de usuario',
   userSubtitle: 'Publica la señal de un ticket nuevo o escanea el QR de la tienda. Se publica de forma anónima: nadie ve quién eres ni cuánto has gastado.',
@@ -541,7 +555,7 @@ const es: typeof en = {
     up: 'Proof server listo en 127.0.0.1:6300',
     down: 'No se encuentra el proof server',
   },
-  proofHelp: 'Arráncalo con Docker y vuelve a comprobarlo:',
+  proofHelp: 'Arráncalo con Docker y se detectará solo:',
   proofCopy: 'Copiar',
   proofCopied: 'Copiado',
   proofRetry: 'Comprobar de nuevo',

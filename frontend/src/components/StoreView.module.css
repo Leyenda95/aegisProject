@@ -227,25 +227,54 @@
   color: var(--ink-soft);
 }
 
-.soldActions {
+/* El siguiente paso, en el móvil (tableta y móvil): del mismo bronce que la
+   tarjeta del ticket que espera allí, con el botón como el de "Publicar señal". */
+.next {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  width: 100%;
+  max-width: 560px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  color: var(--on-bronze);
+  background: linear-gradient(135deg, var(--bronze-deep), var(--bronze));
+  box-shadow: 0 10px 26px rgba(146, 106, 69, 0.35);
 }
 
-.goToUser,
+.nextText {
+  flex: 1 1 120px;
+  min-width: 0;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.nextEyebrow {
+  display: block;
+  margin-bottom: 3px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.nextBtn {
+  padding: 9px 16px;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--bronze-deep);
+  background: var(--on-bronze);
+  border-radius: 999px;
+}
+
 .newSale {
   padding: 7px 14px;
   font-size: var(--text-sm);
   font-weight: 600;
   letter-spacing: 0.3px;
-}
-
-.goToUser {
-  color: var(--on-bronze);
-  background: var(--bronze-deep);
-}
-
-.newSale {
   color: var(--ink-soft);
   background: var(--surface-2);
   border: 1px solid var(--gray-850);
@@ -322,7 +351,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .campaignHeader .toolTitle {
@@ -341,12 +370,36 @@
   border-radius: 999px;
 }
 
-.campaignText {
-  max-width: 62ch;
+/* Crear campaña: el título y el formulario, apagados; "Próximamente", nítida. */
+.campaignTool {
+  background: var(--ground);
+  border-color: var(--line-soft);
+}
+
+.dimmed {
+  opacity: 0.3;
+}
+
+.campaignFields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   margin: 0;
-  font-size: var(--text-sm);
-  line-height: 1.6;
-  color: var(--ink-soft);
+  padding: 0;
+  border: none;
+  cursor: not-allowed;
+}
+
+.campaignGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.campaignSubmit {
+  align-self: flex-start;
+  color: var(--on-bronze);
+  background: var(--bronze-deep);
 }
 
 /* La cesta, a la derecha del catálogo y fija al bajar, cuando cabe: en
@@ -379,4 +432,6 @@
   .basket { padding: 12px; }
   .toolsToggle[aria-expanded="true"] { margin-bottom: 14px; }
   .tool { padding: 14px; }
+  .campaignGrid { grid-template-columns: 1fr; }
+  .campaignSubmit { align-self: auto; width: 100%; }
 }

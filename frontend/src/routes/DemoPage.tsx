@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { usePreferences } from '../app/PreferencesProvider.tsx';
 import { useChain } from '../app/ChainProvider.tsx';
@@ -11,7 +11,8 @@ import UserView from '../components/UserView.tsx';
 import MarketView from '../components/MarketView.tsx';
 import BuiltOnMidnight from '../components/BuiltOnMidnight.tsx';
 import DemoProgress from './DemoProgress.tsx';
-import { DemoFlowContext, INITIAL_FLOW, type DemoFlow } from './demoFlow.ts';
+import PhoneNudge from './PhoneNudge.tsx';
+import { DemoFlowContext, INITIAL_FLOW, ticketWaiting, type DemoFlow } from './demoFlow.ts';
 import styles from './DemoPage.module.css';
 
 type Tab = 'store' | 'user';
@@ -29,11 +30,15 @@ export default function DemoPage({ landing = false, market = false }: { landing?
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('store');
   const [breakdownOpen, setBreakdownOpen] = useState(false);
-  // Se incrementa cada vez que se pulsa "Ir a la vista de Usuario" desde la
-  // caja: el móvil vuelve al ticket nuevo.
+  // Se incrementa al cobrar un ticket y al pulsar "Ir al móvil" desde la
+  // caja: el móvil vuelve a su lista de tickets, con el nuevo arriba.
   const [goToContributeSignal, setGoToContributeSignal] = useState(0);
   const [flow, setFlow] = useState<DemoFlow>(INITIAL_FLOW);
   const reportFlow = useCallback((patch: Partial<DemoFlow>) => setFlow(f => ({ ...f, ...patch })), []);
+
+  useEffect(() => {
+    if (flow.sealedNonce) setGoToContributeSignal(n => n + 1);
+  }, [flow.sealedNonce]);
 
   function showTab(next: Tab) {
     setTab(next);
@@ -42,7 +47,7 @@ export default function DemoPage({ landing = false, market = false }: { landing?
 
   return (
     <DemoFlowContext value={reportFlow}>
-      {landing && <LandingScreen onEnter={path => navigate(path)} />}
+      {landing && <LandingScreen onEnter={() => navigate('/demo')} />}
 
       <StatsRibbon
         state={state}
@@ -92,6 +97,7 @@ export default function DemoPage({ landing = false, market = false }: { landing?
               />
             </div>
             <div className={styles.userCol}>
+              {ticketWaiting(flow) && <PhoneNudge key={flow.sealedNonce} lang={lang} />}
               <UserView lang={lang} goToContributeSignal={goToContributeSignal} />
             </div>
           </div>

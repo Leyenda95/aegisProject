@@ -75,10 +75,10 @@ function AggregateArt({ lang }: { lang: Lang }) {
 
 /**
  * Portada: el logo enorme y translúcido, qué es Aegis en una frase, cuántas
- * señales hay ya en Midnight (en directo) y las dos entradas, la demo y el
- * mercado. Debajo, cómo funciona en tres pasos con la misma compra de la demo.
+ * señales hay ya en Midnight (en directo) y la entrada a la demo. Debajo,
+ * cómo funciona en tres pasos con la misma compra de la demo.
  */
-export default function LandingScreen({ onEnter }: { onEnter: (path: string) => void }) {
+export default function LandingScreen({ onEnter }: { onEnter: () => void }) {
   const { t, lang, chooseLang } = usePreferences();
   const { state, live } = useChain();
   const [exiting, setExiting] = useState(false);
@@ -95,10 +95,10 @@ export default function LandingScreen({ onEnter }: { onEnter: (path: string) => 
     return () => root.classList.remove('landing-open');
   }, [exiting]);
 
-  function enter(path: string) {
+  function enter() {
     if (exiting) return;
     setExiting(true);
-    setTimeout(() => onEnter(path), EXIT_MS);
+    setTimeout(onEnter, EXIT_MS);
   }
 
   function showHow() {
@@ -129,12 +129,7 @@ export default function LandingScreen({ onEnter }: { onEnter: (path: string) => 
               <NumberFlow className={styles.counterValue} value={total ?? 0} locales={t.locale} />
               {' '}{t.landingLiveUnit}{live && ` · ${t.signalsLive}`}
             </p>
-            <div className={styles.actions}>
-              <button className={styles.cta} onClick={() => enter('/demo')}>{t.landingTryDemo}</button>
-              <button className={styles.secondary} onClick={() => enter('/market')}>
-                {t.landingSeeMarket} <span aria-hidden="true" className={styles.arrow}>→</span>
-              </button>
-            </div>
+            <button className={styles.cta} onClick={enter}>{t.landingExplore}</button>
           </div>
         </div>
 
@@ -169,7 +164,7 @@ export default function LandingScreen({ onEnter }: { onEnter: (path: string) => 
             </li>
           ))}
         </ol>
-        <button className={styles.cta} onClick={() => enter('/demo')}>{t.landingTryDemo}</button>
+        <button className={styles.cta} onClick={enter}>{t.landingExplore}</button>
       </section>
     </div>
   );

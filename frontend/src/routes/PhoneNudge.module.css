@@ -1,0 +1,55 @@
+/* Bocadillo junto al móvil (PhoneNudge), del mismo bronce que la tarjeta
+   del ticket a la que apunta. Sobresale por la izquierda, sobre el hueco
+   que deja el recibo en la caja; la altura la pone PhoneNudge. */
+.nudge {
+  position: absolute;
+  top: 210px;
+  right: calc(100% + 4px);
+  z-index: 2;
+  width: 210px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--on-bronze);
+  background: var(--bronze-deep);
+  box-shadow: 0 10px 26px rgba(146, 106, 69, 0.35);
+  transform: translateY(-50%);
+  /* Aparece cuando el ticket aterriza en el móvil (vuela 0,9 s, ver flyTicket.ts). */
+  animation: nudgeIn 0.4s ease-out 0.8s both;
+}
+
+/* La flecha, hacia la tarjeta del móvil. */
+.nudge::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  border: 8px solid transparent;
+  border-left-color: var(--bronze-deep);
+  transform: translateY(-50%);
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+@keyframes nudgeIn {
+  from { opacity: 0; transform: translate(-10px, -50%); }
+  to { opacity: 1; transform: translate(0, -50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nudge { animation: none; }
+}
+
+/* Solo con la caja y el móvil lado a lado (ver DemoPage.module.css). */
+@media (max-width: 1179px) {
+  .nudge { display: none; }
+}

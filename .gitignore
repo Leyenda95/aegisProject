@@ -26,6 +26,7 @@ frontend/playwright-report/
 # Historial del contrato que guarda el backend (ver backend/src/history.ts)
 .history-*
 .claude/settings.local.json
+CLAUDE.md
 *.log
 .vscode/
 .idea/

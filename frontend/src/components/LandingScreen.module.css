@@ -165,13 +165,6 @@
   50% { opacity: 0.35; }
 }
 
-.actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-
 .cta {
   padding: 14px 48px;
   font-size: 16px;
@@ -196,34 +189,6 @@
 @keyframes ctaPulse {
   0%, 100% { box-shadow: 0 0 8px rgba(69, 109, 146, 0.3), 0 0 20px rgba(69,109,146,0.1); }
   50%       { box-shadow: 0 0 20px rgba(69, 109, 146, 0.55), 0 0 45px rgba(69, 109, 146, 0.2); }
-}
-
-/* "Ver el mercado": la segunda entrada, sin caja. */
-.secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 22px;
-  font-size: 16px;
-  font-weight: 500;
-  letter-spacing: 1px;
-  color: rgba(245, 242, 235, 0.78);
-  background: transparent;
-  transition: color 0.2s;
-}
-
-.secondary:hover:not(:disabled) {
-  color: #ffffff;
-  opacity: 1;
-}
-
-.arrow {
-  display: inline-block;
-  transition: transform 0.2s;
-}
-
-.secondary:hover .arrow {
-  transform: translateX(3px);
 }
 
 /* Abajo: "Cómo funciona" y Built on Midnight. */
@@ -393,7 +358,7 @@
   font-size: 11px;
   line-height: 1.6;
   color: #1c1c1c;
-  background: #f6f1e7;
+  background: #fdfaf3;
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
 }
 
@@ -406,8 +371,8 @@
   right: 0;
   height: 8px;
   background:
-    linear-gradient(45deg, transparent 33.333%, #f6f1e7 33.333% 66.667%, transparent 66.667%),
-    linear-gradient(-45deg, transparent 33.333%, #f6f1e7 33.333% 66.667%, transparent 66.667%);
+    linear-gradient(45deg, transparent 33.333%, #fdfaf3 33.333% 66.667%, transparent 66.667%),
+    linear-gradient(-45deg, transparent 33.333%, #fdfaf3 33.333% 66.667%, transparent 66.667%);
   background-size: 11px 16px;
 }
 
@@ -455,7 +420,7 @@
   font-weight: 700;
   letter-spacing: 1.2px;
   text-align: center;
-  background: #ece3d0;
+  background: #f4ecdc;
   border: 1px dashed #9a9084;
 }
 
@@ -624,18 +589,8 @@
     font-size: 12px;
   }
 
-  .actions {
-    flex-direction: column;
-    gap: 4px;
-  }
-
   .cta {
     padding: 12px 40px;
-    font-size: 14px;
-  }
-
-  .secondary {
-    padding: 10px 20px;
     font-size: 14px;
   }
 

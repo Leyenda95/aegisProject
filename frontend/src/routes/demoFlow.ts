@@ -20,6 +20,11 @@ export type DemoFlow = {
 
 export const INITIAL_FLOW: DemoFlow = { cartCount: 0, sealing: false, sealedNonce: null, sheetOpen: false, publishing: null };
 
+/** El ticket recién cobrado espera en el móvil: aún no se ha abierto para publicarlo. */
+export function ticketWaiting(flow: DemoFlow): boolean {
+  return flow.sealedNonce !== null && !flow.sheetOpen && flow.publishing?.nonce !== flow.sealedNonce;
+}
+
 /** Para contarle a la demo un cambio. Fuera de ella (la app en /app) no hace nada. */
 export const DemoFlowContext = createContext<(patch: Partial<DemoFlow>) => void>(() => {});
 

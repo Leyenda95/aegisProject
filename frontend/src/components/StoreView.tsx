@@ -1,7 +1,7 @@
 ﻿import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import QRCode from 'qrcode';
-import { CATEGORY_LABELS, SUBCATEGORY_LABELS, type Category, type Lang } from '../api.ts';
+import { CATEGORIES, CATEGORY_LABELS, SUBCATEGORY_LABELS, type Category, type Lang } from '../api.ts';
 import { attestReceipt, explainTxError, type ReceiptJSON } from '../lace.ts';
 import { encodeReceiptForQr, receiptLink } from '../receiptCodec.ts';
 import {
@@ -161,15 +161,21 @@ export default function StoreView({ lang, onGoToUser }: Props) {
                 qr={posQr}
               />
             </div>
-            <div className={styles.soldActions}>
-              {/* En escritorio el móvil está al lado: no hace falta ir a buscarlo. */}
-              <button className={cx(styles.goToUser, styles.tabsOnly)} onClick={onGoToUser}>
-                {t.posGoToUser}
-              </button>
-              <button className={styles.newSale} onClick={handleResetPos}>
-                {t.posNewSale}
+            {/* En tableta y móvil el móvil va en otra pestaña: el siguiente
+                paso se dice aquí, bajo el recibo, que es donde se queda la
+                vista al cobrar. En escritorio lo dice PhoneNudge, junto al móvil. */}
+            <div className={cx(styles.next, styles.tabsOnly)}>
+              <p className={styles.nextText}>
+                <span className={styles.nextEyebrow}>{t.nudgeEyebrow}</span>
+                {t.nudgeTabs}
+              </p>
+              <button className={styles.nextBtn} onClick={onGoToUser}>
+                {t.nudgeGo} <span aria-hidden="true">→</span>
               </button>
             </div>
+            <button className={styles.newSale} onClick={handleResetPos}>
+              {t.posNewSale}
+            </button>
           </div>
         ) : (
           <div className={styles.pos}>
@@ -267,13 +273,34 @@ export default function StoreView({ lang, onGoToUser }: Props) {
           <div className={styles.toolsBody}>
             <InsightsReport lang={lang} />
 
-            {/* Campañas: todavía no se pueden crear (ver campaignSoonText). */}
-            <div className={styles.tool}>
+            {/* Crear campaña: se enseña apagado para que se vea en qué se
+                está trabajando, pero aún no funciona. Sin opacity en el
+                contenedor (afectaría también a "Próximamente"): el título y
+                el formulario llevan la suya, y la insignia se ve nítida. */}
+            <div className={cx(styles.tool, styles.campaignTool)}>
               <div className={styles.campaignHeader}>
-                <h3 className={styles.toolTitle}>{t.campaignTitle}</h3>
+                <h3 className={cx(styles.toolTitle, styles.dimmed)}>{t.campaignTitle}</h3>
                 <span className={styles.soon}>{t.campaignSoon}</span>
               </div>
-              <p className={styles.campaignText}>{t.campaignSoonText}</p>
+              <fieldset className={cx(styles.campaignFields, styles.dimmed)} disabled>
+                <div className={styles.campaignGrid}>
+                  <div>
+                    <label>{t.campaignTargetLabel}</label>
+                    <select defaultValue="electronics">
+                      {CATEGORIES.map(c => <option key={c} value={c}>{catLabel[c]}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label>{t.campaignMinLabel}</label>
+                    <input type="number" min={1} defaultValue={2} />
+                  </div>
+                </div>
+                <div>
+                  <label>{t.campaignMessageLabel}</label>
+                  <input type="text" placeholder={t.campaignMessagePlaceholder} />
+                </div>
+                <button className={styles.campaignSubmit} type="button">{t.campaignSubmit}</button>
+              </fieldset>
             </div>
           </div>
         )}

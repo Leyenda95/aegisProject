@@ -7,14 +7,15 @@
 .ticket {
   width: 300px;
   max-width: 100%;
-  background: #f6f1e7;
+  background: #fdfaf3;
   color: #1c1c1c;
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
   font-size: var(--text-xs);
   line-height: 1.55;
   padding: 24px 20px 26px;
   position: relative;
-  box-shadow: var(--shadow-md);
+  /* Sombra suave: con la de los modales el papel parecía sucio. */
+  box-shadow: 0 10px 30px rgba(42, 37, 32, 0.18);
 }
 
 /* Bordes dentados de papel de caja, arriba y abajo. */
@@ -26,8 +27,8 @@
   right: 0;
   height: 10px;
   background:
-    linear-gradient(45deg, transparent 33.333%, #f6f1e7 33.333% 66.667%, transparent 66.667%),
-    linear-gradient(-45deg, transparent 33.333%, #f6f1e7 33.333% 66.667%, transparent 66.667%);
+    linear-gradient(45deg, transparent 33.333%, #fdfaf3 33.333% 66.667%, transparent 66.667%),
+    linear-gradient(-45deg, transparent 33.333%, #fdfaf3 33.333% 66.667%, transparent 66.667%);
   background-size: 14px 20px;
 }
 
@@ -76,7 +77,7 @@
 
 .seal {
   border: 1px dashed #9a9084;
-  background: #ece3d0;
+  background: #f4ecdc;
   padding: 10px 12px;
   margin-top: 2px;
 }

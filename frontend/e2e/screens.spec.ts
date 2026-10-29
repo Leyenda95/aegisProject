@@ -172,9 +172,9 @@ async function mockWallets(page: Page) {
 /** Pasa la portada y espera a que la cinta tenga los contadores. */
 async function enter(page: Page) {
   // El primero: el otro está al final de "Cómo funciona".
-  const tryDemo = page.getByRole('button', { name: 'Probar la demo' });
-  await tryDemo.first().click();
-  await expect(tryDemo).toHaveCount(0);
+  const explore = page.getByRole('button', { name: 'Explorar' });
+  await explore.first().click();
+  await expect(explore).toHaveCount(0);
   await expect(page.getByText(STATE.totalSignals, { exact: true }).first()).toBeVisible();
 }
 
@@ -230,10 +230,10 @@ for (const theme of ['light', 'dark'] as const) {
       await page.mouse.move(0, 0);
       await expect.soft(page).toHaveScreenshot(`${theme}-como-funciona.png`, { threshold: 0.2 });
 
-      // La otra entrada lleva al mercado, y la página vuelve a desplazarse.
-      await page.getByRole('button', { name: /Ver el mercado/ }).click();
-      await expect(page).toHaveURL(/\/market$/);
-      await expect(page.getByText('señales en la última semana')).toBeVisible();
+      // El botón del final también entra en la demo, y la página vuelve a desplazarse.
+      await page.getByRole('button', { name: 'Explorar' }).last().click();
+      await expect(page).toHaveURL(/\/demo$/);
+      await expect(page.getByText('Punto de venta (demo)')).toBeVisible();
       await expect(page.locator('html')).not.toHaveClass(/landing-open/);
     });
 
@@ -249,12 +249,13 @@ for (const theme of ['light', 'dark'] as const) {
 
       await page.getByRole('button', { name: 'Cobrar y generar QR' }).click();
       await expect(page.getByRole('img', { name: 'QR' })).toBeVisible();
-      // El ticket que vuela de la caja al móvil, ya aterrizado.
-      await page.waitForTimeout(1000);
+      // El ticket que vuela de la caja al móvil, ya aterrizado, y el
+      // bocadillo que lo señala (sale al aterrizar).
+      await page.waitForTimeout(1300);
       await shot(page, `${theme}-ticket`);
 
       if (!sideBySide) {
-        await page.getByRole('button', { name: 'Ir a la vista de Usuario' }).click();
+        await page.getByRole('button', { name: 'Ir al móvil' }).click();
         await shot(page, `${theme}-movil`);
       }
 

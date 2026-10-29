@@ -9,14 +9,14 @@ import QrScanner from './QrScanner.tsx';
 import RedactedTicket, { type PublishProgressState } from './RedactedTicket.tsx';
 import UserPhone from './UserPhone.tsx';
 import PrivacyPanel from './PrivacyPanel.tsx';
-import ProofLocationPicker, { type ProofServerStatus } from './ProofLocationPicker.tsx';
+import ProofLocationPicker from './ProofLocationPicker.tsx';
 import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
 import { useWallet } from '../app/WalletProvider.tsx';
 import { useChain } from '../app/ChainProvider.tsx';
 import { useTx } from '../app/TxProvider.tsx';
 import { useReportFlow } from '../routes/demoFlow.ts';
-import { isLocalProofServerUp, loadLocalProofPreference, saveLocalProofPreference } from '../localProofServer.ts';
+import { loadLocalProofPreference, saveLocalProofPreference, useLocalProofServer } from '../localProofServer.ts';
 import styles from './UserView.module.css';
 
 // Las tarjetas de "¿Qué acaba de pasar?" salen solo la primera vez.
@@ -76,16 +76,7 @@ export default function UserView({ lang, variant = 'demo', goToContributeSignal 
   const [explained, setExplained] = useState(readExplained);
   // Probar la señal con el proof server del propio usuario (ver localProver.ts).
   const [localProof, setLocalProof] = useState(loadLocalProofPreference);
-  const [proofServer, setProofServer] = useState<ProofServerStatus>('checking');
-
-  async function checkProofServer() {
-    setProofServer('checking');
-    setProofServer(await isLocalProofServerUp() ? 'up' : 'down');
-  }
-
-  useEffect(() => {
-    if (localProof) void checkProofServer();
-  }, [localProof]);
+  const { status: proofServer, recheck: recheckProofServer } = useLocalProofServer(localProof);
 
   function chooseLocalProof(local: boolean) {
     setLocalProof(local);
@@ -171,7 +162,7 @@ export default function UserView({ lang, variant = 'demo', goToContributeSignal 
       local={localProof}
       onChange={chooseLocalProof}
       status={proofServer}
-      onRetry={() => void checkProofServer()}
+      onRetry={recheckProofServer}
       disabled={publishing}
     />
   );

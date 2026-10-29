@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import type { Lang } from '../api.ts';
 import { T } from '../i18n.ts';
-import { LOCAL_PROOF_SERVER_COMMAND } from '../localProofServer.ts';
+import { LOCAL_PROOF_SERVER_COMMAND, type ProofServerStatus } from '../localProofServer.ts';
 import styles from './ProofLocationPicker.module.css';
-
-export type ProofServerStatus = 'checking' | 'up' | 'down';
 
 type Props = {
   lang: Lang;
