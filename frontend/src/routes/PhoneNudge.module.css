@@ -11,9 +11,9 @@
   border-radius: 12px;
   font-size: var(--text-sm);
   line-height: 1.45;
-  color: var(--on-bronze);
-  background: var(--bronze-deep);
-  box-shadow: 0 10px 26px rgba(146, 106, 69, 0.35);
+  color: var(--on-accent);
+  background: var(--accent-fill);
+  box-shadow: var(--shadow-accent);
   transform: translateY(-50%);
   /* Aparece cuando el ticket aterriza en el móvil (vuela 0,9 s, ver flyTicket.ts). */
   animation: nudgeIn 0.4s ease-out 0.8s both;
@@ -26,7 +26,7 @@
   top: 50%;
   left: 100%;
   border: 8px solid transparent;
-  border-left-color: var(--bronze-deep);
+  border-left-color: var(--accent-strong);
   transform: translateY(-50%);
 }
 

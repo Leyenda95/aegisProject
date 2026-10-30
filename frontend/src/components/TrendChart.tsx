@@ -166,8 +166,8 @@ export default function TrendChart({ current, previous, range, lang, stale = fal
           <svg width={width} height={height} role="img" aria-label={summary}>
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="var(--bronze)" stopOpacity="0.18" />
-                <stop offset="1" stopColor="var(--bronze)" stopOpacity="0" />
+                <stop offset="0" stopColor="var(--accent)" stopOpacity="0.18" />
+                <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
               </linearGradient>
             </defs>
 

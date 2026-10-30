@@ -4,7 +4,7 @@
   align-items: center;
   gap: 28px;
   background: linear-gradient(180deg, var(--surface), var(--ground));
-  border-bottom: 1px solid var(--bronze-line);
+  border-bottom: 1px solid var(--accent-line);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -89,7 +89,7 @@
 }
 
 .dotIdle {
-  background: var(--bronze-deep);
+  background: var(--accent-fill);
 }
 
 /* Puede encogerse: si lo de la wallet no cabe, pasa a otra línea en vez de
@@ -148,8 +148,8 @@
 
 .langBtn[aria-pressed="true"] {
   color: var(--ink-bright);
-  background: var(--bronze-wash);
-  border-color: var(--bronze-deep);
+  background: var(--accent-wash);
+  border-color: var(--accent-strong);
 }
 
 /* Botones de la wallet y enlace al alta de la demo. */
@@ -162,14 +162,14 @@
 }
 
 .btnPrimary {
-  color: var(--on-bronze);
-  background: var(--bronze-deep);
+  color: var(--on-accent);
+  background: var(--accent-fill);
 }
 
 .btnOutline {
-  color: var(--bronze-deep);
+  color: var(--accent-strong);
   background: transparent;
-  border: 1px solid var(--bronze-deep);
+  border: 1px solid var(--accent-strong);
 }
 
 /* Una wallet de la lista, cuando hay más de una instalada. */

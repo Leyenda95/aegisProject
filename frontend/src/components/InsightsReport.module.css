@@ -59,8 +59,8 @@
 
 .generate {
   white-space: nowrap;
-  color: var(--on-bronze);
-  background: var(--bronze-deep);
+  color: var(--on-accent);
+  background: var(--accent-fill);
 }
 
 /* Perfiles de ejemplo de un toque. */
@@ -83,8 +83,8 @@
 
 .suggestion[aria-pressed="true"] {
   color: var(--ink-bright);
-  background: var(--bronze-wash);
-  border-color: var(--bronze-deep);
+  background: var(--accent-wash);
+  border-color: var(--accent-strong);
 }
 
 .error {
@@ -170,7 +170,7 @@
   padding: 4px 12px;
   font-size: var(--text-sm);
   background: var(--ground);
-  border: 1px solid var(--bronze-deep);
+  border: 1px solid var(--accent-strong);
   border-radius: 20px;
 }
 
@@ -205,7 +205,7 @@
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--bronze);
+  color: var(--accent);
 }
 
 .recTitle {

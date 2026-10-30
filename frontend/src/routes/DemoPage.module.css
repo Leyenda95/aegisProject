@@ -39,8 +39,8 @@
 
 .tab[aria-pressed="true"] {
   color: var(--ink-bright);
-  background: var(--bronze-wash);
-  border-color: var(--bronze-deep);
+  background: var(--accent-wash);
+  border-color: var(--accent-strong);
 }
 
 .main {

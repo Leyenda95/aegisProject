@@ -91,7 +91,7 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
     <div className={styles.scrollHint}>
       <div className={styles.chevrons}>
         {[0, 1].map(i => (
-          <svg key={i} width="9" height="16" viewBox="0 0 12 24" fill="none" stroke="var(--bronze-deep)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg key={i} width="9" height="16" viewBox="0 0 12 24" fill="none" stroke="var(--accent-strong)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M3 5 L9 12 L3 19" />
           </svg>
         ))}

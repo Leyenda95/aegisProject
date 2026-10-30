@@ -32,11 +32,11 @@ export default function Sparkline({ points, className }: { points: [number, numb
   return (
     <svg className={className} width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} aria-hidden="true">
       {path ? (
-        <path d={path} fill="none" stroke="var(--bronze-deep)" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+        <path d={path} fill="none" stroke="var(--accent-strong)" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
       ) : (
         <path d={`M${PAD} ${HEIGHT / 2} L${WIDTH - PAD} ${HEIGHT / 2}`} fill="none" stroke="var(--line)" strokeWidth="1.5" strokeLinecap="round" />
       )}
-      {end && <circle cx={end[0]} cy={end[1]} r="2" fill="var(--bronze)" />}
+      {end && <circle cx={end[0]} cy={end[1]} r="2" fill="var(--accent)" />}
     </svg>
   );
 }

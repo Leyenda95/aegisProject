@@ -75,8 +75,8 @@
 }
 
 .chipBump {
-  background: var(--bronze-wash);
-  border-color: var(--bronze);
+  background: var(--accent-wash);
+  border-color: var(--accent);
   transition: border-color 0.3s ease, background 0.3s ease;
 }
 
@@ -87,7 +87,7 @@
 }
 
 .chipBump .chipValue {
-  color: var(--bronze);
+  color: var(--accent);
 }
 
 /* "+N" que aparece sobre un número cuando entran señales nuevas: entra, se
@@ -100,7 +100,7 @@
   font-size: var(--text-2xs);
   font-weight: 600;
   line-height: 1;
-  color: var(--bronze);
+  color: var(--accent);
   pointer-events: none;
   animation-name: bumpFloat;
   animation-timing-function: ease-out;
@@ -130,19 +130,19 @@
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--ink-soft);
-  background: var(--bronze-wash);
+  background: var(--accent-wash);
   border: 1px solid var(--line);
   border-radius: 999px;
   cursor: pointer;
 }
 
 .breakdownBtn[aria-expanded="true"] {
-  border-color: var(--bronze-deep);
+  border-color: var(--accent-strong);
 }
 
 .breakdownChevron {
   display: inline-block;
-  color: var(--accent-blue);
+  color: var(--info);
   transition: transform 0.2s;
 }
 

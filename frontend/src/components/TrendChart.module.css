@@ -35,7 +35,7 @@
 }
 
 .keyCurrent {
-  background: var(--bronze);
+  background: var(--accent);
 }
 
 .keyPrevious {
@@ -53,7 +53,7 @@
 }
 
 .plot:focus-visible {
-  outline: 2px solid var(--bronze);
+  outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
 
@@ -85,7 +85,7 @@
 }
 
 .currentLine {
-  stroke: var(--bronze);
+  stroke: var(--accent);
 }
 
 .previousLine {
@@ -106,7 +106,7 @@
 }
 
 .currentDot {
-  fill: var(--bronze);
+  fill: var(--accent);
 }
 
 .previousDot {

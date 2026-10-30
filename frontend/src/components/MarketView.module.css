@@ -181,7 +181,7 @@
   display: block;
   min-width: 2px;
   height: 100%;
-  background: var(--bronze);
+  background: var(--accent);
   border-radius: 0 4px 4px 0;
 }
 
@@ -294,7 +294,7 @@
 }
 
 .noticeLink {
-  color: var(--bronze-deep);
+  color: var(--accent-strong);
   font-weight: 600;
 }
 

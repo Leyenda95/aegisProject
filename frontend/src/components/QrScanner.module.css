@@ -32,8 +32,8 @@
 .cancel {
   padding: 10px 24px;
   font-size: var(--text-base);
-  color: var(--on-bronze);
-  background: var(--bronze-deep);
+  color: var(--on-accent);
+  background: var(--accent-fill);
   border: none;
   border-radius: 8px;
   cursor: pointer;

@@ -7,15 +7,15 @@
 .ticket {
   width: 300px;
   max-width: 100%;
-  background: #fdfaf3;
-  color: #1c1c1c;
+  background: var(--paper);
+  color: var(--paper-ink);
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
   font-size: var(--text-xs);
   line-height: 1.55;
   padding: 24px 20px 26px;
   position: relative;
   /* Sombra suave: con la de los modales el papel parecía sucio. */
-  box-shadow: 0 10px 30px rgba(42, 37, 32, 0.18);
+  box-shadow: var(--shadow-paper);
 }
 
 /* Bordes dentados de papel de caja, arriba y abajo. */
@@ -27,8 +27,8 @@
   right: 0;
   height: 10px;
   background:
-    linear-gradient(45deg, transparent 33.333%, #fdfaf3 33.333% 66.667%, transparent 66.667%),
-    linear-gradient(-45deg, transparent 33.333%, #fdfaf3 33.333% 66.667%, transparent 66.667%);
+    linear-gradient(45deg, transparent 33.333%, var(--paper) 33.333% 66.667%, transparent 66.667%),
+    linear-gradient(-45deg, transparent 33.333%, var(--paper) 33.333% 66.667%, transparent 66.667%);
   background-size: 14px 20px;
 }
 
@@ -44,14 +44,14 @@
 
 .sub {
   text-align: center;
-  color: #6b6459;
+  color: var(--paper-dim);
   font-size: var(--text-2xs);
   margin-top: 2px;
 }
 
 .rule {
   border: 0;
-  border-top: 1px dashed #9a9084;
+  border-top: 1px dashed var(--paper-rule);
   margin: 12px 0;
 }
 
@@ -68,7 +68,7 @@
   text-overflow: ellipsis;
 }
 
-.dim { color: #6b6459; }
+.dim { color: var(--paper-dim); }
 
 .total {
   font-weight: 700;
@@ -76,8 +76,8 @@
 }
 
 .seal {
-  border: 1px dashed #9a9084;
-  background: #f4ecdc;
+  border: 1px dashed var(--paper-rule);
+  background: var(--paper-wash);
   padding: 10px 12px;
   margin-top: 2px;
 }
@@ -91,7 +91,7 @@
 }
 
 .note {
-  color: #6b6459;
+  color: var(--paper-dim);
   font-size: var(--text-2xs);
   line-height: 1.5;
   margin-top: 6px;
@@ -106,14 +106,14 @@
   margin: 14px 0 4px;
 }
 
-.bar { background: #1c1c1c; }
+.bar { background: var(--paper-ink); }
 
 .qr {
   display: block;
   margin: 8px auto 0;
   width: 150px;
   height: 150px;
-  background: #ffffff;
+  background: var(--qr-ground);
   padding: 6px;
 }
 
@@ -176,8 +176,8 @@
   font-size: var(--text-2xs);
   line-height: 1.5;
   color: var(--price);
-  background: var(--bronze-wash);
-  border: 1px solid var(--bronze-line);
+  background: var(--accent-wash);
+  border: 1px solid var(--accent-line);
   border-radius: 8px;
   padding: 8px 10px;
 }
@@ -198,7 +198,7 @@
   border: none;
   background: none;
   margin-top: 2px;
-  accent-color: var(--bronze-deep);
+  accent-color: var(--accent-strong);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -322,8 +322,8 @@
 
 /* Fila de un campo opcional marcado: el mismo realce que lo que va on-chain. */
 .rowOn {
-  background-color: var(--bronze-wash);
-  box-shadow: inset 0 0 0 1.5px var(--bronze-deep);
+  background-color: var(--accent-wash);
+  box-shadow: inset 0 0 0 1.5px var(--accent-strong);
   border-radius: 6px;
   padding: 1px 6px;
   margin: -1px -6px;
@@ -354,8 +354,8 @@
 
 @keyframes keepGlow {
   to {
-    background-color: var(--bronze-wash);
-    box-shadow: inset 0 0 0 1.5px var(--bronze-deep);
+    background-color: var(--accent-wash);
+    box-shadow: inset 0 0 0 1.5px var(--accent-strong);
   }
 }
 
@@ -366,7 +366,7 @@
   font-size: var(--text-3xs);
   letter-spacing: 1.5px;
   font-weight: 700;
-  color: var(--bronze-deep);
+  color: var(--accent-strong);
   opacity: 0;
 }
 
@@ -396,8 +396,8 @@
 }
 
 .modeBtnOn {
-  border-color: var(--bronze-deep);
-  background: var(--bronze-wash);
+  border-color: var(--accent-strong);
+  background: var(--accent-wash);
   color: var(--ink-bright);
 }
 
@@ -425,15 +425,15 @@
 }
 
 .confirmBtn {
-  background: var(--bronze-deep);
-  color: var(--on-bronze);
+  background: var(--accent-fill);
+  color: var(--on-accent);
 }
 
 /* Oscuro en los dos temas, como el marco del móvil en el que va. */
 .discardBtn {
-  background: #111111;
-  border: 1px solid #333333;
-  color: #FFFFFF;
+  background: var(--device-btn);
+  border: 1px solid var(--device-btn-line);
+  color: var(--device-btn-ink);
 }
 
 .confirmBtn:disabled,

@@ -21,7 +21,7 @@
   width: 84px;
   height: 23px;
   border-radius: 999px;
-  background: #050505;
+  background: var(--device-notch);
   z-index: 3;
 }
 
@@ -149,8 +149,8 @@
 }
 
 .noticeWarn {
-  border-color: #92400e;
-  color: #b45309;
+  border-color: var(--warn);
+  color: var(--warn-ink);
 }
 
 /* Tarjeta de ticket nuevo: lo único que pide una acción */
@@ -158,9 +158,9 @@
   position: relative;
   border-radius: 18px;
   padding: 16px;
-  background: linear-gradient(135deg, var(--bronze-deep), var(--bronze));
-  color: var(--on-bronze);
-  box-shadow: 0 10px 26px rgba(146, 106, 69, 0.35);
+  background: linear-gradient(135deg, var(--accent-fill), var(--accent));
+  color: var(--on-accent);
+  box-shadow: var(--shadow-accent);
   animation: ticketIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -182,8 +182,8 @@
 }
 
 .newBadge {
-  background: var(--on-bronze);
-  color: var(--bronze-deep);
+  background: var(--on-accent);
+  color: var(--accent-strong);
   border-radius: 999px;
   padding: 2px 8px;
   letter-spacing: 0.4px;
@@ -216,8 +216,8 @@
 }
 
 .ticketBtn {
-  background: var(--on-bronze);
-  color: var(--bronze-deep);
+  background: var(--on-accent);
+  color: var(--accent-strong);
   border: none;
   border-radius: 999px;
   padding: 9px 16px;
@@ -229,8 +229,8 @@
 
 /* Halo que late alrededor del botón para invitar a publicar. */
 @keyframes ticketPulse {
-  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--on-bronze) 70%, transparent); }
-  70%, 100% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--on-bronze) 0%, transparent); }
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--on-accent) 70%, transparent); }
+  70%, 100% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--on-accent) 0%, transparent); }
 }
 
 .ticketArrow {
@@ -261,8 +261,8 @@
 }
 
 @keyframes ticketGlow {
-  0%, 100% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--on-bronze) 15%, transparent); }
-  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--on-bronze) 55%, transparent); }
+  0%, 100% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--on-accent) 15%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--on-accent) 55%, transparent); }
 }
 
 .emptyCard {
@@ -386,13 +386,13 @@
   padding: 0 0 9px;
   justify-content: center;
   border-radius: 10px;
-  background: var(--bronze-wash);
+  background: var(--accent-wash);
 }
 
 .chartIcon span {
   width: 3.5px;
   border-radius: 2px;
-  background: var(--bronze-deep);
+  background: var(--accent-fill);
 }
 
 .collapsibleTitle {
@@ -448,7 +448,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--bronze);
+  background: var(--accent);
 }
 
 /* Últimas compras */
@@ -477,7 +477,7 @@
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(-6px); background: var(--bronze-wash); }
+  from { opacity: 0; transform: translateY(-6px); background: var(--accent-wash); }
   to { opacity: 1; transform: none; }
 }
 
@@ -576,7 +576,7 @@
 }
 
 .tabBtn[aria-pressed="true"] {
-  color: var(--bronze-deep);
+  color: var(--accent-strong);
 }
 
 .scanBtn {

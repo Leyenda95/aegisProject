@@ -26,7 +26,7 @@
 
 .noticeLink {
   font-weight: 600;
-  color: var(--bronze-deep);
+  color: var(--accent-strong);
 }
 
 /* ---------- Punto de venta ---------- */
@@ -71,8 +71,8 @@
 
 .category[aria-pressed="true"] {
   color: var(--ink-bright);
-  background: var(--bronze-wash);
-  border-color: var(--bronze-deep);
+  background: var(--accent-wash);
+  border-color: var(--accent-strong);
 }
 
 .products {
@@ -93,7 +93,7 @@
 }
 
 .productInCart {
-  border-color: var(--bronze-deep);
+  border-color: var(--accent-strong);
 }
 
 .productName {
@@ -114,8 +114,8 @@
   width: 100%;
   padding: 6px 14px;
   font-size: var(--text-xs);
-  color: var(--on-bronze);
-  background: var(--bronze-deep);
+  color: var(--on-accent);
+  background: var(--accent-fill);
 }
 
 .stepper {
@@ -209,8 +209,8 @@
 
 .checkout {
   width: 100%;
-  color: var(--on-bronze);
-  background: var(--bronze-deep);
+  color: var(--on-accent);
+  background: var(--accent-fill);
 }
 
 /* Ticket ya sellado, con su QR. */
@@ -238,9 +238,9 @@
   max-width: 560px;
   padding: 14px 16px;
   border-radius: 14px;
-  color: var(--on-bronze);
-  background: linear-gradient(135deg, var(--bronze-deep), var(--bronze));
-  box-shadow: 0 10px 26px rgba(146, 106, 69, 0.35);
+  color: var(--on-accent);
+  background: linear-gradient(135deg, var(--accent-fill), var(--accent));
+  box-shadow: var(--shadow-accent);
 }
 
 .nextText {
@@ -265,8 +265,8 @@
   font-size: var(--text-sm);
   font-weight: 700;
   white-space: nowrap;
-  color: var(--bronze-deep);
-  background: var(--on-bronze);
+  color: var(--accent-strong);
+  background: var(--on-accent);
   border-radius: 999px;
 }
 
@@ -316,7 +316,7 @@
 .toolsChevron {
   display: inline-block;
   font-size: var(--text-lg);
-  color: var(--accent-blue);
+  color: var(--info);
   transform: rotate(0deg);
   transition: transform 0.2s;
 }
@@ -364,9 +364,9 @@
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: var(--bronze-deep);
-  background: var(--bronze-wash);
-  border: 1px solid var(--bronze-deep);
+  color: var(--accent-strong);
+  background: var(--accent-wash);
+  border: 1px solid var(--accent-strong);
   border-radius: 999px;
 }
 
@@ -398,8 +398,8 @@
 
 .campaignSubmit {
   align-self: flex-start;
-  color: var(--on-bronze);
-  background: var(--bronze-deep);
+  color: var(--on-accent);
+  background: var(--accent-fill);
 }
 
 /* La cesta, a la derecha del catálogo y fija al bajar, cuando cabe: en

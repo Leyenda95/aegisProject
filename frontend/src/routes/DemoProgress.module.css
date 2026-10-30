@@ -36,7 +36,7 @@
 }
 
 .done + .step::before {
-  background: var(--bronze);
+  background: var(--accent);
 }
 
 .dot {
@@ -54,8 +54,8 @@
 }
 
 .done .dot {
-  background: var(--bronze);
-  border-color: var(--bronze);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .current {
@@ -64,8 +64,8 @@
 }
 
 .current .dot {
-  border-color: var(--bronze);
-  box-shadow: 0 0 0 4px var(--bronze-wash);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-wash);
 }
 
 /* El paso en marcha late despacio mientras la red trabaja. */
@@ -74,7 +74,7 @@
 }
 
 @keyframes working {
-  50% { box-shadow: 0 0 0 7px var(--bronze-wash); }
+  50% { box-shadow: 0 0 0 7px var(--accent-wash); }
 }
 
 .hint {
@@ -100,7 +100,7 @@
   padding: 0;
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--bronze-deep);
+  color: var(--accent-strong);
   background: none;
   text-decoration: underline;
   text-underline-offset: 3px;

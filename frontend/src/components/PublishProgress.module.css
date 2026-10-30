@@ -110,8 +110,8 @@
 
 /* El paso en marcha: el borde gira, como el spinner del resto de la web. */
 .active .marker {
-  border-color: var(--bronze-wash);
-  border-top-color: var(--bronze);
+  border-color: var(--accent-wash);
+  border-top-color: var(--accent);
   animation: spin 0.8s linear infinite;
 }
 
@@ -133,8 +133,8 @@
 }
 
 .primary {
-  color: var(--on-bronze);
-  background: var(--bronze-deep);
+  color: var(--on-accent);
+  background: var(--accent-fill);
 }
 
 .secondary {
@@ -184,6 +184,6 @@
 
   .active .marker {
     animation: none;
-    border-color: var(--bronze);
+    border-color: var(--accent);
   }
 }
