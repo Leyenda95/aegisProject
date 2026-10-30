@@ -1,59 +1,54 @@
 :root {
-  /* Aegis: paleta clara (predeterminada). Los tokens van por función, no por
-     color, para que cambiar la paleta sea tocar solo este archivo. Los que no
-     varían entre temas (acento, --on-accent, --info, papel, móvil) tienen
-     contraste suficiente en ambos fondos; el resto se redefine para modo
-     oscuro en el bloque [data-theme="dark"] de abajo. */
+  /* Aegis: paleta clara (predeterminada). Neutros fríos con el azul noche del
+     logo (#182531) como tinta, y Pizarra (gris azulado) como acento. Los tokens
+     van por función, no por color: cambiar la paleta es tocar solo este
+     archivo. Lo que no se redefine en [data-theme="dark"] vale en los dos temas. */
 
   /* Fondos y líneas */
-  --ground: #F6F2EA;
+  --ground: #F5F7F9;
   --surface: #FFFFFF;
-  --surface-2: #F1EAE0;
+  --surface-2: #EDF1F4;
   --raised: #FFFFFF;
-  --line: #E3D9C8;
-  --line-soft: #EDE5D8;
+  --line: #DCE2E8;
+  --line-soft: #E7EBEF;
 
-  /* Acento: lo que se pulsa, lo elegido y la serie principal de las gráficas.
-     --accent-strong es el acento como texto o trazo; --accent-fill, el relleno
-     de los botones, con --on-accent encima. Van aparte porque en oscuro un
-     relleno que deje leer el texto blanco es demasiado oscuro como texto. */
-  --accent: #B0813F;
-  --accent-strong: #926A45;
-  --accent-fill: #926A45;
-  --accent-wash: rgba(176, 129, 63, 0.12);
-  /* Bordes suaves (cabecera, notas). */
-  --accent-line: rgba(176, 129, 63, 0.4);
-  /* Texto sobre --accent-fill: ese fondo no cambia entre temas, así
-     que este token tampoco, a diferencia de --ink-bright. */
-  --on-accent: #FFFFFF;
+  /* Acento, en claro tonal: relleno suave (--accent-fill) con texto oscuro del
+     mismo color (--on-accent), no un relleno oscuro con texto blanco.
+     --accent: lo elegido, trazos y series de las gráficas.
+     --accent-strong: el acento como texto.
+     --accent-mark: indicadores sobre el fondo (barras, puntos, interruptores).
+     --accent-fill-end: final del degradado de las tarjetas que piden una acción. */
+  --accent: #5B7290;
+  --accent-strong: #3F5672;
+  --accent-fill: #D0DBE8;
+  --accent-fill-end: #BCCBDD;
+  --accent-mark: #5B7290;
+  --accent-wash: rgba(91, 114, 144, 0.10);
+  --accent-line: rgba(91, 114, 144, 0.32);
+  --on-accent: #2A3E57;
 
   /* Tinta */
-  --ink: #2A2520;
-  --ink-pale: #4A433B;
-  --ink-soft: #6B6255;
-  /* Un poco más oscuros que el resto de la escala para que se lean bien en
-     texto real y pequeño (etiquetas de la cinta de estadísticas sin abrir
-     el desglose, p. ej.), sin el color bronce que se probó y no convenció. */
-  --ink-dim: #766B5C;
-  --ink-faint: #8B8172;
-  --ink-bright: #16120D;
+  --ink: #182531;
+  --ink-pale: #2C3B4B;
+  --ink-soft: #4A5868;
+  --ink-dim: #56636F;
+  --ink-faint: #6D7A88;
+  --ink-bright: #0A131D;
 
-  /* Grises para chrome secundario (bordes/fondos de pastillas y badges),
-     aparte de la escala --line/--surface. */
-  --gray-850: #E2DAC9;
-  --gray-800: #D8CFBB;
+  /* Grises para chrome secundario (bordes/fondos de pastillas y badges). */
+  --gray-850: #E1E6EB;
+  --gray-800: #D3DAE1;
 
   /* Estados */
   --danger: #DC2626;
-  --success: #0E8A63;
+  --success: #08805A;
   --warn: #92400e;
   --warn-ink: #b45309;
-  --info: #456D92;
-  --price: #9C6B2E;
+  --info: #2F6FA8;
+  --price: #3F5672;
   /* Serie de contexto en las gráficas (el periodo anterior, junto al acento
-     del actual): un gris que se distingue bien del acento también con
-     daltonismo, más claro para que no compita con él. */
-  --chart-context: #C2BBB0;
+     del actual): un gris claro que no compite con él. */
+  --chart-context: #C4CCD5;
 
   /* Papel del ticket impreso: igual en los dos temas, como un papel real. */
   --paper: #fdfaf3;
@@ -89,7 +84,7 @@
   --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
-  --shadow-accent: 0 10px 26px rgba(146, 106, 69, 0.35);
+  --shadow-accent: 0 8px 22px rgba(67, 90, 118, 0.16);
   /* El ticket de papel, con una sombra cálida y suave. */
   --shadow-paper: 0 10px 30px rgba(42, 37, 32, 0.18);
 
@@ -97,39 +92,85 @@
   --scrim: rgba(0, 0, 0, 0.8);
   --scrim-camera: rgba(0, 0, 0, 0.93);
 
-  --font-display: 'Archivo', system-ui, -apple-system, sans-serif;
-  --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-display: 'Geist', system-ui, -apple-system, sans-serif;
+  --font-body: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-/* Modo oscuro: mismo sistema de tokens, con los tonos "papel cálido claro"
-   invertidos a "cálido oscuro". Solo se redefine lo que de verdad depende
-   de si el fondo es oscuro o claro (ver comentario del bloque :root). */
+/* Modo oscuro: los mismos papeles sobre azul casi negro. Aquí el acento va al
+   revés que en claro: relleno claro con texto oscuro. */
 :root[data-theme="dark"] {
-  --ground: #0C0C0D;
-  --surface: #141414;
-  --surface-2: #1C1B18;
-  --raised: #232120;
-  --line: #2B2825;
-  --line-soft: #201E1C;
+  --ground: #080C11;
+  --surface: #0F151C;
+  --surface-2: #151D26;
+  --raised: #1B2530;
+  --line: #24303C;
+  --line-soft: #18212A;
 
-  --ink: #ECE7DE;
-  --ink-pale: #C7BFB2;
-  --ink-soft: #ACA396;
-  --ink-dim: #968E82;
-  --ink-faint: #968d80;
+  --accent: #91A6C0;
+  --accent-strong: #AABBD1;
+  --accent-fill: #91A6C0;
+  --accent-fill-end: #91A6C0;
+  --accent-mark: #91A6C0;
+  --accent-wash: rgba(145, 166, 192, 0.12);
+  --accent-line: rgba(145, 166, 192, 0.3);
+  --on-accent: #0B1018;
+
+  --ink: #E6ECF2;
+  --ink-pale: #C2CCD6;
+  --ink-soft: #A0ACB9;
+  --ink-dim: #8B98A6;
+  --ink-faint: #7C8997;
   --ink-bright: #FFFFFF;
 
-  --gray-850: #222222;
-  --gray-800: #2A2A2A;
+  --gray-850: #18212B;
+  --gray-800: #212C38;
 
   --danger: #f87171;
-  --price: #c0956de5;
-  --chart-context: #56524C;
-  /* El verde fuerte de modo claro (#0E8A63) se pensó para texto sobre fondo
-     claro, en oscuro queda muy apagado; aquí se usa el pastel original,
-     pensado para fondo oscuro. */
-  --success: #64d1a9;
+  --success: #5EE0B0;
+  --info: #8DB8E8;
+  --price: #AABBD1;
+  --chart-context: #384553;
+  --shadow-accent: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* Portada (LandingScreen): clara con cualquier tema, así que sus colores van
+   aparte de los del tema. Niebla fría con manchas gris azuladas y una cálida;
+   tinta del logo; el acento Pizarra en las señales y la segunda línea. */
+[data-landing] {
+  color-scheme: light;
+  --l-bg: #F6F7FA;
+  --l-ink: #0E1A26;
+  --l-ink-soft: #4A5868;
+  --l-ink-faint: #6D7A88;
+  --l-line: rgba(24, 37, 49, 0.1);
+  --l-pill-bg: rgba(255, 255, 255, 0.7);
+  --l-live: #0B9A6A;
+  --l-accent: #3F5672;
+  --l-accent-ink: #344A64;
+  --l-accent-wash: rgba(91, 114, 144, 0.1);
+  --l-accent-line: rgba(91, 114, 144, 0.3);
+  --l-line2: linear-gradient(92deg, #5F7896 0%, #7B90AC 55%, #93A6BF 100%);
+  --l-cta-bg: #182531;
+  --l-cta-ink: #FFFFFF;
+  --l-cta-glow: 0 1px 0 rgba(255, 255, 255, 0.2) inset, 0 10px 30px rgba(24, 37, 49, 0.22);
+  --l-blob1: rgba(170, 190, 215, 0.5);
+  --l-blob2: rgba(195, 205, 225, 0.45);
+  --l-blob3: rgba(225, 215, 200, 0.38);
+  --l-ring: #182531;
+  --l-signal-line: rgba(91, 114, 144, 0.28);
+  --l-card: rgba(255, 255, 255, 0.72);
+  --l-card-line: rgba(24, 37, 49, 0.08);
+  --l-art-bg: radial-gradient(120% 90% at 50% 0%, rgba(170, 190, 215, 0.32), rgba(255, 255, 255, 0.5) 70%);
+  --l-inner: #FFFFFF;
+  --l-inner-line: rgba(24, 37, 49, 0.08);
+  --l-track: rgba(24, 37, 49, 0.07);
+  --l-bar: rgba(24, 37, 49, 0.22);
+  --l-stage-bg: rgba(255, 255, 255, 0.45);
+  --l-stage-line: rgba(255, 255, 255, 0.9);
+  --l-shadow: 0 30px 80px rgba(24, 37, 49, 0.12);
+  --l-float-shadow: 0 8px 24px rgba(24, 37, 49, 0.07);
+  --l-logo-filter: invert(1);
 }
 
 :root:not([data-theme="dark"]) .midnight-logo { filter: invert(1); }

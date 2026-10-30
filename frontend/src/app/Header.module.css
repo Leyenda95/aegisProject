@@ -42,15 +42,9 @@
 }
 
 .logo {
-  width: 95px;
-  height: 40px;
-  object-fit: contain;
-}
-
-.logoMobileWordmarkLight,
-.logoMobileWordmarkDark {
-  display: none;
-  object-fit: contain;
+  width: 48px;
+  flex: none;
+  color: var(--ink-bright);
 }
 
 /* Píldoras de red y de patrocinio, una al lado de la otra */
@@ -89,7 +83,7 @@
 }
 
 .dotIdle {
-  background: var(--accent-fill);
+  background: var(--accent-mark);
 }
 
 /* Puede encogerse: si lo de la wallet no cabe, pasa a otra línea en vez de
@@ -291,36 +285,20 @@
     gap: 6px;
   }
 
-  /* Wordmark único con "AEGIS" integrado en vez de marca + texto por
-     separado, mismo alto (40px) que el logo de siempre. Una variante por
-     tema: texto negro en claro, blanco en oscuro. */
+  /* Marca más el nombre "AEGIS" (sin lema), algo más pequeños que en
+     escritorio para que quepa junto a los controles. */
   .brand {
     flex: 0;
     gap: 8px;
   }
 
   .logo {
-    display: none;
+    width: 38px;
   }
 
-  .logoMobileWordmarkLight {
-    display: block;
-    height: 40px;
-    width: auto;
-  }
-
-  :root[data-theme="dark"] .logoMobileWordmarkLight {
-    display: none;
-  }
-
-  :root[data-theme="dark"] .logoMobileWordmarkDark {
-    display: block;
-    height: 40px;
-    width: auto;
-  }
-
-  .brandText {
-    display: none;
+  .brandName {
+    font-size: var(--text-lg);
+    letter-spacing: 2px;
   }
 
   /* Controls en su propia fila, alineados a la derecha bajo el botón de

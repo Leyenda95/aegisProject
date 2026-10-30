@@ -1,0 +1,17 @@
+.mark {
+  display: block;
+  overflow: visible;
+}
+
+/* Parpadeo: el arco baja hacia el centro del ojo y vuelve, rápido, una vez
+   cada pocos segundos. */
+.blink {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: blink 7s cubic-bezier(0.4, 0, 0.2, 1) 2.5s infinite;
+}
+
+@keyframes blink {
+  0%, 94%, 100% { transform: none; }
+  96% { transform: translateY(55%) scaleY(0.35); }
+}

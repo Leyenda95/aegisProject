@@ -239,7 +239,7 @@
   padding: 14px 16px;
   border-radius: 14px;
   color: var(--on-accent);
-  background: linear-gradient(135deg, var(--accent-fill), var(--accent));
+  background: linear-gradient(135deg, var(--accent-fill), var(--accent-fill-end));
   box-shadow: var(--shadow-accent);
 }
 
@@ -265,7 +265,8 @@
   font-size: var(--text-sm);
   font-weight: 700;
   white-space: nowrap;
-  color: var(--accent-strong);
+  /* Invertido: la letra es el relleno de la tarjeta. */
+  color: var(--accent-fill);
   background: var(--on-accent);
   border-radius: 999px;
 }

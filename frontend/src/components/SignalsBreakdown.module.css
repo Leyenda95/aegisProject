@@ -82,7 +82,7 @@
 /* Barra de porcentaje: el ancho llega en línea desde el componente. */
 .fill {
   height: 100%;
-  background: var(--accent-fill);
+  background: var(--accent-mark);
   border-radius: 3px;
   transition: width 0.4s;
 }

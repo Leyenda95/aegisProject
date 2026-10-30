@@ -1,89 +1,111 @@
-﻿import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useState, type CSSProperties } from 'react';
 import NumberFlow from '@number-flow/react';
 import { CATEGORY_LABELS, SUBCATEGORY_LABELS, type Category, type Lang } from '../api.ts';
-import { PRODUCTS_BY_ID, formatEUR } from '../catalog.ts';
-import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
 import { usePreferences } from '../app/PreferencesProvider.tsx';
 import { useChain } from '../app/ChainProvider.tsx';
+import AegisMark from './AegisMark.tsx';
 import styles from './LandingScreen.module.css';
 
 // Lo que tarda la portada en fundirse (.exiting) antes de dejar ver la demo.
 const EXIT_MS = 650;
 const LANGS: Lang[] = ['es', 'en'];
 
-// La compra de las ilustraciones: la misma que la primera de la demo, dos
-// pares de calzado.
-const TICKET_ITEMS = [PRODUCTS_BY_ID['zapatillas-urbanas'], PRODUCTS_BY_ID['botas-cuero']];
-// El agregado de la tercera ilustración: cifras de ejemplo, no las del contrato.
-const EXAMPLE_COUNTS: [Category, number][] = [['fashion', 2580], ['food', 1883], ['electronics', 1321], ['sports', 958]];
+// Señales que flotan alrededor del titular: dónde (x, y en %), cuán lejos (z:
+// 0 cerca, 1 lejos, más pequeña y borrosa) y qué dicen. Solo a media altura,
+// a los lados de la segunda línea y del botón: arriba restarían protagonismo
+// a la marca y a la píldora del contador.
+const FLOATERS: { x: number; y: number; z: number; category: Category; sub: string; qty: number }[] = [
+  { x: 5, y: 36, z: 0.5, category: 'fashion', sub: 'shoes', qty: 2 },
+  { x: 82, y: 38, z: 0.5, category: 'electronics', sub: 'audio', qty: 1 },
+  { x: 4, y: 58, z: 1, category: 'food', sub: 'cafes', qty: 1 },
+  { x: 73, y: 60, z: 0, category: 'sports', sub: 'equipment', qty: 1 },
+];
 
-/** El ticket de la compra: sellado en la caja o, con `redacted`, tal como se publica. */
-function TicketArt({ lang, redacted = false }: { lang: Lang; redacted?: boolean }) {
-  const t = T[lang];
-  const total = TICKET_ITEMS.reduce((sum, p) => sum + p.priceCents, 0);
+function splitHeadline(text: string): [string, string] {
+  const i = text.indexOf('. ');
+  return i < 0 ? [text, ''] : [text.slice(0, i + 1), text.slice(i + 2)];
+}
+
+/** Las señales flotan alrededor del titular; de vez en cuando una se enciende. */
+function FloatingSignals({ lang }: { lang: Lang }) {
   return (
-    <div className={cx(styles.paper, redacted ? styles.paperRedacted : styles.paperSealed)}>
-      <div className={styles.paperLines}>
-        {TICKET_ITEMS.map(p => (
-          <div key={p.id} className={styles.paperRow}>
-            <span className={styles.paperItem}>1× {p.name[lang]}</span>
-            <span>{formatEUR(p.priceCents, lang)}</span>
-          </div>
-        ))}
-        <div className={cx(styles.paperRow, styles.paperTotal)}>
-          <span>TOTAL</span>
-          <span>{formatEUR(total, lang)}</span>
-        </div>
+    <div className={styles.floaters} aria-hidden="true">
+      {FLOATERS.map((f, i) => (
+        <span key={i} className={styles.floater} style={{ '--x': `${f.x}%`, '--y': `${f.y}%`, '--z': f.z, '--i': i } as CSSProperties}>
+          <span className={styles.floaterDot} />
+          {CATEGORY_LABELS[lang][f.category]} › {SUBCATEGORY_LABELS[lang][f.sub]} ×{f.qty}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** El ticket de la compra: sellado, o con todo difuminado salvo lo que se comparte. */
+function TicketCard({ lang, mode }: { lang: Lang; mode: 'sealed' | 'redacted' | 'animated' }) {
+  const { t } = usePreferences();
+  const rows = [[t.landingItem1, '89,00 €'], [t.landingItem2, '129,00 €'], [`${t.landingCardLabel} •••• 4821`, '218,00 €']];
+  return (
+    <div className={cx(styles.card, styles[mode])}>
+      <div className={styles.cardHead}>
+        <span>{t.landingStore}</span>
+        <span className={styles.tag}>◆ {t.landingSealed}</span>
       </div>
-      {redacted ? (
-        <div className={styles.keep}>
-          <div className={styles.keepLine}>
-            <span>{CATEGORY_LABELS[lang].fashion} › {SUBCATEGORY_LABELS[lang].shoes}</span>
-            <span>×2</span>
-          </div>
-          <span className={styles.midTag}>{t.redactMidtag}</span>
+      {rows.map(([a, b], i) => (
+        <div key={i} className={styles.row} style={{ '--r': i } as CSSProperties}>
+          <span>{a}</span><span>{b}</span>
         </div>
-      ) : (
-        <div className={styles.seal}>◆ {t.receiptSealed} ◆</div>
+      ))}
+      {mode !== 'sealed' && (
+        <div className={styles.keepRow}>{CATEGORY_LABELS[lang].fashion} › {SUBCATEGORY_LABELS[lang].shoes} ×2</div>
       )}
     </div>
   );
 }
 
-/** El agregado público, como las barras del mercado: la categoría de la compra sube en dos. */
-function AggregateArt({ lang }: { lang: Lang }) {
-  const number = new Intl.NumberFormat(T[lang].locale);
-  const max = Math.max(...EXAMPLE_COUNTS.map(([, count]) => count));
+/** El mercado público: barras por categoría; la de la compra sube en dos. */
+function MarketCard({ lang, animated = false }: { lang: Lang; animated?: boolean }) {
+  const { t } = usePreferences();
+  const bars: [Category, number][] = [['fashion', 92], ['food', 70], ['electronics', 52], ['sports', 38]];
   return (
-    <ul className={styles.bars}>
-      {EXAMPLE_COUNTS.map(([category, count]) => (
-        <li key={category} className={styles.barRow}>
-          <span>{CATEGORY_LABELS[lang][category]}</span>
-          <span className={styles.barTrack}>
-            <span className={styles.bar} style={{ width: `${(count / max) * 100}%` }} />
-          </span>
-          <span className={styles.barValue}>
-            {number.format(count)}
-            {category === 'fashion' && <span className={styles.bump}>+2</span>}
-          </span>
-        </li>
+    <div className={cx(styles.card, animated && styles.animated)}>
+      <div className={styles.cardHead}>
+        <span>{t.landingMarket}</span>
+        <span className={styles.liveTag}><span className={styles.dot} /> {t.signalsLive}</span>
+      </div>
+      {bars.map(([cat, w]) => (
+        <div key={cat} className={styles.barRow}>
+          <span>{CATEGORY_LABELS[lang][cat]}</span>
+          <span className={styles.track}><span className={cx(styles.fill, cat === 'fashion' && styles.fillBump)} style={{ width: `${w}%` }} /></span>
+          <span className={styles.plus}>{cat === 'fashion' ? '+2' : ''}</span>
+        </div>
       ))}
-    </ul>
+    </div>
+  );
+}
+
+/** La app misma, en bucle: el ticket se difumina, la señal viaja y sube el mercado. */
+function FlowCardArt({ lang }: { lang: Lang }) {
+  return (
+    <div className={styles.stage} aria-hidden="true">
+      <TicketCard lang={lang} mode="animated" />
+      <div className={styles.wire}><span className={styles.travel} /></div>
+      <MarketCard lang={lang} animated />
+    </div>
   );
 }
 
 /**
- * Portada: el logo enorme y translúcido, qué es Aegis en una frase, cuántas
- * señales hay ya en Midnight (en directo) y la entrada a la demo. Debajo,
- * cómo funciona en tres pasos con la misma compra de la demo.
+ * Portada: la marca, cuántas señales hay ya en Midnight (en directo), qué es
+ * Aegis en una frase y la entrada a la demo, con la app animada debajo. Luego
+ * tres cifras y cómo funciona en tres pasos con la misma compra.
  */
 export default function LandingScreen({ onEnter }: { onEnter: () => void }) {
   const { t, lang, chooseLang } = usePreferences();
   const { state, live } = useChain();
   const [exiting, setExiting] = useState(false);
-  const howRef = useRef<HTMLElement>(null);
   const total = state ? Number(state.totalSignals ?? 0) : null;
+  const [line1, line2] = splitHeadline(t.landingHeadline);
 
   // Mientras se ve, la que se desplaza es la portada y no la página de
   // debajo (ver .landing-open en index.css). Al empezar a fundirse, la página
@@ -101,14 +123,13 @@ export default function LandingScreen({ onEnter }: { onEnter: () => void }) {
     setTimeout(onEnter, EXIT_MS);
   }
 
-  function showHow() {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    howRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-  }
-
   return (
-    <div className={cx(styles.root, exiting && styles.exiting)}>
-      <section className={styles.hero}>
+    <div className={cx(styles.root, exiting && styles.exiting)} data-landing>
+      <div className={styles.backdrop} aria-hidden="true">
+        <span className={styles.blob1} /><span className={styles.blob2} /><span className={styles.blob3} />
+      </div>
+
+      <header className={styles.nav}>
         <div className={styles.langs} role="group" aria-label={t.landingLanguage}>
           {LANGS.map(l => (
             <button key={l} type="button" className={styles.lang} onClick={() => chooseLang(l)} aria-pressed={lang === l}>
@@ -116,56 +137,75 @@ export default function LandingScreen({ onEnter }: { onEnter: () => void }) {
             </button>
           ))}
         </div>
+      </header>
 
-        <div className={styles.heroWrap}>
-          <img src="/images/aegis_hor.svg" alt="" className={styles.heroLogo} />
-          <div className={styles.heroContent}>
-            <p className={styles.title}>AEGIS</p>
-            <p className={styles.tagline}>{t.tagline}</p>
-            <p className={styles.headline}>{t.landingHeadline}</p>
-            {/* Ocupa su sitio aunque aún no haya cifra, para que nada se mueva al llegar. */}
-            <p className={cx(styles.counter, total === null && styles.counterPending)}>
-              {live && <span className={styles.liveDot} aria-hidden="true" />}
-              <NumberFlow className={styles.counterValue} value={total ?? 0} locales={t.locale} />
-              {' '}{t.landingLiveUnit}{live && ` · ${t.signalsLive}`}
-            </p>
-            <button className={styles.cta} onClick={enter}>{t.landingExplore}</button>
-          </div>
+      <section className={styles.hero}>
+        <FloatingSignals lang={lang} />
+        <div className={styles.lockup}>
+          <AegisMark className={styles.lockupMark} blink />
+          <span className={styles.lockupName}>AEGIS</span>
         </div>
-
-        <div className={styles.footer}>
-          <button type="button" className={styles.howLink} onClick={showHow}>
-            {t.landingHowLink} <span aria-hidden="true" className={styles.howArrow}>↓</span>
-          </button>
-          {/* No usa BuiltOnMidnight: el fondo de la portada es siempre oscuro y
-              aquí el texto y el logo no deben cambiar con el tema (ver .builtOn). */}
-          <div className={styles.builtOn}>
-            <span className={styles.builtOnText}>Built on</span>
-            <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" className={styles.builtOnLogo} />
-          </div>
+        {/* Ocupa su sitio aunque aún no haya cifra, para que nada se mueva al llegar. */}
+        <p className={cx(styles.pill, total === null && styles.pending)}>
+          <span className={cx(styles.dot, !live && styles.dotIdle)} aria-hidden="true" />
+          <NumberFlow className={styles.pillValue} value={total ?? 0} locales={t.locale} />
+          {' '}{t.landingLiveUnit}{live && ` · ${t.signalsLive}`}
+        </p>
+        <h1 className={styles.headline}>
+          <span className={styles.line1}>{line1}</span>{' '}
+          <span className={styles.line2}>{line2}</span>
+        </h1>
+        <p className={styles.sub}>{t.landingSub}</p>
+        <button className={styles.cta} onClick={enter}>
+          {t.landingExplore} <span aria-hidden="true" className={styles.ctaArrow}>→</span>
+        </button>
+        <div className={styles.art}>
+          <FlowCardArt lang={lang} />
         </div>
       </section>
 
-      <section ref={howRef} className={styles.how} aria-labelledby="landing-how">
+      <section className={styles.stats}>
+        <div className={styles.stat}>
+          <span className={styles.statValue}><NumberFlow value={total ?? 0} locales={t.locale} /></span>
+          <span className={styles.statLabel}>{t.landingStatSignals}</span>
+        </div>
+        <div className={styles.stat}>
+          <span className={styles.statValue}>6</span>
+          <span className={styles.statLabel}>{t.landingStatCategories}</span>
+        </div>
+        <div className={styles.stat}>
+          <span className={cx(styles.statValue, styles.statZero)}>0</span>
+          <span className={styles.statLabel}>{t.landingStatExposed}</span>
+        </div>
+      </section>
+
+      <section className={styles.how} aria-labelledby="landing-how">
         <h2 id="landing-how" className={styles.howTitle}>{t.landingHowLink}</h2>
         <ol className={styles.steps}>
           {t.landingSteps.map((step, i) => (
             <li key={step.title} className={styles.step}>
-              <div className={styles.art} aria-hidden="true">
-                {i === 0 && <TicketArt lang={lang} />}
-                {i === 1 && <TicketArt lang={lang} redacted />}
-                {i === 2 && <AggregateArt lang={lang} />}
+              <div className={styles.stepArt} aria-hidden="true">
+                {i === 0 && <TicketCard lang={lang} mode="sealed" />}
+                {i === 1 && <TicketCard lang={lang} mode="redacted" />}
+                {i === 2 && <MarketCard lang={lang} />}
               </div>
-              <div className={styles.stepBody}>
-                <span className={styles.stepNumber}>0{i + 1}</span>
-                <h3 className={styles.stepTitle}>{step.title}</h3>
-                <p className={styles.stepText}>{step.text}</p>
-              </div>
+              <span className={styles.stepNumber}>0{i + 1}</span>
+              <h3 className={styles.stepTitle}>{step.title}</h3>
+              <p className={styles.stepText}>{step.text}</p>
             </li>
           ))}
         </ol>
-        <button className={styles.cta} onClick={enter}>{t.landingExplore}</button>
       </section>
+
+      <footer className={styles.footer}>
+        <button className={styles.cta} onClick={enter}>
+          {t.landingExplore} <span aria-hidden="true" className={styles.ctaArrow}>→</span>
+        </button>
+        <div className={styles.builtOn}>
+          <span>Built on</span>
+          <img src="/images/midnight/logo-horizontal-white.png" alt="Midnight Network" className={styles.builtOnLogo} />
+        </div>
+      </footer>
     </div>
   );
 }

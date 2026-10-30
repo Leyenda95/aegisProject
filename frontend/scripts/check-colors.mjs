@@ -16,7 +16,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(ROOT, 'src');
 
 // Archivos fuera de la comprobación (se reescribirá más adelante).
-const IGNORADOS = new Set(['src/components/LandingScreen.module.css']);
+const IGNORADOS = new Set([]);
 
 // Excepciones puntuales (archivo + literal exacto). Cada una debe llevar su motivo.
 const PERMITIDOS = [];

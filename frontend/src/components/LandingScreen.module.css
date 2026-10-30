@@ -1,619 +1,614 @@
-/* Portada (LandingScreen). Es oscura con cualquier tema, así que sus colores
-   van fijos y no con las variables del tema, y su escala de letra va aparte
-   de la de la interfaz (ver index.css). */
+/* Portada. Sus colores son fijos (claros con cualquier tema) y salen de
+   [data-landing] en index.css; aquí solo hay composición y movimiento.
+   Movimiento: una sola curva (--ease) y tres ideas que se repiten: aparecer
+   desde borroso (lo privado se enfoca), derivar despacio y latir lo que está
+   en directo. Todo es lento y pequeño, así que se ve igual con
+   prefers-reduced-motion. */
+
 .root {
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
   position: fixed;
   inset: 0;
   z-index: 50;
   overflow-x: hidden;
   overflow-y: auto;
-  /* Al llegar al final no se desplaza la página de debajo. */
   overscroll-behavior: contain;
-  /* Barra de desplazamiento oscura, como el fondo. */
-  color-scheme: dark;
-  color: #ffffff;
-  background: #0A0A0A;
+  background: var(--l-bg);
+  color: var(--l-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
 }
 
 .root.exiting {
-  animation: screenOut 0.7s ease forwards;
+  animation: screenOut 0.65s ease forwards;
   pointer-events: none;
 }
 
-@keyframes screenOut {
-  to { opacity: 0; }
+@keyframes screenOut { to { opacity: 0; filter: blur(8px); } }
+
+@keyframes blurIn {
+  from { opacity: 0; filter: blur(14px); transform: translateY(12px); }
+  to { opacity: 1; filter: blur(0); transform: none; }
 }
 
-@keyframes contentIn {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ---------- Fondo: manchas de luz que derivan ---------- */
+
+.backdrop {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 130vh;
+  overflow: hidden;
+  pointer-events: none;
 }
+
+.blob1, .blob2, .blob3 {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  animation: drift 26s ease-in-out infinite alternate;
+}
+.blob1 { width: 55vw; height: 45vw; left: -12vw; top: -18vw; background: var(--l-blob1); }
+.blob2 { width: 45vw; height: 40vw; right: -10vw; top: -8vw; background: var(--l-blob2); animation-duration: 32s; animation-direction: alternate-reverse; }
+.blob3 { width: 40vw; height: 34vw; left: 30vw; top: 38vh; background: var(--l-blob3); animation-duration: 38s; }
+
+@keyframes drift {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(4vw, 3vh) scale(1.08); }
+  100% { transform: translate(-3vw, 5vh) scale(0.96); }
+}
+
+/* ---------- Barra superior ---------- */
+
+.nav {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 22px clamp(20px, 4vw, 40px);
+}
+
+
+.langs {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--l-line);
+  border-radius: 10px;
+  background: var(--l-pill-bg);
+  backdrop-filter: blur(10px);
+}
+
+.lang {
+  padding: 5px 10px;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--l-ink-faint);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  transition: color 0.2s, background 0.2s;
+}
+.lang[aria-pressed="true"] { background: var(--l-line); color: var(--l-ink); }
 
 /* ---------- Primera pantalla ---------- */
 
 .hero {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  min-height: 100dvh;
-  overflow: hidden;
-  background: radial-gradient(ellipse at 50% 45%, #0e1825 0%, #0A0A0A 65%);
-}
-
-/* Idioma, arriba a la derecha. */
-.langs {
-  position: absolute;
-  top: max(20px, env(safe-area-inset-top, 0px));
-  right: max(24px, env(safe-area-inset-right, 0px));
   z-index: 1;
   display: flex;
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 8px;
-  animation: contentIn 1s ease 0.6s both;
-}
-
-.lang {
-  padding: 4px 10px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 1px;
-  color: rgba(245, 242, 235, 0.55);
-  background: transparent;
-  border-radius: 6px;
-}
-
-.lang[aria-pressed="true"] {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* Logo enorme y translúcido con el texto encima. */
-.heroWrap {
-  position: relative;
-  bottom: 5vh;
-  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  animation: contentIn 1s ease 0.2s both;
+  padding: clamp(16px, 4vh, 56px) 20px 0;
+  text-align: center;
 }
 
-.heroLogo {
-  width: 107vw;
-  object-fit: contain;
-  opacity: 0.3;
-}
-
-.heroContent {
-  position: absolute;
-  bottom: 25%;
+/* La marca: logo y nombre, juntos, encima de la píldora. */
+.lockup {
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-family: var(--font-display);
+  gap: 14px;
+  margin-bottom: 24px;
+  color: var(--l-ring);
+  animation: blurIn 0.9s var(--ease) both;
 }
-
-.title {
-  margin-bottom: 50px;
+.lockupMark { width: 84px; }
+.lockupName {
+  padding-left: 0.34em;
   font-family: var(--font-display);
-  font-size: 65px;
-  font-weight: 500;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 0.34em;
   line-height: 1;
-  letter-spacing: 20px;
-  color: #ffffff;
 }
 
-.tagline {
-  margin-bottom: 20px;
-  font-size: 21px;
-  font-weight: 500;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #ffffff;
-}
-
-/* Qué es Aegis, en una frase. */
-.headline {
-  max-width: 640px;
-  font-size: 20px;
-  line-height: 1.35;
-  text-align: center;
-  text-wrap: balance;
-  color: #ffffff;
-}
-
-/* Cuántas señales hay ya en Midnight, en directo. Texto seguido, para que en
-   móvil parta en dos líneas iguales. */
-.counter {
-  margin: 18px 0 30px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  letter-spacing: 0.3px;
-  text-align: center;
-  text-wrap: balance;
-  color: rgba(245, 242, 235, 0.7);
-}
-
-.counterPending {
-  visibility: hidden;
-}
-
-.counterValue {
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  color: #ffffff;
-}
-
-.liveDot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-right: 8px;
-  vertical-align: middle;
-  border-radius: 50%;
-  background: #64d1a9;
-  animation: livePulse 2.4s ease-in-out infinite;
-}
-
-@keyframes livePulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
-}
-
-.cta {
-  padding: 14px 48px;
-  font-size: 16px;
-  font-weight: 500;
-  letter-spacing: 1px;
-  color: #fff;
-  background: linear-gradient(135deg, rgba(69,109,146,0.25) 0%, rgba(42,80,120,0.15) 100%);
-  border: 1px solid rgba(69, 109, 146, 0.8);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
-  animation: ctaPulse 3s ease-in-out infinite;
-}
-
-.cta:hover {
-  background: linear-gradient(135deg, rgba(69,109,146,0.5) 0%, rgba(42,80,120,0.35) 100%);
-  border-color: #6a9bb8;
-  box-shadow: 0 0 24px rgba(69, 109, 146, 0.6), 0 0 60px rgba(69, 109, 146, 0.2);
-  animation: none;
-}
-
-@keyframes ctaPulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(69, 109, 146, 0.3), 0 0 20px rgba(69,109,146,0.1); }
-  50%       { box-shadow: 0 0 20px rgba(69, 109, 146, 0.55), 0 0 45px rgba(69, 109, 146, 0.2); }
-}
-
-/* Abajo: "Cómo funciona" y Built on Midnight. */
-.footer {
-  position: absolute;
-  bottom: 32px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  animation: contentIn 1s ease 0.6s both;
-}
-
-.howLink {
+.pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  font-size: 11px;
+  padding: 7px 14px 7px 12px;
+  border: 1px solid var(--l-line);
+  border-radius: 999px;
+  background: var(--l-pill-bg);
+  backdrop-filter: blur(10px);
+  color: var(--l-ink-soft);
+  font-size: 13px;
+  animation: blurIn 0.9s var(--ease) both;
+}
+.pending { visibility: hidden; }
+.pillValue { color: var(--l-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--l-live);
+  animation: live 2.4s ease-out infinite;
+}
+.dotIdle { animation: none; opacity: 0.5; }
+
+@keyframes live {
+  0% { box-shadow: 0 0 0 0 var(--l-live); }
+  70%, 100% { box-shadow: 0 0 0 7px transparent; }
+}
+
+.headline {
+  margin-top: 24px;
+  font-family: var(--font-display);
+  font-size: clamp(40px, 6.6vw, 84px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+}
+
+.line1, .line2 { display: block; }
+.line1 { animation: blurIn 1s var(--ease) 0.1s both; }
+
+/* La segunda frase es la de la privacidad: llega más tarde y desde más
+   borrosa, como algo que se revela solo en parte. */
+.line2 {
+  padding-bottom: 0.08em;
+  background: var(--l-line2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: blurIn 1.6s var(--ease) 0.45s both;
+}
+
+.sub {
+  max-width: 44ch;
+  margin-top: 20px;
+  text-wrap: balance;
+  color: var(--l-ink-soft);
+  font-size: clamp(16px, 1.5vw, 19px);
+  line-height: 1.5;
+  animation: blurIn 1s var(--ease) 0.7s both;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 30px;
+  padding: 14px 24px;
+  border-radius: 12px;
+  background: var(--l-cta-bg);
+  color: var(--l-cta-ink);
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: var(--l-cta-glow);
+  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
+  animation: blurIn 1s var(--ease) 0.85s both;
+}
+.cta:hover:not(:disabled) { opacity: 1; transform: translateY(-2px); }
+.ctaArrow { transition: transform 0.25s var(--ease); }
+.cta:hover .ctaArrow { transform: translateX(3px); }
+
+.art {
+  width: 100%;
+  margin-top: clamp(28px, 5vh, 56px);
+  animation: blurIn 1.6s var(--ease) 1s both;
+}
+
+/* ---------- Señales flotando alrededor del titular ---------- */
+
+.floaters {
+  position: absolute;
+  /* Debajo de la marca (.lockup), que baja el resto del texto. */
+  inset: 152px 0 auto 0;
+  height: min(560px, 70vh);
+  max-width: 1280px;
+  margin: 0 auto;
+  pointer-events: none;
+}
+
+/* Cada una: aparece desde borrosa, sube y baja despacio a su ritmo y, por
+   turnos, se enciende como si acabara de llegar. --z aleja: más pequeña,
+   más tenue y más borrosa. */
+
+.floater {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 13px;
+  border: 1px solid var(--l-signal-line);
+  border-radius: 12px;
+  background: var(--l-pill-bg);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--l-float-shadow);
+  color: var(--l-ink);
+  font-size: 13px;
   font-weight: 500;
-  letter-spacing: 1.5px;
+  white-space: nowrap;
+  scale: calc(1 - var(--z) * 0.18);
+  opacity: calc(1 - var(--z) * 0.35);
+  filter: blur(calc(var(--z) * 1.6px));
+  animation:
+    floatIn 1.4s var(--ease) calc(1.1s + var(--i) * 0.15s) both,
+    bob calc(4.5s + var(--i) * 0.7s) ease-in-out calc(var(--i) * -1.3s) infinite alternate,
+    lit 12s ease-in-out calc(3s + var(--i) * 2s) infinite;
+}
+
+.floaterDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--l-accent);
+  box-shadow: 0 0 10px var(--l-accent);
+}
+
+@keyframes floatIn {
+  from { opacity: 0; filter: blur(12px); translate: 0 14px; }
+}
+
+@keyframes bob {
+  from { transform: translate(-5px, -14px); }
+  to { transform: translate(5px, 14px); }
+}
+
+/* Se enciende un momento: borde y halo del acento, y vuelve. */
+@keyframes lit {
+  0%, 8%, 100% { border-color: var(--l-signal-line); box-shadow: var(--l-float-shadow); }
+  3% { border-color: var(--l-accent); box-shadow: 0 0 0 4px var(--l-accent-wash), var(--l-float-shadow); }
+}
+
+/* ---------- Tarjetas de la app (primera pantalla y pasos) ---------- */
+
+.stage {
+  --loop: 9s;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px minmax(0, 1fr);
+  align-items: center;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 26px;
+  border: 1px solid var(--l-stage-line);
+  border-radius: 28px;
+  background: var(--l-stage-bg);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--l-shadow);
+}
+
+.card {
+  --loop: 9s;
+  width: 100%;
+  padding: 16px 18px;
+  border: 1px solid var(--l-inner-line);
+  border-radius: 16px;
+  background: var(--l-inner);
+  color: var(--l-ink);
+  text-align: left;
+  font-size: 13px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.tag, .liveTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(245, 242, 235, 0.7);
-  background: transparent;
-  transition: color 0.2s;
+}
+.tag { background: var(--l-accent-wash); color: var(--l-accent-ink); }
+.liveTag { color: var(--l-ink-soft); }
+.liveTag .dot { width: 6px; height: 6px; }
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--l-line);
+  color: var(--l-ink-soft);
+  font-variant-numeric: tabular-nums;
 }
 
-.howLink:hover:not(:disabled) {
-  color: #ffffff;
-  opacity: 1;
+.keepRow {
+  margin-top: 12px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--l-accent-wash);
+  box-shadow: inset 0 0 0 1px var(--l-accent-line);
+  color: var(--l-accent-ink);
+  font-weight: 600;
 }
 
-.howArrow {
-  display: inline-block;
-  animation: nudge 2.2s ease-in-out infinite;
+/* Quieto, ya publicado: todo difuminado menos lo que se comparte. */
+.redacted .row { filter: blur(4px); opacity: 0.5; }
+
+/* En bucle: las filas se difuminan una a una, se enciende lo compartido... */
+.animated .row {
+  animation: rowBlur var(--loop) var(--ease) infinite;
+  animation-delay: calc(var(--r) * 0.18s);
+}
+.animated .keepRow { animation: keep var(--loop) var(--ease) infinite; }
+
+@keyframes rowBlur {
+  0%, 10% { filter: blur(0); opacity: 1; }
+  22%, 84% { filter: blur(5px); opacity: 0.45; }
+  96%, 100% { filter: blur(0); opacity: 1; }
 }
 
-@keyframes nudge {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(3px); }
+@keyframes keep {
+  0%, 18% { opacity: 0.35; transform: scale(0.98); }
+  26%, 88% { opacity: 1; transform: none; }
+  100% { opacity: 0.35; transform: scale(0.98); }
 }
 
-.builtOn {
+/* ...viaja por el cable... */
+.wire {
+  position: relative;
+  height: 1px;
+  margin: 0 10px;
+  background: var(--l-line);
+}
+
+.travel {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--l-accent);
+  box-shadow: 0 0 14px var(--l-accent);
+  transform: translate(-50%, -50%);
+  animation: travel var(--loop) var(--ease) infinite;
+}
+
+@keyframes travel {
+  0%, 30% { left: 0; opacity: 0; }
+  34% { opacity: 1; }
+  50% { left: 100%; opacity: 1; }
+  54%, 100% { left: 100%; opacity: 0; }
+}
+
+/* ...y sube la barra de su categoría. */
+.barRow {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  color: var(--l-ink-soft);
+}
+
+.track {
+  height: 7px;
+  border-radius: 99px;
+  background: var(--l-track);
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--l-bar);
+  transform-origin: left;
+}
+.fillBump { background: var(--l-accent); }
+
+.plus {
+  color: var(--l-accent);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.animated .fillBump { animation: bump var(--loop) var(--ease) infinite; }
+.animated .plus { animation: plusIn var(--loop) var(--ease) infinite; }
+
+@keyframes bump {
+  0%, 52% { transform: scaleX(0.93); }
+  60%, 92% { transform: none; }
+  100% { transform: scaleX(0.93); }
+}
+
+@keyframes plusIn {
+  0%, 52% { opacity: 0; transform: translateY(4px); }
+  58%, 88% { opacity: 1; transform: none; }
+  96%, 100% { opacity: 0; }
+}
+
+/* ---------- Cifras ---------- */
+
+.stats {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 1080px;
+  margin: clamp(48px, 9vh, 96px) auto 0;
+  border-top: 1px solid var(--l-line);
+  border-bottom: 1px solid var(--l-line);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 28px;
+  text-align: center;
+  animation: blurIn linear both;
+  animation-timeline: view();
+  animation-range: entry 10% entry 90%;
+}
+.stat + .stat { border-left: 1px solid var(--l-line); }
+
+/* Caja de 1em con la cifra centrada: NumberFlow es más alto por dentro (deja
+   sitio a los dígitos que ruedan) y así las tres cifras quedan a la misma altura. */
+.statValue {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 25px;
-  padding: 18px 0 8px;
-  text-align: center;
+  height: 1em;
+  font-family: var(--font-display);
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
 }
-
-/* Color fijo, no var(--ink-dim): esa cambia con el tema y en modo claro
-   quedaba anaranjada contra este fondo, que es siempre oscuro. */
-.builtOnText {
-  font-size: 11px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: rgba(245, 242, 235, 0.7);
+.statZero {
+  background: var(--l-line2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
-
-/* Sin la clase global midnight-logo, que lo invierte en modo claro: aquí
-   tiene que seguir en blanco pase lo que pase con el tema. */
-.builtOnLogo {
-  height: 28px;
-  opacity: 0.85;
-}
+.statLabel { color: var(--l-ink-soft); font-size: 14px; }
 
 /* ---------- Cómo funciona ---------- */
 
 .how {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 56px;
-  padding-block: 96px 120px;
-  padding-left: max(24px, env(safe-area-inset-left, 0px));
-  padding-right: max(24px, env(safe-area-inset-right, 0px));
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  max-width: 1080px;
+  margin: clamp(90px, 16vh, 160px) auto 0;
+  padding: 0 20px;
 }
 
 .howTitle {
   font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
+  font-size: clamp(32px, 4.2vw, 52px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
   text-align: center;
-  color: #ffffff;
+  animation: blurIn linear both;
+  animation-timeline: view();
+  animation-range: entry 10% entry 90%;
 }
 
 .steps {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
-  width: 100%;
-  max-width: 1080px;
+  gap: 18px;
+  margin-top: 48px;
   list-style: none;
 }
 
 .step {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
+  padding: 14px 14px 26px;
+  border: 1px solid var(--l-card-line);
+  border-radius: 24px;
+  background: var(--l-card);
+  animation: blurIn linear both;
+  animation-timeline: view();
+  animation-range: entry 10% entry 90%;
 }
 
-/* Cada paso entra al llegar a él, donde el navegador lo sabe hacer solo. */
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    .step {
-      animation: stepIn linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 70%;
-    }
-  }
-}
-
-@keyframes stepIn {
-  from { opacity: 0; transform: translateY(32px); }
-  to { opacity: 1; transform: none; }
-}
-
-.art {
+.stepArt {
   display: grid;
   place-items: center;
-  height: 240px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 14px;
+  height: 230px;
+  margin-bottom: 22px;
+  padding: 0 22px;
+  border-radius: 16px;
+  background: var(--l-art-bg);
 }
-
-.stepBody {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
+.stepArt .card { max-width: 280px; }
 
 .stepNumber {
+  display: block;
+  padding: 0 12px;
+  color: var(--l-accent);
   font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 1.5px;
-  color: #6a9bb8;
 }
 
 .stepTitle {
+  margin: 8px 0;
+  padding: 0 12px;
   font-family: var(--font-display);
   font-size: 20px;
-  font-weight: 500;
-  line-height: 1.3;
-  text-wrap: balance;
-  color: #ffffff;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .stepText {
-  max-width: 42ch;
-  font-size: 15px;
-  line-height: 1.6;
-  color: rgba(245, 242, 235, 0.7);
-}
-
-/* El ticket de las ilustraciones: el mismo papel que el de la caja
-   (ReceiptTicket), en pequeño. */
-.paper {
-  position: relative;
-  width: 240px;
-  padding: 16px 16px 18px;
-  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
-  font-size: 11px;
-  line-height: 1.6;
-  color: #1c1c1c;
-  background: #fdfaf3;
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
-}
-
-/* Bordes dentados de papel de caja, arriba y abajo. */
-.paper::before,
-.paper::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 8px;
-  background:
-    linear-gradient(45deg, transparent 33.333%, #fdfaf3 33.333% 66.667%, transparent 66.667%),
-    linear-gradient(-45deg, transparent 33.333%, #fdfaf3 33.333% 66.667%, transparent 66.667%);
-  background-size: 11px 16px;
-}
-
-.paper::before { top: -8px; }
-.paper::after { bottom: -8px; transform: scaleY(-1); }
-
-.paperSealed { transform: rotate(-2deg); }
-.paperRedacted { transform: rotate(1.5deg); }
-
-.paperLines {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-/* Lo que no se publica, difuminado como en el móvil. */
-.paperRedacted .paperLines {
-  filter: blur(2.5px);
-  opacity: 0.35;
-}
-
-.paperRow {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.paperItem {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.paperTotal {
-  margin-top: 6px;
-  padding-top: 6px;
-  font-weight: 700;
-  border-top: 1px dashed #9a9084;
-}
-
-.seal {
-  margin-top: 12px;
-  padding: 8px 6px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  text-align: center;
-  background: #f4ecdc;
-  border: 1px dashed #9a9084;
-}
-
-/* Lo único que se publica: nítido y con el realce bronce de la app. */
-.keep {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 12px;
-}
-
-.keepLine {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 5px 8px;
-  background: rgba(176, 129, 63, 0.12);
-  border-radius: 6px;
-  box-shadow: inset 0 0 0 1.5px #926A45;
-}
-
-.midTag {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-align: center;
-  color: #926A45;
-}
-
-/* El agregado: las barras por categoría del mercado, como en modo oscuro. */
-.bars {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  max-width: 290px;
   padding: 0 12px;
-  list-style: none;
+  color: var(--l-ink-soft);
+  font-size: 15px;
+  line-height: 1.55;
 }
 
-.barRow {
-  display: grid;
-  grid-template-columns: 88px minmax(0, 1fr) 40px;
+/* ---------- Final ---------- */
+
+.footer {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  color: #ECE7DE;
+  gap: 48px;
+  padding: clamp(80px, 14vh, 140px) 20px 48px;
 }
 
-.barTrack {
-  display: block;
-  height: 8px;
-}
-
-/* Crece desde la izquierda, con el extremo de la derecha redondeado. */
-.bar {
-  display: block;
-  height: 100%;
-  background: #B0813F;
-  border-radius: 0 4px 4px 0;
-}
-
-.barValue {
-  position: relative;
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  color: #ffffff;
-}
-
-.bump {
-  position: absolute;
-  top: -13px;
-  right: 0;
+.builtOn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--l-ink-faint);
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 600;
-  line-height: 1;
-  color: #B0813F;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
+.builtOnLogo { height: 22px; filter: var(--l-logo-filter); }
 
-@media (prefers-reduced-motion: reduce) {
-  .cta,
-  .liveDot,
-  .howArrow { animation: none; }
-}
+/* ---------- Tamaños ---------- */
 
-/* Tablet (680px - 1080px) */
-@media (max-width: 1080px) {
-  .title {
-    margin-bottom: 40px;
-    font-size: 52px;
-    letter-spacing: 14px;
-  }
-
-  .tagline { font-size: 17px; }
-  .headline { max-width: 520px; font-size: 17px; }
-}
-
-/* Pasos uno debajo de otro, con el dibujo al lado. */
-@media (max-width: 899px) {
-  .steps {
+@media (max-width: 760px) {
+  .stage {
     grid-template-columns: minmax(0, 1fr);
-    gap: 40px;
-    max-width: 680px;
+    gap: 14px;
+    padding: 14px;
   }
-
-  .step {
-    display: grid;
-    grid-template-columns: 300px minmax(0, 1fr);
-    align-items: center;
-    gap: 32px;
-  }
+  .wire { width: 1px; height: 34px; margin: 0 auto; }
+  .travel { animation-name: travelDown; }
+  .stats { grid-template-columns: 1fr; }
+  .stat + .stat { border-left: none; border-top: 1px solid var(--l-line); }
+  .steps { grid-template-columns: minmax(0, 1fr); }
+  .floaters { display: none; }
 }
 
-/* Mobile (< 680px) */
-@media (max-width: 680px) {
-  .hero { justify-content: flex-start; }
-
-  .langs {
-    top: max(16px, env(safe-area-inset-top, 0px));
-    right: max(16px, env(safe-area-inset-right, 0px));
-  }
-
-  .heroWrap {
-    flex-direction: column;
-    /* flex-start + padding-top en vez de center: con center sobraba hueco
-       arriba (el conjunto logo+texto no llena la pantalla, así que quedaba
-       centrado más abajo de lo que se ve bien). */
-    justify-content: flex-start;
-    align-items: center;
-    width: 100%;
-    bottom: 0;
-    padding: 20vh 28px 0;
-    gap: 8px;
-  }
-
-  .heroLogo { width: 120vw; }
-
-  .heroContent {
-    position: relative;
-    bottom: auto;
-    width: 100%;
-    text-align: center;
-  }
-
-  .title {
-    position: relative;
-    z-index: 1;
-    margin-bottom: 0;
-    font-size: 26px;
-    letter-spacing: 6px;
-    transform: translateY(-27vw) translateX(3vw);
-  }
-
-  .tagline {
-    margin-bottom: 8px;
-    font-size: 14px;
-    letter-spacing: 2px;
-  }
-
-  .headline { font-size: 15px; }
-
-  .counter {
-    margin: 14px 0 24px;
-    font-size: 12px;
-  }
-
-  .cta {
-    padding: 12px 40px;
-    font-size: 14px;
-  }
-
-  /* En la columna, abajo del todo sin pisar lo de encima en pantallas bajas. */
-  .footer {
-    position: static;
-    margin-top: auto;
-    padding: 40px 0 20px;
-  }
-
-  .how {
-    gap: 40px;
-    padding-block: 72px 88px;
-  }
-
-  .howTitle { font-size: 26px; }
-
-  .step {
-    display: flex;
-    align-items: stretch;
-    gap: 20px;
-  }
-
-  .art { height: 220px; }
-  .stepTitle { font-size: 18px; }
+@keyframes travelDown {
+  0%, 30% { left: 50%; top: 0; opacity: 0; }
+  34% { opacity: 1; }
+  50% { left: 50%; top: 100%; opacity: 1; }
+  54%, 100% { left: 50%; top: 100%; opacity: 0; }
 }

@@ -5,6 +5,7 @@ import { cx } from '../cx.ts';
 import { usePreferences } from './PreferencesProvider.tsx';
 import { useWallet } from './WalletProvider.tsx';
 import { useChain } from './ChainProvider.tsx';
+import AegisMark from '../components/AegisMark.tsx';
 import styles from './Header.module.css';
 
 export default function Header() {
@@ -22,12 +23,7 @@ export default function Header() {
           bajo el logo solo en móvil (ver .brandGroup en Header.module.css) */}
       <div className={styles.brandGroup}>
         <Link to="/" className={styles.brand} aria-label={t.homeLink}>
-          <img className={styles.logo} src="/images/Aegis_logo_original.png" alt="Aegis" />
-          {/* Móvil: wordmark con "AEGIS" integrado en vez de marca + <h1>
-              por separado, una variante por tema (ver .logo/.logoMobileWordmark
-              en el media query de móvil). */}
-          <img className={styles.logoMobileWordmarkLight} src="/images/AEGIS_logo_movil_black.png" alt="Aegis" />
-          <img className={styles.logoMobileWordmarkDark} src="/images/AEGIS_logo_movil_white.png" alt="Aegis" />
+          <AegisMark className={styles.logo} title="Aegis" />
           <div className={styles.brandText}>
             <h1 className={styles.brandName}>AEGIS</h1>
             <p className={styles.brandTagline}>{t.tagline}</p>

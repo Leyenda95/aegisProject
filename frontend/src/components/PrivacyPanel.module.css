@@ -74,7 +74,7 @@
 }
 
 .switch[aria-checked="true"] {
-  background: var(--accent-fill);
+  background: var(--accent-mark);
 }
 
 .knob {

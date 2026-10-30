@@ -77,7 +77,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent-fill);
+  background: var(--accent-mark);
 }
 
 .optionBody {

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "check:colors": "node scripts/check-colors.mjs",
-    "build": "node scripts/check-colors.mjs && vite build",
+    "icons": "node scripts/make-icons.mjs",
+    "build": "node scripts/check-colors.mjs && node scripts/check-contrast.mjs && vite build",
     "preview": "vite preview",
     "screens": "playwright test",
     "screens:update": "playwright test --update-snapshots"
