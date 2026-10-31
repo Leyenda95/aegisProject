@@ -50,12 +50,13 @@
      del actual): un gris claro que no compite con él. */
   --chart-context: #C4CCD5;
 
-  /* Papel del ticket impreso: igual en los dos temas, como un papel real. */
-  --paper: #fdfaf3;
-  --paper-ink: #1c1c1c;
-  --paper-dim: #6b6459;
-  --paper-rule: #9a9084;
-  --paper-wash: #f4ecdc;
+  /* Papel del ticket impreso: igual en los dos temas, como un papel real.
+     Blanco frío con la tinta del logo y un lavado pizarra, como la portada. */
+  --paper: #FAFBFC;
+  --paper-ink: #182531;
+  --paper-dim: #5E6B79;
+  --paper-rule: #9AA6B3;
+  --paper-wash: #EAEFF5;
   /* Margen blanco del QR: los lectores lo necesitan blanco puro. */
   --qr-ground: #ffffff;
 
@@ -85,8 +86,8 @@
   --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
   --shadow-accent: 0 8px 22px rgba(67, 90, 118, 0.16);
-  /* El ticket de papel, con una sombra cálida y suave. */
-  --shadow-paper: 0 10px 30px rgba(42, 37, 32, 0.18);
+  /* El ticket de papel, con una sombra suave del tono de la tinta. */
+  --shadow-paper: 0 10px 30px rgba(24, 37, 49, 0.16);
 
   /* Velos oscuros: detrás de los modales, y casi negro detrás de la cámara. */
   --scrim: rgba(0, 0, 0, 0.8);

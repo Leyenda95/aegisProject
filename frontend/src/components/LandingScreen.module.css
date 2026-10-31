@@ -451,6 +451,11 @@
 
 /* ---------- Cifras ---------- */
 
+/* Las que aparecen al hacer scroll (cifras, título y pasos de "Cómo
+   funciona") van con propiedades sueltas y no con el atajo `animation`: al
+   minificar, Lightning CSS mete `view()` dentro del atajo, el navegador lo
+   descarta y en producción no había animación. */
+
 .stats {
   position: relative;
   display: grid;
@@ -468,7 +473,9 @@
   gap: 8px;
   padding: 32px 28px;
   text-align: center;
-  animation: blurIn linear both;
+  animation-name: blurIn;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
   animation-timeline: view();
   animation-range: entry 10% entry 90%;
 }
@@ -510,7 +517,9 @@
   font-weight: 600;
   letter-spacing: -0.04em;
   text-align: center;
-  animation: blurIn linear both;
+  animation-name: blurIn;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
   animation-timeline: view();
   animation-range: entry 10% entry 90%;
 }
@@ -528,7 +537,9 @@
   border: 1px solid var(--l-card-line);
   border-radius: 24px;
   background: var(--l-card);
-  animation: blurIn linear both;
+  animation-name: blurIn;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
   animation-timeline: view();
   animation-range: entry 10% entry 90%;
 }

@@ -15,8 +15,9 @@ export default function PhoneNudge({ lang }: { lang: Lang }) {
   const [top, setTop] = useState<number | null>(null);
 
   // A la altura del centro de la tarjeta, sin contar el rebote con el que
-  // llega (empieza 10 px más arriba): se le quita su desplazamiento. Se
-  // vuelve a medir si se desplaza la pantalla del móvil o cambia la ventana.
+  // llega (empieza 10 px más arriba): se le quita su desplazamiento. Se mide
+  // al llegar y si cambia la ventana; al desplazar la pantalla del móvil se
+  // queda quieto, no persigue a la tarjeta.
   useLayoutEffect(() => {
     const card = document.querySelector<HTMLElement>('[data-phone-ticket]');
     function measure() {
@@ -27,12 +28,8 @@ export default function PhoneNudge({ lang }: { lang: Lang }) {
       setTop(a.top + a.height / 2 - shift - col.getBoundingClientRect().top);
     }
     measure();
-    document.addEventListener('scroll', measure, true);
     window.addEventListener('resize', measure);
-    return () => {
-      document.removeEventListener('scroll', measure, true);
-      window.removeEventListener('resize', measure);
-    };
+    return () => window.removeEventListener('resize', measure);
   }, []);
 
   return (

@@ -20,17 +20,18 @@ const DAY_MS = 86_400_000;
 // Compras de ejemplo, para que la app no esté vacía la primera vez: tiendas
 // inventadas y marcadas como ejemplo en la lista. `signaled` marca las que
 // ya se publicaron como señal, para que se vean las dos situaciones.
-const EXAMPLES = [
-  { store: 'Mercado del Sol', daysAgo: 2, cents: 14230, subcategory: 'groceries', signaled: true },
-  { store: 'TecnoPunto', daysAgo: 4, cents: 8900, subcategory: 'mobile', signaled: false },
-  { store: 'Moda Norte', daysAgo: 6, cents: 4500, subcategory: 'tops', signaled: true },
-  { store: 'Súper Ahorro', daysAgo: 8, cents: 8950, subcategory: 'groceries', signaled: false },
-  { store: 'Deportes Cima', daysAgo: 11, cents: 8900, subcategory: 'footwear', signaled: true },
-  { store: 'Casa Lumen', daysAgo: 13, cents: 9500, subcategory: 'decor', signaled: false },
-  { store: 'Sonido Plus', daysAgo: 15, cents: 14900, subcategory: 'audio', signaled: true },
-  { store: 'Vaqueros & Co.', daysAgo: 18, cents: 3599, subcategory: 'bottoms', signaled: false },
-  { store: 'Arcade Center', daysAgo: 20, cents: 5900, subcategory: 'gaming', signaled: false },
-  { store: 'Trattoria Roma', daysAgo: 22, cents: 4850, subcategory: 'restaurant', signaled: false },
+// El nombre de la tienda cambia con el idioma.
+const EXAMPLES: { store: Record<Lang, string>; daysAgo: number; cents: number; subcategory: string; signaled: boolean }[] = [
+  { store: { es: 'Mercado del Sol', en: 'Sunny Market' }, daysAgo: 2, cents: 14230, subcategory: 'groceries', signaled: true },
+  { store: { es: 'TecnoPunto', en: 'TechCorner' }, daysAgo: 4, cents: 8900, subcategory: 'mobile', signaled: false },
+  { store: { es: 'Moda Norte', en: 'Northside Apparel' }, daysAgo: 6, cents: 4500, subcategory: 'tops', signaled: true },
+  { store: { es: 'Súper Ahorro', en: 'ValueMart' }, daysAgo: 8, cents: 8950, subcategory: 'groceries', signaled: false },
+  { store: { es: 'Deportes Cima', en: 'Summit Sports' }, daysAgo: 11, cents: 8900, subcategory: 'footwear', signaled: true },
+  { store: { es: 'Casa Lumen', en: 'Lumen Home' }, daysAgo: 13, cents: 9500, subcategory: 'decor', signaled: false },
+  { store: { es: 'Sonido Plus', en: 'SoundHouse' }, daysAgo: 15, cents: 14900, subcategory: 'audio', signaled: true },
+  { store: { es: 'Vaqueros & Co.', en: 'Denim & Co.' }, daysAgo: 18, cents: 3599, subcategory: 'bottoms', signaled: false },
+  { store: { es: 'Arcade Center', en: 'Arcade Center' }, daysAgo: 20, cents: 5900, subcategory: 'gaming', signaled: false },
+  { store: { es: 'Trattoria Roma', en: 'Trattoria Roma' }, daysAgo: 22, cents: 4850, subcategory: 'restaurant', signaled: false },
 ];
 
 /** Total del recibo en céntimos: el desglose por producto si viene, si no las líneas selladas. */
@@ -105,7 +106,7 @@ export default function UserPhone({
   const next = pending[0]?.receipt;
   const today = new Date();
   today.setHours(12, 0, 0, 0);
-  const examples: Purchase[] = EXAMPLES.map((p, i) => ({ ...p, key: `example-${i}`, date: new Date(today.getTime() - p.daysAgo * DAY_MS) }));
+  const examples: Purchase[] = EXAMPLES.map((p, i) => ({ ...p, store: p.store[lang], key: `example-${i}`, date: new Date(today.getTime() - p.daysAgo * DAY_MS) }));
   const mine = entries.filter(e => e.publishedAt).map(purchaseFromEntry);
   const all = [...entries.map(purchaseFromEntry), ...examples];
   const totalCents = all.reduce((s, p) => s + p.cents, 0);
