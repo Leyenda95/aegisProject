@@ -1,6 +1,5 @@
-/* Ver RingTexture.tsx: las láminas centradas en un punto (el que fija
-   quien la usa). Cada una suma un velo claro sobre las de detrás y proyecta
-   su sombra, con un filo de luz arriba: relieve, no líneas. */
+/* Ver LockTexture.tsx: el candado centrado en un punto (el que fija quien
+   la usa), con un velo claro, su sombra y un filo de luz: relieve, no líneas. */
 .root {
   position: absolute;
   width: 0;
@@ -12,6 +11,7 @@
   position: absolute;
   left: 0;
   top: 0;
+  width: 240px;
   transform: translate(-50%, -50%);
   overflow: visible;
   filter: drop-shadow(0 14px 22px var(--ring-shadow-a)) drop-shadow(0 2px 4px var(--ring-shadow-b));

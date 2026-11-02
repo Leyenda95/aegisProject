@@ -66,7 +66,7 @@ export default function DemoPage({ scene }: { scene: DemoScene }) {
     if (flow.sealedNonce) setGoToContributeSignal(n => n + 1);
   }, [flow.sealedNonce]);
 
-  // En el último paso del tour ya salen las pestañas: desde ahí se sigue por libre.
+  // En el último paso del tour ya salen las pestañas y la línea de progreso: desde ahí se sigue por libre.
   const tourDone = tour !== null && tour.index === tour.total;
 
   function showTab(next: Tab) {
@@ -102,7 +102,7 @@ export default function DemoPage({ scene }: { scene: DemoScene }) {
         <main className={cx(styles.main, !market && styles.mainDemo, tour && styles.tourMain)}>
           {market && <MarketView lang={lang} />}
           <div hidden={market}>
-            {!tour && <DemoProgress lang={lang} flow={flow} onViewMarket={() => navigate('/market')} />}
+            {(!tour || tourDone) && <DemoProgress lang={lang} flow={flow} onViewMarket={() => navigate('/market')} />}
             <div className={styles.split} data-tab={side}>
               <div className={styles.storeCol}>
                 <StoreView

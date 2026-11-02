@@ -39,15 +39,15 @@
   animation: fade 0.3s ease-out both;
 }
 
-/* El ojo es más ancho que alto (24 x 14 en su rejilla): a 34px su altura
-   visible coincide con la de las dos líneas de texto. */
+/* El ojo es más ancho que alto (24 x 14 en su rejilla): a 26px queda
+   discreto junto a las dos líneas de texto. */
 .seal {
   position: relative;
   display: grid;
   place-items: center;
   color: var(--accent-strong);
-  font-size: 34px;
-  --verified-stroke: 1.6;
+  font-size: 26px;
+  --verified-stroke: 1.8;
 }
 
 /* Al cerrarse el visto, una onda con la forma del ojo sale una vez y se
@@ -88,13 +88,6 @@
   letter-spacing: 0.01em;
   color: var(--ink-dim);
   animation: rise 0.35s ease-out 0.55s both;
-}
-
-/* El símbolo de Midnight, del tamaño de las mayúsculas y en el azul tinta. */
-.midnight {
-  flex-shrink: 0;
-  font-size: 12px;
-  color: var(--accent-strong);
 }
 
 @keyframes fade {

@@ -34,7 +34,7 @@ export const storyEs: StoryCopy = {
     },
     disclaimer: {
       title: 'Antes de empezar',
-      body: 'Esto es una **demo** sobre **Preprod**, la red de pruebas de Midnight. La tienda y los productos son inventados y las señales no tienen valor real. Lo que sí es real: cada paso es una **transacción de verdad**, con una **prueba de conocimiento cero** que cualquiera puede verificar.',
+      body: 'Esto es una **demo** sobre **Preprod**, la red de pruebas de Midnight. La tienda y los productos son inventados y las señales no tienen valor real. Lo que sí es real: cada paso es una **transacción de verdad**, con una prueba de conocimiento cero que cualquiera puede verificar.',
     },
     problem: {
       title: 'Tus compras tienen dueño, y no eres tú',
@@ -42,7 +42,7 @@ export const storyEs: StoryCopy = {
     },
     idea: {
       title: 'Una compra, una señal anónima',
-      body: '*Aegis* convierte cada compra en una **señal anónima**: solo se revela lo que el cliente decide. Sumadas, las señales dibujan el mercado; por separado, no dicen nada de nadie.',
+      body: '*Aegis* convierte cada compra en una **señal anónima**: solo se revela lo que el cliente decide. Sumadas, las señales **dibujan el mercado**; por separado, no dicen nada de nadie.',
     },
     players: {
       title: 'Quién participa',

@@ -30,9 +30,23 @@ export type ConnectedAPI = {
 // lo haya pedido). Todo lo demás (InternalError, Disconnected, InvalidRequest,
 // o incluso un error que no siga el shape de la spec, como un "request failed"
 // suelto) se trata como transitorio.
-function isDeliberateWalletRejection(e: any): boolean {
+export function isDeliberateWalletRejection(e: any): boolean {
   return e?.code === 'PermissionRejected' || e?.code === 'Rejected';
 }
+
+/**
+ * La wallet dio la sesión por terminada: el código Disconnected de la spec,
+ * o solo el texto ("Not connected to wallet", "shutdown"...), según la
+ * wallet. No se reintenta: hay que volver a conectar.
+ */
+export function isWalletDisconnected(e: any): boolean {
+  if (e?.code === 'Disconnected') return true;
+  const msg = String(e?.message ?? e?.reason ?? '');
+  return /not connected|disconnected|shutdown|can no longer be used/i.test(msg);
+}
+
+/** Avisa a WalletProvider de que la wallet cortó la sesión a mitad de una acción. */
+export const walletEvents = new EventTarget();
 
 /**
  * La extensión corre su propio service worker (Manifest V3) y, si lleva un
@@ -51,6 +65,10 @@ async function withWalletUnavailableRetry<T>(fn: () => Promise<T>, maxAttempts =
     try {
       return await fn();
     } catch (e: any) {
+      if (isWalletDisconnected(e)) {
+        walletEvents.dispatchEvent(new Event('disconnected'));
+        throw e;
+      }
       if (isDeliberateWalletRejection(e) || attempt === maxAttempts) throw e;
       console.warn(`Wallet call failed (attempt ${attempt}/${maxAttempts}), retrying`, e);
       await new Promise(resolve => setTimeout(resolve, 300 * attempt));
@@ -161,6 +179,7 @@ const LIKELY_UNCONFIRMED_ASSERTS = [
 
 /** Antepone una explicación en lenguaje llano cuando el error es uno de los asserts típicos de "aún no confirmado". */
 export function explainTxError(e: unknown, lang: Lang): string {
+  if (isWalletDisconnected(e)) return T[lang].walletConnectionLost;
   const msg = (e as any)?.message ?? String(e);
   if (LIKELY_UNCONFIRMED_ASSERTS.some((s) => msg.includes(s))) {
     return T[lang].txMaybeUnconfirmed(msg);

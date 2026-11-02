@@ -126,37 +126,12 @@ The browser never talks to Blockfrost: its token stays in the backend, and the f
 5. The contract marks the receipt as used and adds the units to the public counters.
 6. The agent reads the counters and writes each store's report.
 
-### What is public and what is private
-
-| Public on Midnight | Private (only on the customer's phone, or never leaves the proof) |
-|---|---|
-| A registered store sealed a receipt (not which store) | The full receipt: products, prices, card, etc |
-| The receipt commitment | The receipt nonce and timestamp |
-| Each signal's subcategories and units | Which store the receipt came from |
-| The counters | Who the customer is, and which signal is theirs |
-| The registered stores' public keys in the store tree (not who owns each) | The store and admin secret keys |
-
-This is not total unlinkability: the sealing transaction is public and has a block time, and publishing a signal reveals the receipt's commitment, so a signal can be matched to the sealing of the same receipt, though not to a person or a store. Moving sealed receipts into their own tree with nullifiers (see [What's next](#whats-next)) would remove that link. Also, whichever backend proves a transaction sees the receipt while it does: the store side always, the customer side unless the signal is proved on a local proof server.
-
-### Backend routes
-
-| Route | Purpose |
-|---|---|
-| `GET /state` | Public counters, decoded with the contract's own `ledger()` |
-| `GET /events` | Server-Sent Events: a snapshot, then each contract transaction as it lands |
-| `GET /history?range=7d` | Signals over a period next to the previous one, for the market charts |
-| `GET /insights` | The AI agent's report for a period, from aggregate counters only |
-| `POST /register-store`, `POST /attest-receipt` | Build and prove the store-side transactions |
-| `POST /build-tx/signal`, `GET /contract-states` | Prove `submitPurchase` on the backend, or give the browser the public state to prove it locally |
-| `POST /sponsor-signal`, `GET /sponsor-status` | Forward a proven `submitPurchase` to the sponsor bot, and tell whether sponsorship is available |
-| `POST /campaigns`, `GET /match/:id` | Campaigns (not in the store screen yet) |
-| `GET/POST /contract-address`, `GET /build-tx/deploy`, `POST /build-tx/seed`, `GET /store-registered` | Deploy and demo setup (`/setup`) |
-
 ### Notes on the flow
 
 - **Reading state.** `GET /state` is public ledger data. The backend reads it from the Preprod indexer (served by Blockfrost) and decodes it with the contract's `ledger()` function. No proof, no key, no privileged access. What the backend has read is kept on disk (`.history-<network>.json`), so a restart only fetches the transactions it hasn't seen.
 - **Market.** The market counts every signal, like the on-chain counters. A period that includes the demo data load says so and isn't compared with the previous one.
 - **Insights.** The AI agent returns trending categories and recommendations over 1W, 1M, 3M and 1Y windows. The counters are the same ones the market shows for that period, and the previous period is only passed along when the two can be compared. The model only ever sees aggregate numbers, never individual signals or user data.
+- **Privacy limits.** A signal reveals its receipt's commitment, so it can be matched to that receipt's sealing, though not to a person or a store. Whoever generates a proof sees the receipt while doing it, unless the signal is proved on a local proof server.
 - **Campaigns.** They are ready in the backend but not in the store screen yet, which shows them as coming soon: `POST /campaigns` registers one and `GET /match/:id` checks its threshold against the live aggregate, again using the AI agent to explain the result.
 
 ## Stack

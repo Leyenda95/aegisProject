@@ -8,7 +8,7 @@ import { STACK, STACK_GROUPS } from './ids.ts';
 import type { TourId } from './tour.ts';
 import Art from './art/Art.tsx';
 import CoverArt from './art/CoverArt.tsx';
-import RingTexture from './art/RingTexture.tsx';
+import LockTexture from './art/LockTexture.tsx';
 import Icon from './Icon.tsx';
 import Rich from './Rich.tsx';
 import styles from './Slide.module.css';
@@ -118,7 +118,7 @@ function Contrast({ copy }: { copy: SlideCopy }) {
       <div className={styles.columns}>
         {copy.columns?.map((column, i) => (
           <div key={column.title} className={cx(styles.side, i === 1 && styles.sideDark)}>
-            {i === 1 && <RingTexture className={styles.sideRings} />}
+            {i === 1 && <LockTexture className={styles.sideRings} />}
             <span className={styles.sideBadge}><Icon id={i === 0 ? 'eye' : 'lock'} /></span>
             <h3 className={styles.sideTitle}>{column.title}</h3>
             <ul className={styles.sideList}>

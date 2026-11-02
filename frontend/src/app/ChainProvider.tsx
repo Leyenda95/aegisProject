@@ -41,6 +41,8 @@ type Chain = {
   setContractAddress: (address: string) => void;
   storeRegistered: boolean;
   setStoreRegistered: (registered: boolean) => void;
+  /** El backend ya contestó si la tienda está registrada (hasta entonces, storeRegistered es false sin saberlo). */
+  storeChecked: boolean;
   /** El backend paga las transacciones (patrocinio): sellar y publicar no necesitan wallet. */
   sponsored: boolean;
   /** Contadores públicos del contrato; null hasta la primera respuesta. */
@@ -64,6 +66,7 @@ export function ChainProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [contractAddress, setContractAddress] = useState<string | null>(CONTRACT_ADDRESS);
   const [storeRegistered, setStoreRegistered] = useState(false);
+  const [storeChecked, setStoreChecked] = useState(false);
   const [live, setLive] = useState(false);
   const [recent, setRecent] = useState<Change[]>([]);
 
@@ -77,7 +80,10 @@ export function ChainProvider({ children }: { children: ReactNode }) {
         if (address !== undefined) setContractAddress(address);
       }).catch(() => {});
     }
-    checkStoreRegistered().then(registered => { if (registered) setStoreRegistered(true); }).catch(() => {});
+    checkStoreRegistered().then(registered => {
+      if (registered) setStoreRegistered(true);
+      setStoreChecked(true);
+    }).catch(() => {});
   }, []);
 
   // El patrocinio puede ir y venir (el bot se reinicia o tarda en tener la
@@ -136,7 +142,7 @@ export function ChainProvider({ children }: { children: ReactNode }) {
   return (
     <ChainContext value={{
       contractAddress, setContractAddress,
-      storeRegistered, setStoreRegistered,
+      storeRegistered, setStoreRegistered, storeChecked,
       sponsored: sponsor.data ?? false,
       state: aggregate.data ?? null,
       live,

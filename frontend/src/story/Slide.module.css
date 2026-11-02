@@ -370,8 +370,8 @@
   box-shadow: 0 14px 32px var(--slide-dark-shadow);
 }
 
-/* Textura de lo privado: el aro de Aegis en contornos concéntricos desde
-   la esquina de abajo a la derecha (ver RingTexture). */
+/* Textura de lo privado: un candado grande en
+   la esquina de abajo a la derecha (ver LockTexture). */
 .sideRings { right: 40px; bottom: 30px; z-index: -1; }
 
 .sideBadge {

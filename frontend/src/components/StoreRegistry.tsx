@@ -4,7 +4,6 @@ import { cx } from '../cx.ts';
 import { T } from '../i18n.ts';
 import { checkStoreRegistered } from '../lace.ts';
 import { useReportFlow } from '../routes/demoFlow.ts';
-import Icon from '../story/Icon.tsx';
 import { useTourFocus } from '../story/tourFocus.ts';
 import styles from './StoreRegistry.module.css';
 import VerifiedMark from './VerifiedMark.tsx';
@@ -51,7 +50,6 @@ export default function StoreRegistry({ lang }: { lang: Lang }) {
           <span className={styles.verifiedText}>
             <strong className={styles.verifiedTitle}>{label}</strong>
             <span className={styles.verifiedMeta}>
-              <Icon id="midnight" className={styles.midnight} />
               {t.registryVerified}
             </span>
           </span>

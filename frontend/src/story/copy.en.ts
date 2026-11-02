@@ -34,15 +34,15 @@ export const storyEn: StoryCopy = {
     },
     disclaimer: {
       title: 'Before we start',
-      body: 'This is a **demo** on **Preprod**, the Midnight test network. The store and the products are made up and the signals have no real value. What is real: every step is an **actual transaction**, with a **zero-knowledge proof** anyone can verify.',
+      body: 'This is a **demo** on **Preprod**, the Midnight test network. The store and the products are made up and the signals have no real value. What is real: every step is an **actual transaction**, with a zero-knowledge proof anyone can verify.',
     },
     problem: {
       title: 'Your purchases have an owner, and it is not you',
-      body: 'Every purchase, every loyalty card, every click: data brokers and big platforms gather it into a **profile about you** and sell it to whoever pays. **You neither see it nor decide it.** Meanwhile, small shops compete blind.',
+      body: 'Every purchase, every loyalty card, every click: data brokers and big platforms build **profiles about you** and sell them to the highest bidder. The ones buying them are not small shops, which **compete blind**.',
     },
     idea: {
       title: 'One purchase, one anonymous signal',
-      body: '*Aegis* turns every purchase into an **anonymous signal**: only what the customer decides is revealed. Added together, signals draw the market; on their own, they say nothing about anyone.',
+      body: '*Aegis* turns every purchase into an **anonymous signal**: only what the customer decides is revealed. Added together, signals **draw the market**; on their own, they say nothing about anyone.',
     },
     players: {
       title: 'Who takes part',
@@ -74,7 +74,7 @@ export const storyEn: StoryCopy = {
           title: 'Public on Midnight',
           items: [
             'That a registered store sealed a receipt, not which one',
-            'The receipt commitment: a hash that cannot be undone',
+            'The receipt commitment',
             'The information from each receipt that the customer decides to publish',
             'The counters for each category',
           ],
@@ -82,10 +82,10 @@ export const storyEn: StoryCopy = {
         {
           title: 'Only on your phone',
           items: [
-            'The full receipt: products, prices and amount',
+            'The full receipt: products, amount, card, etc.',
             'The store where you bought',
-            'Who you are',
-            'That the signal is yours',
+            'Your shopping profile',
+            'Ownership of your data',
           ],
         },
       ],

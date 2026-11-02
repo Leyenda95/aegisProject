@@ -4,14 +4,16 @@
 }
 
 /* Parpadeo: el arco baja hacia el centro del ojo y vuelve, rápido, una vez
-   cada pocos segundos. */
+   cada 5 s. El parpadeo en sí dura lo mismo (unos 0,4 s): si cambia el
+   periodo, hay que recalcular los porcentajes. El retraso negativo arranca
+   el ciclo ya avanzado: el primer parpadeo llega a los 1,5 s, no a los 6. */
 .blink {
   transform-box: fill-box;
   transform-origin: 50% 100%;
-  animation: blink 7s cubic-bezier(0.4, 0, 0.2, 1) 2.5s infinite;
+  animation: blink 5s cubic-bezier(0.4, 0, 0.2, 1) -3s infinite;
 }
 
 @keyframes blink {
-  0%, 94%, 100% { transform: none; }
-  96% { transform: translateY(55%) scaleY(0.35); }
+  0%, 91.6%, 100% { transform: none; }
+  94.4% { transform: translateY(55%) scaleY(0.35); }
 }

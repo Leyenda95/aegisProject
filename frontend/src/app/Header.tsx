@@ -12,14 +12,18 @@ import styles from './Header.module.css';
 export default function Header() {
   const { t, theme, toggleTheme, lang, chooseLang } = usePreferences();
   const { wallet, address, choices, connecting, slow, error, connect } = useWallet();
-  const { sponsored, contractAddress, storeRegistered, state } = useChain();
+  const { sponsored, contractAddress, storeRegistered, storeChecked, state } = useChain();
   const { pathname } = useLocation();
   // En el paso de la wallet del tour, el botón de conectar es lo resaltado.
   // En los demás no se apaga: la cabecera sigue a mano durante todo el tour.
   const walletFocus = useRouteTourFocus('wallet') === 'selected' ? 'selected' : undefined;
   // Algo del alta de la demo sin hacer (en la práctica, solo en local con un
   // contrato propio): con la wallet conectada, enlace a /setup.
-  const setupPending = !contractAddress || !storeRegistered || Number(state?.isSeeded ?? 0) === 0;
+  // Solo cuando ya se sabe: mientras llegan el registro y los contadores, no
+  // se enseña (si no, aparece un momento al cargar y desaparece).
+  const setupPending = !contractAddress
+    || (storeChecked && !storeRegistered)
+    || (state !== null && Number(state.isSeeded ?? 0) === 0);
 
   return (
     <header className={styles.header}>
