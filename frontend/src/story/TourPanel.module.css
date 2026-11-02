@@ -187,16 +187,21 @@
     width: auto;
     max-height: min(62vh, 560px);
     box-shadow: var(--shadow-md);
-    /* Translúcida: la demo se intuye detrás. */
-    background: color-mix(in srgb, var(--surface) 72%, transparent);
-    -webkit-backdrop-filter: blur(18px) saturate(1.4);
-    backdrop-filter: blur(18px) saturate(1.4);
+    /* Sin fondo propio: la franja de arriba deja ver la demo, el resto es sólido. */
+    background: transparent;
   }
 
-  .top { background: transparent; }
+  /* La franja, con su color a media opacidad y la demo desenfocada detrás. */
+  .top {
+    background: color-mix(in srgb, var(--ground) 50%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
 
-  /* Desplegada solo quedan "Explorar por libre" y "Ver menos". */
-  .links { display: none; }
+  .body, .bottom { background: var(--surface); }
+
+  /* Desplegada solo quedan "Explorar por libre" y "Ver menos", juntos a la derecha. */
+  .links { display: none; margin-left: auto; }
   .open .links { display: flex; }
   .wideOnly { display: none; }
 
@@ -222,6 +227,9 @@
   .open .art { display: block; max-width: 280px; margin-inline: auto; }
   .open .text { display: grid; margin-top: 10px; }
   .open .text p { display: block; white-space: normal; }
+  /* El "Te toca" solo se ve desplegada. */
+  .todo { display: none; }
+  .open .todo { display: grid; }
   .todo { margin-top: 8px; }
 }
 
