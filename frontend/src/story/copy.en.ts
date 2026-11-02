@@ -42,7 +42,7 @@ export const storyEn: StoryCopy = {
     },
     idea: {
       title: 'One purchase, one anonymous signal',
-      body: '*Aegis* turns every purchase into an **anonymous signal**: only what the customer decides is revealed. Added together, signals **draw the market**; on their own, they say nothing about anyone.',
+      body: '*Aegis* turns every purchase into an **anonymous signal**: only what the customer decides is revealed. Added together, signals **draw the market**. On their own, they say nothing about anyone.',
     },
     players: {
       title: 'Who takes part',
@@ -114,7 +114,7 @@ export const storyEn: StoryCopy = {
         'The store sealed your receipt without saying which one it is',
         'You took the receipt to your phone with a QR',
         'You chose what to share and a ZK proof published the signal',
-        'Your signal added to the public figures; the agent only read the whole',
+        'Your signal added to the public figures, and the agent only read the whole',
       ],
     },
     beyond: {
@@ -135,7 +135,7 @@ export const storyEn: StoryCopy = {
   stack: {
     compact: { title: 'Compact', text: 'The contract language: the circuits that prove each step and the public counters.' },
     proofServer: { title: 'Proof server', text: 'Generates the zero-knowledge proofs, at *Aegis* or on your own machine.' },
-    disclosure: { title: 'Selective disclosure', text: 'Each customer decides which part of their purchase becomes public; the rest stays on their phone.' },
+    disclosure: { title: 'Selective disclosure', text: 'Each customer decides which part of their purchase becomes public. The rest stays on their phone.' },
     indexer: { title: 'Indexer', text: 'Reads the public contract state and follows every transaction live.' },
     dust: { title: 'Sponsored fees', text: 'The resource that pays the fees. Here *Aegis* can pay them for you.' },
     midnightJs: { title: 'Midnight.js', text: 'The SDK used to build, prove and send the transactions.' },
@@ -157,58 +157,58 @@ export const storyEn: StoryCopy = {
 
   tour: {
     wallet: {
-      title: 'Connect your wallet',
-      body: 'By default, *Aegis* sponsors every transaction, so you can carry on without connecting anything. But if you prefer an experience that is more your own, connect your wallet and sign each step yourself.\n\nOn a computer, use the **Lace** or **1AM** extension. Whichever you choose, you can then start interacting with the private market of *Aegis*.',
+      title: 'Connect your wallet (optional)',
+      body: 'You are about to follow a purchase from a store\'s till all the way to the public market, and every step will be a **real transaction** on Midnight.\n\nYou can sign them yourself with **Lace** or **1AM** on a computer, or carry on without connecting anything: *Aegis* pays the fees for you.',
     },
     ribbon: {
       title: 'The market figures',
-      body: 'At the top are the market\'s **public figures**: how many signals there are in total and in each category. They live on Midnight and anyone can read and check them.\n\nThey come from what consumers themselves chose to share. Look at the total: in a moment it will include yours.',
+      body: 'These are the market\'s **public figures**. They live on Midnight and anyone can read and check them.\n\nThere are no names or receipts behind them, only what each customer chose to share. Look at the total: by the end of the journey, your purchase will add one more.',
     },
     registry: {
-      title: 'A registered store',
-      body: 'Only registered stores can seal receipts; otherwise anyone could make up purchases. Each store applies to join, and whoever manages the registry reviews the request before accepting it. Once accepted, the store\'s **public key** goes into a **Merkle tree** inside the contract.\n\nThe registry lives on-chain, so anyone can check it.',
+      title: 'A registry you can trust',
+      body: 'If anyone could seal receipts, anyone could make up purchases and fake the market. That is why stores sign up, and their **public key** goes into a **Merkle tree**, a compact list kept in the contract.\n\nThat way, every small shop knows the figures it reads come from real purchases.',
       todo: 'Press "Check the store registry"',
     },
     addToCart: {
       title: 'Add something to the basket',
-      body: 'Each product has a **category** and a **subcategory**, for example Fashion › Shoes. They are what draws the market, without anyone knowing who bought.',
+      body: 'It all starts as usual: someone buys something. Each product carries a **category** and a **subcategory**, for example Fashion › Shoes.\n\nThat is the minimum that will reach the market, and it is enough to know what sells. When publishing, the customer can add more, such as their age range or how much they spent, in exchange for offers from the stores.',
       todo: 'Add a product to the basket',
     },
     charge: {
-      title: 'Charge and seal the receipt',
-      body: 'At checkout, the store publishes a **commitment** to the receipt, a fingerprint that reveals nothing of what is inside. With a **ZK proof** it shows it is a registered store **without saying which**.\n\nThe raw receipt never touches the chain. If you have not connected your wallet, you paid no fees: *Aegis* sponsored the transaction in the background so everything flows.',
+      title: 'The store issues the receipt',
+      body: 'At checkout, the store does not put the receipt on-chain. It publishes a **commitment**: a sealed envelope that proves the receipt exists without showing what is inside.\n\nAt the same time, with a **ZK proof**, it shows it is in the registry **without saying which store it is**. Midnight checks it and the envelope is sealed.',
       todo: 'Press "Charge & generate QR"',
     },
     receipt: {
-      title: 'The receipt and its QR',
-      body: 'This is the receipt of the purchase, with products, prices and amount. On Midnight there is only its **commitment**.\n\nThe QR carries the whole receipt inside a link, and no server ever sees it. Now you can take your own phone and scan it to live the real flow, or carry on with the demo here.\n\nLater you will be able to choose which information from this receipt you share.',
+      title: 'The receipt travels with you',
+      body: 'The full receipt is not in any database. It travels inside this **QR**, and no server ever reads it.\n\nScan it with your phone to live the real flow, or carry on here. Either way the receipt is already yours, and later you will choose which information from it you want to share.',
     },
     ticket: {
       title: 'The receipt, on your phone',
-      body: 'This is the *Aegis* app. It keeps the receipts **on your device**: there is no account and no server holding them. The one at the top is the receipt you just created; the rest are earlier purchases.\n\nFrom the receipt you decide whether to publish its signal and what information you share.',
+      body: 'The *Aegis* app keeps receipts **only on your device**, with no account or server behind it. At the top is the one you just received. Below, your earlier purchases.\n\nThe store has already sealed the envelope. Now you decide what to do with it.',
       todo: 'Press "Publish signal" on the new receipt',
     },
     share: {
       title: 'Your data, your decision',
-      body: 'The information about your purchase belongs to you. This is **selective disclosure**: you decide what becomes public and what stays with you. Nothing you publish can be linked back to you.\n\nYou will see a clear summary of your selection. You also choose where the proof is generated: at *Aegis* or on your own machine.',
+      body: 'Today, others decide what is known about your purchases. Here **you** decide, and whatever you do not want to share stays with you.\n\nThis is **selective disclosure**: nobody can build a profile of you behind your back. The more you share, the better the offers you get. Stores will know **what you like**, but never **who you are**.',
       todo: 'Publish the signal',
     },
     publish: {
       title: 'The proof, under way',
-      body: 'A **ZK proof** is generated showing that a registered store sealed your receipt and that it has not been used yet.\n\nMidnight verifies it and marks the receipt to prevent double use. Finally, it adds the units to the market figures.',
+      body: 'What reaches Midnight is not your receipt but a **ZK proof**: a registered store sealed it and nobody has used it yet. Midnight verifies it without seeing anything else.\n\nThen it marks that envelope as used, to prevent double use, and adds your purchase to the market figures.',
       todo: 'Wait for the signal to reach the aggregate',
     },
     market: {
       title: 'Your signal now counts',
-      body: 'In a few seconds, your signal will be part of the **public figures**, and the market will draw itself with it. Here you can compare periods and watch the latest signals live.\n\nAnyone can see that one more signal has arrived. Nobody knows it was you.',
+      body: 'In a few seconds, your signal will be part of the **public figures**, and the market will draw itself with it. Here you can compare periods and watch the latest signals live.\n\nAnyone can see that one more signal has arrived. Nobody knows it was you. And a small shop, somewhere, knows a little better what to sell.',
     },
     report: {
       title: 'A small store, with the vision of a big one',
-      body: 'This is what everything before is for. With a public, real-time market, any store can decide with data instead of blind.\n\nAn **AI agent** reads the market figures and tells each store what is happening: what is rising, what is falling and what to do to sell more. Concrete actions for its business, without any customer having given up their data.\n\nThat way, small shops compete with the big ones and consumers stay the owners of their data.',
+      body: 'This is what everything before is for. An **AI agent** reads the public figures and tells each store what is rising, what is falling and what to do to sell more.\n\nWhat only the big chains could afford before is now within reach of any store. And without any customer giving up their privacy.',
     },
     explore: {
       title: 'Now, on your own',
-      body: 'You have seen the whole journey. The demo is yours: make more purchases, change what you share, try the local proof server or browse the market.\n\nWhenever you want, the recap sums up everything you saw.',
+      body: 'You have followed the whole journey. Now the demo is yours: make more purchases, change what you share, generate the proof on your own machine or watch the market move.\n\nWhenever you want, the recap goes over everything you saw.',
     },
   },
 };

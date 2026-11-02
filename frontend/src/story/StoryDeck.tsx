@@ -88,7 +88,7 @@ function DeckTop({ deck, index }: { deck: DeckId; index: number }) {
         {intro && index > 1 && <Link className={styles.pill} to="/intro/1">{ui.backToStart}</Link>}
       </div>
       <div className={styles.topGroup}>
-        <Link className={styles.pill} to={intro ? '/demo' : '/intro/1'}>{intro ? ui.skipIntro : ui.resetToIntro}</Link>
+        <Link className={styles.pill} to={intro ? '/tour/1' : '/intro/1'}>{intro ? ui.skipIntro : ui.resetToIntro}</Link>
         <a className={`${styles.pill} ${styles.wideOnly}`} href={REPO_URL} target="_blank" rel="noreferrer">{ui.repository}</a>
         <div className={styles.langs} role="group" aria-label={t.landingLanguage}>
           {LANGS.map(l => (

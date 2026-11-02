@@ -187,13 +187,22 @@
     width: auto;
     max-height: min(62vh, 560px);
     box-shadow: var(--shadow-md);
+    /* Translúcida: la demo se intuye detrás. */
+    background: color-mix(in srgb, var(--surface) 72%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    backdrop-filter: blur(18px) saturate(1.4);
   }
 
+  .top { background: transparent; }
+
+  /* Desplegada solo quedan "Explorar por libre" y "Ver menos". */
   .links { display: none; }
   .open .links { display: flex; }
+  .wideOnly { display: none; }
 
   .fold {
     display: block;
+    white-space: nowrap;
     padding: 4px 10px;
     border: 1px solid var(--line);
     border-radius: 999px;
@@ -205,9 +214,14 @@
   }
 
   .body { padding: 12px 14px; }
-  .art, .text { display: none; }
-  .open .art { display: block; max-width: 280px; }
-  .open .text { display: grid; }
+  /* Plegada: el título y la primera línea del texto, cortada con "...", para invitar a desplegar. */
+  .art { display: none; }
+  .text { display: block; margin-top: 4px; }
+  .text p:not(:first-child) { display: none; }
+  .text p:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .open .art { display: block; max-width: 280px; margin-inline: auto; }
+  .open .text { display: grid; margin-top: 10px; }
+  .open .text p { display: block; white-space: normal; }
   .todo { margin-top: 8px; }
 }
 

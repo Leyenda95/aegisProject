@@ -42,7 +42,7 @@ export const storyEs: StoryCopy = {
     },
     idea: {
       title: 'Una compra, una señal anónima',
-      body: '*Aegis* convierte cada compra en una **señal anónima**: solo se revela lo que el cliente decide. Sumadas, las señales **dibujan el mercado**; por separado, no dicen nada de nadie.',
+      body: '*Aegis* convierte cada compra en una **señal anónima**: solo se revela lo que el cliente decide. Sumadas, las señales **dibujan el mercado**. Por separado, no dicen nada de nadie.',
     },
     players: {
       title: 'Quién participa',
@@ -114,7 +114,7 @@ export const storyEs: StoryCopy = {
         'La tienda selló tu recibo sin decir cuál es',
         'Te llevaste el ticket al móvil con un QR',
         'Elegiste qué compartir y una prueba ZK publicó la señal',
-        'Tu señal sumó a las cifras públicas; el agente solo leyó el conjunto',
+        'Tu señal sumó a las cifras públicas, y el agente solo leyó el conjunto',
       ],
     },
     beyond: {
@@ -135,7 +135,7 @@ export const storyEs: StoryCopy = {
   stack: {
     compact: { title: 'Compact', text: 'El lenguaje del contrato: los circuitos que prueban cada paso y los contadores públicos.' },
     proofServer: { title: 'Proof server', text: 'Genera las pruebas de conocimiento cero, en *Aegis* o en tu propio equipo.' },
-    disclosure: { title: 'Divulgación selectiva', text: 'Cada cliente decide qué parte de su compra se hace pública; el resto se queda en su móvil.' },
+    disclosure: { title: 'Revelación selectiva', text: 'Cada cliente decide qué parte de su compra se hace pública. El resto se queda en su móvil.' },
     indexer: { title: 'Indexer', text: 'Lee el estado público del contrato y sigue cada transacción en directo.' },
     dust: { title: 'Comisiones patrocinadas', text: 'El recurso con el que se pagan las comisiones. Aquí puede pagarlas *Aegis* por ti.' },
     midnightJs: { title: 'Midnight.js', text: 'El SDK con el que se construyen, prueban y envían las transacciones.' },
@@ -157,58 +157,58 @@ export const storyEs: StoryCopy = {
 
   tour: {
     wallet: {
-      title: 'Conecta tu wallet',
-      body: 'Por defecto, *Aegis* patrocina todas las transacciones, así que puedes seguir sin conectar nada. Pero si prefieres una experiencia más tuya, conecta tu wallet y firma tú cada paso.\n\nEn el ordenador, usa la extensión de **Lace** o de **1AM**. Elijas lo que elijas, después podrás empezar a interactuar con el mercado privado de *Aegis*.',
+      title: 'Conecta tu wallet (opcional)',
+      body: 'Vas a seguir una compra desde la caja de una tienda hasta el mercado público, y cada paso será una **transacción real** en Midnight.\n\nPuedes firmarlas tú con **Lace** o **1AM** desde el ordenador, o seguir sin conectar nada: *Aegis* paga las comisiones por ti.',
     },
     ribbon: {
       title: 'Las cifras del mercado',
-      body: 'Arriba están las **cifras públicas** del mercado: cuántas señales hay en total y en cada categoría. Viven en Midnight y cualquiera puede leerlas y comprobarlas.\n\nSon fruto de lo que los propios consumidores han decidido compartir. Fíjate en el total: dentro de un momento sumará el tuyo.',
+      body: 'Estas son las **cifras públicas** del mercado. Viven en Midnight y cualquiera puede leerlas y comprobarlas.\n\nDetrás no hay nombres ni recibos, solo lo que cada cliente decidió compartir. Fíjate en el total: al final del recorrido, tu compra sumará una más.',
     },
     registry: {
-      title: 'Una tienda registrada',
-      body: 'Solo las tiendas dadas de alta pueden sellar recibos; si no, cualquiera podría inventarse compras. Cada tienda solicita su alta y quien administra el registro la revisa. Si todo es correcto, su **clave pública** entra en un **árbol de Merkle** dentro del contrato.\n\nEl registro vive en la cadena, así que cualquiera puede comprobarlo.',
+      title: 'Un registro de confianza',
+      body: 'Si cualquiera pudiera sellar recibos, cualquiera podría inventarse compras y falsear el mercado. Por eso las tiendas se dan de alta, y su **clave pública** entra en un **árbol de Merkle**, una lista compacta guardada en el contrato.\n\nAsí, cada pequeño comercio sabe que las cifras que consulta salen de compras de verdad.',
       todo: 'Pulsa «Comprobar el registro de tiendas»',
     },
     addToCart: {
       title: 'Añade algo a la cesta',
-      body: 'Cada producto tiene una **categoría** y una **subcategoría**, por ejemplo Moda › Calzado. Con ellas se dibuja el mercado, sin que nadie sepa quién compró.',
+      body: 'Todo empieza como siempre: alguien compra algo. Cada producto lleva una **categoría** y una **subcategoría**, por ejemplo Moda › Calzado.\n\nEso es lo mínimo que llegará al mercado, y basta para saber qué se vende. Al publicar, el cliente podrá añadir más, como su franja de edad o lo que gastó, a cambio de ofertas de las tiendas.',
       todo: 'Añade un producto a la cesta',
     },
     charge: {
-      title: 'Cobra y sella el recibo',
-      body: 'Al cobrar, la tienda publica un **compromiso** del recibo, una huella que no deja ver nada de lo que hay dentro. Con una **prueba ZK** demuestra que es una tienda registrada **sin decir cuál**.\n\nEl recibo en crudo nunca pisa la cadena. Si no has conectado tu wallet, no has pagado comisiones: *Aegis* patrocinó la transacción en segundo plano para que todo fluya.',
+      title: 'La tienda emite el recibo',
+      body: 'Al cobrar, la tienda no sube el recibo a la cadena. Publica un **compromiso**: un sobre cerrado que prueba que el recibo existe, sin dejar ver lo que hay dentro.\n\nA la vez, con una **prueba ZK**, demuestra que está en el registro **sin decir qué tienda es**. Midnight lo comprueba y el sobre queda sellado.',
       todo: 'Pulsa «Cobrar y generar QR»',
     },
     receipt: {
-      title: 'El recibo y su QR',
-      body: 'Este es el recibo de la compra, con productos, precios e importe. En Midnight solo está su **compromiso**.\n\nEl QR lleva el recibo entero dentro de un enlace, y ningún servidor llega a verlo. Ahora puedes coger tu móvil y escanearlo para vivir el flujo real, o seguir con la demo aquí.\n\nMás adelante podrás elegir qué información de este recibo compartes.',
+      title: 'El recibo viaja contigo',
+      body: 'El recibo completo no está en ninguna base de datos. Viaja dentro de este **QR**, y ningún servidor llega a leerlo.\n\nEscanéalo con tu móvil para vivir el flujo real, o sigue aquí. En los dos casos el recibo ya es tuyo, y más adelante elegirás qué información de él quieres compartir.',
     },
     ticket: {
       title: 'El ticket, en tu móvil',
-      body: 'Esta es la app de *Aegis*. Guarda los tickets **en tu dispositivo**: no hay cuenta ni servidor que los tenga. El de arriba es el recibo que acabas de crear; el resto son compras anteriores.\n\nDesde el ticket decides si publicas su señal y qué información compartes.',
+      body: 'La app de *Aegis* guarda los tickets **solo en tu dispositivo**, sin cuenta ni servidor detrás. Arriba está el que acabas de recibir. Debajo, tus compras anteriores.\n\nLa tienda ya ha sellado el sobre. Ahora decides tú qué hacer con él.',
       todo: 'Pulsa «Publicar señal» en el ticket nuevo',
     },
     share: {
       title: 'Tus datos, tu decisión',
-      body: 'La información de tu compra te pertenece. Esto es la **revelación selectiva**: tú decides qué se hace público y qué se queda contigo. Nada de lo que publiques se podrá enlazar con tu persona.\n\nVerás un resumen claro de tu selección. También eliges dónde se genera la prueba: en *Aegis* o en tu propio equipo.',
+      body: 'Hoy, otros deciden qué se sabe de tus compras. Aquí decides **tú**, y lo que no quieras compartir se queda contigo.\n\nEs la **revelación selectiva**: nadie podrá construir un perfil sobre ti a tus espaldas. Cuanto más compartas, mejores ofertas recibirás. Las tiendas sabrán **qué te gusta**, pero nunca **quién eres**.',
       todo: 'Publica la señal',
     },
     publish: {
       title: 'La prueba, en marcha',
-      body: 'Se genera una **prueba ZK** que demuestra que tu recibo lo selló una tienda registrada y que no se ha usado todavía.\n\nMidnight la verifica y marca el recibo para evitar el doble uso. Por último, suma las unidades a las cifras del mercado.',
+      body: 'A Midnight no llega tu recibo, sino una **prueba ZK**: lo selló una tienda registrada y nadie lo ha usado todavía. Midnight la verifica sin ver nada más.\n\nDespués marca ese sobre como usado, para evitar el doble uso, y suma tu compra a las cifras del mercado.',
       todo: 'Espera a que la señal llegue al agregado',
     },
     market: {
       title: 'Tu señal ya cuenta',
-      body: 'En unos segundos, tu señal formará parte de las **cifras públicas**, y el mercado se dibujará con ella. Aquí puedes comparar por periodos y ver las últimas señales en directo.\n\nCualquiera ve que ha llegado una señal más. Nadie sabe que fuiste tú.',
+      body: 'En unos segundos, tu señal formará parte de las **cifras públicas**, y el mercado se dibujará con ella. Aquí puedes comparar por periodos y ver las últimas señales en directo.\n\nCualquiera ve que ha llegado una señal más. Nadie sabe que fuiste tú. Y una tienda pequeña, en algún sitio, sabe un poco mejor qué vender.',
     },
     report: {
       title: 'Una tienda pequeña, con la visión de una grande',
-      body: 'Para esto existe todo lo anterior. Con un mercado público y en tiempo real, cualquier tienda puede decidir con datos en lugar de a ciegas.\n\nUn **agente de IA** lee las cifras del mercado y le explica a cada tienda qué está pasando: qué sube, qué baja y qué hacer para vender más. Acciones concretas para su negocio, sin que ningún cliente haya cedido sus datos.\n\nAsí, los pequeños comercios compiten con los grandes y los consumidores siguen siendo dueños de sus datos.',
+      body: 'Para esto sirve todo lo anterior. Un **agente de IA** lee las cifras públicas y le explica a cada tienda qué sube, qué baja y qué hacer para vender más.\n\nLo que antes solo podían permitirse las grandes cadenas, ahora está al alcance de cualquier tienda. Y sin que ningún cliente renuncie a su privacidad.',
     },
     explore: {
       title: 'Ahora, por tu cuenta',
-      body: 'Ya has visto el recorrido entero. La demo es tuya: haz más compras, cambia qué compartes, prueba el proof server local o mira el mercado.\n\nCuando quieras, el resumen recoge todo lo que has visto.',
+      body: 'Ya has seguido el recorrido completo. Ahora la demo es tuya: haz más compras, cambia qué compartes, genera la prueba en tu equipo o mira cómo se mueve el mercado.\n\nCuando quieras, el resumen repasa todo lo que has visto.',
     },
   },
 };

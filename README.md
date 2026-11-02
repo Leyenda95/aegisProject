@@ -51,7 +51,7 @@ When you run it yourself, you deploy your own contract instance from the browser
 - A Midnight proof server reachable at `http://127.0.0.1:6300`
 - The Compact CLI (`compact`) installed and on your `PATH`, to compile the contract
 - A Midnight wallet extension (Lace or 1AM) with some Preprod NIGHT/DUST
-- An API key for the AI agent, `ANTHROPIC_API_KEY` (optional), only needed for the market intelligence (insights) endpoints; the purchase/signal flow works without it
+- An API key for the AI agent, `ANTHROPIC_API_KEY` (optional), only needed for the market intelligence (insights) endpoints. The purchase and signal flow works without it
 
 **Steps**
 
@@ -71,7 +71,7 @@ npm run dev                # starts the frontend, open the printed URL
 2. Compile the contract: `cd contract && npm run compact` (generates the ZK keys under `contract/managed/`).
 3. Start the backend against Preprod: `cd backend && npm run start:preprod` (set `ANTHROPIC_API_KEY` in `backend/.env` first if you want insights). No contract is deployed yet at this point, that happens from the browser next.
 4. Start the frontend: `cd frontend && npm run dev`, then open the printed URL.
-5. In the browser, open `/setup` (once your wallet is connected, the header links to it as **Set up demo** while something is missing): **Connect Wallet** (Lace or 1AM, Preprod network) → **Deploy contract** (this deploys a fresh instance and makes your wallet its store admin; the backend remembers it for next time) → **Register demo store** → **Load demo data** (seeds baseline counters so the store insights have something to talk about).
+5. In the browser, open `/setup` (once your wallet is connected, the header links to it as **Set up demo** while something is missing): **Connect Wallet** (Lace or 1AM, Preprod network) → **Deploy contract** (this deploys a fresh instance and makes your wallet its store admin, and the backend remembers it for next time) → **Register demo store** → **Load demo data** (seeds baseline counters so the store insights have something to talk about).
 6. Try the flow: check out a cart at the till, tap **Publish signal** on the new ticket in the phone (the **User** tab on smaller screens), review what will be shared and publish.
 
 **Backend environment variables** (in `backend/.env` or the process environment)
@@ -79,10 +79,10 @@ npm run dev                # starts the frontend, open the printed URL
 | Variable | Needed for |
 |---|---|
 | `MIDNIGHT_NETWORK` | `local`, `preprod` or `preview`. `npm run start:preprod` sets it for Preprod |
-| `BLOCKFROST_PROJECT_ID` | Preprod indexer and RPC (required on Preprod; the token stays in the backend) |
+| `BLOCKFROST_PROJECT_ID` | Preprod indexer and RPC (required on Preprod, and the token stays in the backend) |
 | `ANTHROPIC_API_KEY` | AI agent for the market intelligence (optional) |
 | `PROOF_SERVER_URL` | Use another proof server than the network default (as on Railway) |
-| `SPONSOR_URL`, `SPONSOR_TOKEN` | Sponsored transactions through the aegis-signal-bot (optional; both must be set) |
+| `SPONSOR_URL`, `SPONSOR_TOKEN` | Sponsored transactions through the aegis-signal-bot (optional, and both must be set) |
 
 ### Prove on your own device (optional)
 
@@ -115,7 +115,7 @@ Browser (Vercel) ──► Backend + proof server (Railway) ──► Midnight P
  Wallet (Lace, 1AM)     AI agent (aggregate counters only)
 ```
 
-The browser never talks to Blockfrost: its token stays in the backend, and the frontend reads the public state through `GET /state`. The local proof server is optional; without it the backend's proof server proves the signal. Sponsorship is optional too: without `SPONSOR_URL` and `SPONSOR_TOKEN` the backend returns the proven transaction and the connected wallet pays.
+The browser never talks to Blockfrost: its token stays in the backend, and the frontend reads the public state through `GET /state`. The local proof server is optional. Without it, the backend's proof server proves the signal. Sponsorship is optional too: without `SPONSOR_URL` and `SPONSOR_TOKEN` the backend returns the proven transaction and the connected wallet pays.
 
 ### How a purchase travels
 

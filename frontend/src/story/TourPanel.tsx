@@ -32,7 +32,7 @@ export default function TourPanel({ tour, facts }: { tour: GuidedTour; facts: To
       <header className={styles.top}>
         <span className={styles.eyebrow}>{ui.behindTheScenes}</span>
         <div className={styles.links}>
-          <Link className={styles.pill} to="/intro/1">{ui.resetToIntro}</Link>
+          <Link className={cx(styles.pill, styles.wideOnly)} to="/intro/1">{ui.resetToIntro}</Link>
           <Link className={styles.pill} to="/demo">{ui.switchToFree}</Link>
         </div>
         <button type="button" className={styles.fold} onClick={() => setOpen(o => !o)} aria-expanded={open}>
