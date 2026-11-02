@@ -128,7 +128,8 @@
 
 .overlay {
   position: fixed;
-  inset: 0;
+  /* En el tour, deja a la vista su panel (ver html.tour-open en index.css). */
+  inset: 0 var(--tour-inset-right, 0px) var(--tour-inset-bottom, 0px) 0;
   z-index: 1000;
   background: var(--scrim);
   display: flex;

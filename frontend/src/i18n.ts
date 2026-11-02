@@ -1,4 +1,6 @@
 import type { Lang } from './api.ts';
+import { storyEn } from './story/copy.en.ts';
+import { storyEs } from './story/copy.es.ts';
 
 const en = {
   // Header
@@ -116,6 +118,12 @@ const en = {
 
   // StoreView, point of sale / catalogue
   posTitle: 'Point of sale (demo)',
+  registryCheck: 'Check the store registry',
+  registryChecking: 'Checking on Midnight…',
+  registryOk: 'Registered store',
+  registryVerified: 'Verified on Midnight',
+  registryMissing: 'This store is not in the registry',
+  registryError: 'Could not check the registry',
   posDeployFirst: 'Deploy the contract first.',
   posConnectFirst: 'Sponsored transactions are unavailable right now. Connect a wallet with DUST to seal the receipt.',
   posCatalogHint: 'Add products to the basket. Checkout seals the receipt on-chain and generates the QR for the customer.',
@@ -130,6 +138,7 @@ const en = {
   posCheckout: 'Charge & generate QR',
   posSealing: 'Sealing...',
   posNewSale: 'New sale',
+  posViewTx: 'View the transaction in the explorer',
   posScanHint: 'Receipt sealed. The customer scans this code with their phone camera.',
   sponsorOn: 'DUST sponsored',
   sponsorOff: 'DUST not sponsored',
@@ -146,6 +155,7 @@ const en = {
   // UserView
   userTitle: 'User device',
   userSubtitle: "Publish the signal from a new ticket or scan the store's QR. It's published anonymously: nobody sees who you are or how much you spent.",
+  publishNeedsWallet: 'Connect your wallet to publish the signal',
   userNeedsLace: 'Sponsored transactions are unavailable right now. Connect a wallet with DUST in the header to send signals.',
   sponsorUnavailable: 'Sponsored transactions are unavailable right now. Connect a wallet with DUST to pay the fee yourself.',
   userNeedsDeploy: 'Deploy the contract first, in "Set up demo".',
@@ -231,7 +241,7 @@ const en = {
   phoneStatSignals: 'Signals',
   phoneAnalyticsTitle: 'My spending',
   phoneAnalyticsSub: (n: number) => `Across ${n} ${n === 1 ? 'category' : 'categories'}`,
-  phoneSignalChip: 'Signal sent',
+  phoneSignalChip: 'Signal published',
   profilePrivateSub: 'This data never leaves your phone. Zero-knowledge proof sent to the network.',
   profileStatPurchases: 'Purchases',
   profileStatSpent: 'This month',
@@ -246,7 +256,6 @@ const en = {
   receiptTotal: 'TOTAL',
   receiptSealed: 'SEALED ON MIDNIGHT',
   receiptProof: 'Double spend proof',
-  receiptNote: 'On-chain only categories and subcategories are recorded. You decide what else gets published!',
   receiptScan: 'Scan it with your phone camera',
 
   // Abrir un ticket desde el enlace del QR (/r#...)
@@ -297,6 +306,9 @@ const en = {
   proofCopy: 'Copy',
   proofCopied: 'Copied',
   proofRetry: 'Check again',
+
+  // Recorrido: intro, tour guiado y resumen (ver story/)
+  story: storyEn,
 };
 
 const es: typeof en = {
@@ -407,6 +419,12 @@ const es: typeof en = {
   landingItem2: '1× Botas de cuero',
 
   posTitle: 'Punto de venta (demo)',
+  registryCheck: 'Comprobar el registro de tiendas',
+  registryChecking: 'Comprobando en Midnight…',
+  registryOk: 'Tienda registrada',
+  registryVerified: 'Verificado en Midnight',
+  registryMissing: 'Esta tienda no está en el registro',
+  registryError: 'No se ha podido comprobar el registro',
   posDeployFirst: 'Despliega el contrato primero.',
   posConnectFirst: 'Las transacciones patrocinadas no están disponibles ahora mismo. Conecta una billetera con DUST para sellar el recibo.',
   posCatalogHint: 'Añade productos a la cesta. Al cobrar se sella el recibo on-chain y se genera el QR para el cliente.',
@@ -421,6 +439,7 @@ const es: typeof en = {
   posCheckout: 'Cobrar y generar QR',
   posSealing: 'Sellando...',
   posNewSale: 'Nueva venta',
+  posViewTx: 'Ver la transacción en el explorador',
   posScanHint: 'Recibo sellado. El cliente escanea este código con la cámara de su móvil.',
   sponsorOn: 'DUST patrocinado',
   sponsorOff: 'DUST no patrocinado',
@@ -434,6 +453,7 @@ const es: typeof en = {
 
   userTitle: 'Dispositivo de usuario',
   userSubtitle: 'Publica la señal de un ticket nuevo o escanea el QR de la tienda. Se publica de forma anónima: nadie ve quién eres ni cuánto has gastado.',
+  publishNeedsWallet: 'Conecta tu wallet para publicar la señal',
   userNeedsLace: 'Las transacciones patrocinadas no están disponibles ahora mismo. Conecta una billetera con DUST en el encabezado para enviar señales.',
   sponsorUnavailable: 'Las transacciones patrocinadas no están disponibles ahora mismo. Conecta una billetera con DUST para pagar tú la comisión.',
   userNeedsDeploy: 'Despliega el contrato primero, en «Preparar demo».',
@@ -517,7 +537,7 @@ const es: typeof en = {
   phoneStatSignals: 'Señales',
   phoneAnalyticsTitle: 'Mis gastos',
   phoneAnalyticsSub: (n: number) => `Repartidos en ${n} ${n === 1 ? 'categoría' : 'categorías'}`,
-  phoneSignalChip: 'Señal enviada',
+  phoneSignalChip: 'Señal publicada',
   profilePrivateSub: 'Estos datos nunca salen de tu móvil. Se envía una prueba ZK anónima a la red.',
   profileStatPurchases: 'Compras',
   profileStatSpent: 'Este mes',
@@ -531,7 +551,6 @@ const es: typeof en = {
   receiptTotal: 'TOTAL',
   receiptSealed: 'SELLADO EN MIDNIGHT',
   receiptProof: 'Prueba anti doble gasto',
-  receiptNote: 'On-chain solo se registran las categorías y subcategorías. ¡El resto de información publicada la decides tú!',
   receiptScan: 'Escanéalo con la cámara del móvil',
 
   importOpening: 'Abriendo tu ticket...',
@@ -579,6 +598,8 @@ const es: typeof en = {
   proofCopy: 'Copiar',
   proofCopied: 'Copiado',
   proofRetry: 'Comprobar de nuevo',
+
+  story: storyEs,
 };
 
 export const T: Record<Lang, typeof en> = { en, es };

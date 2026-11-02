@@ -3,6 +3,8 @@ import { Link } from 'react-router';
 import QRCode from 'qrcode';
 import { CATEGORIES, CATEGORY_LABELS, SUBCATEGORY_LABELS, type Category, type Lang } from '../api.ts';
 import { attestReceipt, explainTxError, type ReceiptJSON } from '../lace.ts';
+import { NETWORK_ID } from '../chainConfig.ts';
+import { explorerTxUrl } from '../explorer.ts';
 import { encodeReceiptForQr, receiptLink } from '../receiptCodec.ts';
 import {
   PRODUCTS, SUBCAT_TO_CATEGORY, cartLinesFrom, cartTotalCents, rollupBySubcategory, sealedLines, formatEUR,
@@ -10,6 +12,7 @@ import {
 import ProductImage from './ProductImage.tsx';
 import { preloadProductImages } from '../productImages.ts';
 import ReceiptTicket from './ReceiptTicket.tsx';
+import StoreRegistry from './StoreRegistry.tsx';
 import InsightsReport from './InsightsReport.tsx';
 import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
@@ -19,6 +22,7 @@ import { useWallet } from '../app/WalletProvider.tsx';
 import { useChain } from '../app/ChainProvider.tsx';
 import { useTx } from '../app/TxProvider.tsx';
 import { useReportFlow } from '../routes/demoFlow.ts';
+import { useTourFocus } from '../story/tourFocus.ts';
 import styles from './StoreView.module.css';
 
 // Orden de las pestañas de categoría en el POS de la demo (moda primero).
@@ -41,6 +45,15 @@ export default function StoreView({ lang, onGoToUser }: Props) {
   // Lock global: hay una transacción de otra pestaña/acción esperando confirmación.
   const { confirming: confirmingMsg, setConfirming: setConfirmingMsg } = useTx();
   const [storeToolsOpen, setStoreToolsOpen] = useState(false);
+  // Zonas que resalta o apaga el tour guiado; en su paso, las herramientas se abren solas.
+  const posFocus = useTourFocus('pos');
+  const catalogFocus = useTourFocus('catalog');
+  const basketFocus = useTourFocus('basket');
+  const receiptFocus = useTourFocus('receipt');
+  const toolsFocus = useTourFocus('tools');
+  useEffect(() => {
+    if (toolsFocus === 'selected') setStoreToolsOpen(true);
+  }, [toolsFocus]);
 
   const [browseCat, setBrowseCat] = useState<Category>('fashion');
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -50,6 +63,8 @@ export default function StoreView({ lang, onGoToUser }: Props) {
   const [posQr, setPosQr] = useState<string | null>(null);
   // Si el sellado del último recibo lo pagó el patrocinio (para decirlo junto al QR).
   const [posSponsored, setPosSponsored] = useState(false);
+  // La transacción que selló el último recibo, en el explorador (null si no se conoce su hash o la red no tiene explorador).
+  const [posTxUrl, setPosTxUrl] = useState<string | null>(null);
   const ticketRef = useRef<HTMLDivElement>(null);
   const vault = useVault();
   const reportFlow = useReportFlow();
@@ -86,7 +101,7 @@ export default function StoreView({ lang, onGoToUser }: Props) {
       // No resuelve hasta que attestReceipt está confirmado on-chain (ver
       // pollUntil en lace.ts), así que al volver ya se puede publicar la
       // señal sin el assert de "Receipt not attested by a registered store".
-      const { receipt, sponsored: paidBySponsor } = await attestReceipt(
+      const { receipt, sponsored: paidBySponsor, txHash } = await attestReceipt(
         lace,
         sealed.map(r => ({ subcategory: r.subcategory, qty: r.qty, amount: r.amountCents })),
         lang,
@@ -97,6 +112,7 @@ export default function StoreView({ lang, onGoToUser }: Props) {
         items: cartLines.slice(0, 24).map(l => ({ name: l.product.name[lang], qty: l.qty, unitCents: l.product.priceCents })),
       };
       setPosSponsored(paidBySponsor);
+      setPosTxUrl(explorerTxUrl(NETWORK_ID, txHash));
       setPosQr(await QRCode.toDataURL(receiptLink(await encodeReceiptForQr(receiptForQr)), { margin: 1, width: 260 }));
       setPosReceipt(receiptForQr);
       // En la demo, el cliente es este mismo navegador: el ticket llega a su
@@ -113,6 +129,7 @@ export default function StoreView({ lang, onGoToUser }: Props) {
   function handleResetPos() {
     setPosReceipt(null);
     setPosQr(null);
+    setPosTxUrl(null);
     setPosError(null);
     setCart({});
   }
@@ -142,15 +159,18 @@ export default function StoreView({ lang, onGoToUser }: Props) {
   return (
     <>
       {/* Punto de venta (protagonista): cesta -> recibo sellado -> QR */}
-      <div className={styles.card}>
-        <div className={styles.cardTitle}>{t.posTitle}</div>
+      <div className={styles.card} data-tour={posFocus}>
+        <div className={styles.posHead}>
+          <div className={styles.cardTitle}>{t.posTitle}</div>
+          {contractAddress && <StoreRegistry lang={lang} />}
+        </div>
 
         {!contractAddress ? (
           <p className={styles.notice}>{t.posDeployFirst} <Link to="/setup" className={styles.noticeLink}>{t.setupLink}</Link></p>
         ) : !lace && !sponsored ? (
           <p className={styles.notice}>{t.posConnectFirst}</p>
         ) : posQr && posReceipt ? (
-          <div className={styles.sold}>
+          <div className={styles.sold} data-tour={receiptFocus}>
             <p className={styles.scanHint}>{t.posScanHint}{posSponsored && ` · ${t.feePaidByAegis}`}</p>
             <div ref={ticketRef}>
               <ReceiptTicket
@@ -161,6 +181,11 @@ export default function StoreView({ lang, onGoToUser }: Props) {
                 qr={posQr}
               />
             </div>
+            {posTxUrl && (
+              <a className={styles.txLink} href={posTxUrl} target="_blank" rel="noopener noreferrer">
+                {t.posViewTx} <span aria-hidden="true">↗</span>
+              </a>
+            )}
             {/* En tableta y móvil el móvil va en otra pestaña: el siguiente
                 paso se dice aquí, bajo el recibo, que es donde se queda la
                 vista al cobrar. En escritorio lo dice PhoneNudge, junto al móvil. */}
@@ -179,7 +204,7 @@ export default function StoreView({ lang, onGoToUser }: Props) {
           </div>
         ) : (
           <div className={styles.pos}>
-            <div className={styles.catalog}>
+            <div className={styles.catalog} data-tour={catalogFocus}>
               <p className={styles.catalogHint}>{t.posCatalogHint}</p>
 
               <div className={styles.categories}>
@@ -215,7 +240,7 @@ export default function StoreView({ lang, onGoToUser }: Props) {
               </div>
             </div>
 
-            <div className={styles.basket}>
+            <div className={styles.basket} data-tour={basketFocus}>
               <div className={styles.basketTitle}>{t.posBasket} ({cartCount})</div>
               {cartLines.length === 0 ? (
                 <p className={styles.notice}>{t.posEmpty}</p>
@@ -250,7 +275,7 @@ export default function StoreView({ lang, onGoToUser }: Props) {
       </div>
 
       {/* Herramientas de tienda: analítica y campañas (secundario) */}
-      <div className={cx(styles.card, !storeToolsOpen && styles.toolsClosed)}>
+      <div className={cx(styles.card, !storeToolsOpen && styles.toolsClosed)} data-tour={toolsFocus}>
         <button
           className={styles.toolsToggle}
           onClick={() => setStoreToolsOpen(o => !o)}

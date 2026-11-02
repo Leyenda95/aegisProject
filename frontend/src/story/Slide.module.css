@@ -1,0 +1,463 @@
+/* Composiciones de diapositiva (ver Slide.tsx). Colores de la portada. */
+
+.heading { max-width: 680px; }
+.center { margin: 0 auto; text-align: center; }
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.4vw, 40px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--l-ink);
+}
+
+.body {
+  margin-top: 16px;
+  font-size: clamp(16px, 1.5vw, 19px);
+  line-height: 1.6;
+  color: var(--l-ink-soft);
+}
+
+.body strong, .heroBody strong { color: var(--l-ink); font-weight: 600; }
+
+.cardTitle {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--l-accent-ink);
+}
+
+.cardText {
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--l-ink-soft);
+}
+
+/* ---------- Bienvenida ---------- */
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 64px 24px;
+  border-radius: 24px;
+  background: var(--l-art-bg);
+  border: 1px solid var(--l-stage-line);
+  box-shadow: var(--l-shadow);
+  overflow: hidden;
+}
+
+.heroGlow {
+  position: absolute;
+  inset: -30% 20% auto;
+  height: 70%;
+  border-radius: 50%;
+  background: var(--l-blob1);
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.heroMark {
+  position: relative;
+  width: 84px;
+  color: var(--l-ring);
+}
+
+.kicker {
+  position: relative;
+  margin-top: 28px;
+  font-size: 18px;
+  color: var(--l-ink-soft);
+}
+
+.heroTitle {
+  position: relative;
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-size: clamp(40px, 6vw, 64px);
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  margin-right: -0.32em;
+  text-transform: uppercase;
+  color: var(--l-ink);
+}
+
+.heroBody {
+  position: relative;
+  max-width: 620px;
+  margin-top: 24px;
+  font-size: clamp(17px, 1.7vw, 21px);
+  line-height: 1.6;
+  color: var(--l-ink-soft);
+}
+
+/* Las ondas centradas en el logo: 64 px de margen arriba más la mitad del
+   alto del logo (84 x 60). */
+.cover { isolation: isolate; }
+.coverWaves { left: 50%; top: 94px; z-index: -1; }
+
+/* ---------- Dibujo y texto ---------- */
+
+.featureTop {
+  display: grid;
+  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+  gap: 48px;
+  align-items: center;
+}
+
+.art { width: 100%; }
+
+.ctaRow { margin-top: 28px; }
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 26px;
+  border-radius: 12px;
+  background: var(--l-cta-bg);
+  color: var(--l-cta-ink);
+  box-shadow: var(--l-cta-glow);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.cta:hover { transform: translateY(-1px); }
+
+.cards {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 14px;
+  margin-top: 28px;
+}
+
+
+.card {
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: var(--l-inner);
+  border: 1px solid var(--l-inner-line);
+}
+
+.numbered {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 32px;
+  margin-top: 36px;
+}
+
+.numberedItem {
+  display: flex;
+  gap: 12px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--l-ink-soft);
+}
+
+.number {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-top: -1px;
+  border-radius: 50%;
+  background: var(--l-cta-bg);
+  color: var(--l-cta-ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* ---------- Texto arriba y bloques debajo ---------- */
+
+.plain { display: flex; flex-direction: column; gap: 36px; }
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.groups {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  gap: 40px;
+}
+
+.groupsWide { grid-template-columns: 1fr; gap: 24px; }
+
+.groupTitle {
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--l-ink-faint);
+}
+
+.chips { list-style: none; display: grid; gap: 10px; min-width: 260px; }
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-radius: 12px;
+  background: var(--l-inner);
+  border: 1px solid var(--l-inner-line);
+  font-size: 15px;
+  color: var(--l-ink);
+}
+
+.chipIcon { font-size: 18px; color: var(--l-accent); }
+
+.linkGrid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.linkCard {
+  display: block;
+  height: 100%;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: var(--l-inner);
+  border: 1px solid var(--l-inner-line);
+  text-decoration: none;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.linkCard:hover { border-color: var(--l-accent-line); transform: translateY(-1px); }
+
+.linkIcon { display: block; margin-bottom: 12px; font-size: 22px; color: var(--l-accent); }
+
+.mission {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.missionCard {
+  position: relative;
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--l-inner);
+  border: 1px solid var(--l-inner-line);
+}
+
+/* El número del paso: solo la cifra, tenue, sin círculo, para
+   no cargar la tarjeta. */
+.missionNumber {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  width: auto;
+  height: auto;
+  margin-top: 0;
+  background: none;
+  font-size: 14px;
+  color: var(--l-ink-faint);
+  opacity: 0.8;
+}
+
+.missionIcon { display: block; margin-bottom: 18px; font-size: 26px; color: var(--l-accent); }
+
+.checklist {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 40px;
+}
+
+.check {
+  display: flex;
+  gap: 12px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--l-ink);
+}
+
+.checkMark { flex: none; width: 20px; height: 20px; margin-top: 2px; }
+.checkMark circle { fill: var(--l-accent); }
+.checkMark path { fill: none; stroke: var(--l-cta-ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Por dónde seguir: dos tarjetas con dibujo y la franja de contacto. */
+.startCards {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.startCard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 14px 14px 22px;
+  border-radius: 18px;
+  background: var(--l-inner);
+  border: 1px solid var(--l-inner-line);
+  box-shadow: var(--l-float-shadow);
+  text-decoration: none;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.startCard:hover { border-color: var(--l-accent-line); transform: translateY(-1px); }
+
+/* El dibujo, más bajo que los de las diapositivas con texto al lado. */
+.startCard .startArt {
+  display: grid;
+  place-items: center;
+  height: 176px;
+  margin-bottom: 18px;
+  padding: 10px;
+}
+
+.startCard .startArt { overflow: hidden; }
+.startCard .startArt svg { width: auto; height: 156px; aspect-ratio: 4 / 3; max-width: 100%; transform: scale(1.3); }
+.startCard .cardTitle, .startCard .cardText { padding: 0 8px; }
+
+.contactBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: fit-content;
+  margin: 24px auto 0;
+  padding: 12px 24px;
+  border-radius: 999px;
+  background: var(--l-inner);
+  border: 1px solid var(--l-inner-line);
+  font-size: 15px;
+  color: var(--l-ink);
+  text-decoration: none;
+  transition: border-color 0.2s;
+}
+
+.contactBar:hover { border-color: var(--l-accent-line); }
+.contactBar svg { font-size: 20px; color: var(--l-accent); }
+
+/* Público frente a privado: lo público claro, lo privado en tinta. */
+.side {
+  padding: 26px;
+  border-radius: 18px;
+  background: var(--l-inner);
+  border: 1px solid var(--l-inner-line);
+  box-shadow: var(--l-float-shadow);
+}
+
+.sideDark {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(70% 60% at 0% 0%, rgba(255, 255, 255, 0.12), transparent 70%),
+    linear-gradient(160deg, #31476A 0%, #1F3049 100%);
+  border-color: transparent;
+  box-shadow: 0 14px 32px rgba(46, 71, 102, 0.22);
+}
+
+/* Textura de lo privado: el aro de Aegis en contornos concéntricos desde
+   la esquina de abajo a la derecha (ver RingTexture). */
+.sideRings { right: 40px; bottom: 30px; z-index: -1; }
+
+.sideBadge {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, var(--art-tile-from), var(--art-tile-to));
+  font-size: 24px;
+  color: #FFFFFF;
+  box-shadow: 0 6px 14px var(--art-glow);
+}
+
+.sideDark .sideBadge { background: rgba(255, 255, 255, 0.92); color: #1F3049; box-shadow: none; }
+
+.sideTitle {
+  margin-top: 18px;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--l-ink);
+}
+
+.sideDark .sideTitle { color: #FFFFFF; }
+
+.sideList {
+  margin-top: 14px;
+  padding-left: 18px;
+  display: grid;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--l-ink-soft);
+}
+
+.sideDark .sideList { color: #E4EBF3; }
+
+/* ---------- Entrada escalonada ---------- */
+
+/* Primero el dibujo y después, todo a la vez, lo demás (texto, tarjetas,
+   listas), solo fundiéndose. Igual con movimiento reducido. */
+.art { animation: artIn 0.6s ease-out 0.2s both; }
+
+:is(.featureText, .plain > .heading, .groupTitle),
+:is(.cards, .chips, .mission, .checklist, .linkGrid, .startCards, .columns) > *,
+.contactBar {
+  animation: fadeIn 0.6s ease-out 0.55s both;
+}
+
+/* Las píldoras (diapositiva 8), con una sombra muy sutil: se despegan del
+   fondo gris. El marco de los dibujos no lleva. */
+.chip { box-shadow: 0 3px 10px rgba(24, 37, 49, 0.02), 0 1px 2px rgba(24, 37, 49, 0.015); }
+
+/* Sin dibujo (público y privado, piezas, misión...), el título y los
+   nombres de grupo ocupan su lugar: aparecen primero, cuando aparecería el
+   dibujo, y los bloques de debajo después. */
+.plain :is(.heading, .groupTitle) { animation-delay: 0.2s; }
+
+/* Los pasos numerados (diapositiva 6) van con el dibujo: son sus números. */
+.numbered > * { animation: fadeIn 0.6s ease-out 0.2s both; }
+
+.cover > :is(.kicker, .heroTitle, .heroBody) { animation: fadeIn 0.8s ease-out both; }
+.cover > .kicker { animation-delay: 0.4s; }
+.cover > :is(.heroTitle, .heroBody) { animation-delay: 0.75s; }
+
+@keyframes artIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ---------- Tableta y móvil ---------- */
+
+@media (max-width: 900px) {
+  .featureTop { grid-template-columns: 1fr; gap: 28px; }
+  .art { max-width: 420px; }
+  .cards, .mission { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .numbered, .checklist { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .cards, .mission, .startCards, .columns, .groups { grid-template-columns: 1fr; }
+  .hero { padding: 40px 18px; }
+  .coverWaves { top: 70px; }
+}

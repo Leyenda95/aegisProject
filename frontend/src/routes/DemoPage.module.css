@@ -12,7 +12,9 @@
 
 .tabsWrap {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: 10px 12px;
   padding: 20px 16px 0;
 }
 
@@ -36,6 +38,19 @@
   border-radius: 7px;
   cursor: pointer;
 }
+
+.tourLink {
+  align-self: center;
+  padding: 7px 14px;
+  border: 1px solid var(--accent-line);
+  border-radius: 999px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+.tourLink:hover { background: var(--accent-wash); }
 
 .tab[aria-pressed="true"] {
   color: var(--ink-bright);
@@ -91,6 +106,29 @@
   .split[data-tab="user"] .storeCol {
     display: none;
   }
+}
+
+/* Tour guiado: el panel le quita ancho a la demo, así que la caja y el móvil
+   van lado a lado solo si caben en lo que queda; si no, se ve el que pida el
+   paso (data-tab). */
+.tourMain { container-type: inline-size; }
+
+@container (max-width: 879px) {
+  .tourMain .split { display: block; }
+  .tourMain .split[data-tab="store"] .userCol,
+  .tourMain .split[data-tab="user"] .storeCol { display: none; }
+}
+
+@container (min-width: 880px) {
+  .tourMain .split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 28px;
+    align-items: start;
+  }
+  .tourMain .split .storeCol,
+  .tourMain .split .userCol { display: block; }
+  .tourMain .userCol { position: sticky; top: 24px; }
 }
 
 /* Tablet (680px - 1080px) */

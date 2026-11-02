@@ -79,12 +79,19 @@ export async function connectWallet(walletKey: string, networkId: string): Promi
   return withWalletUnavailableRetry(() => api.connect(networkId));
 }
 
+/**
+ * La wallet paga, firma y sella la transacción y la envía tal cual.
+ * Devuelve la transacción sellada (hex), la misma que se envió: de ahí sale
+ * su hash para el explorador (ver txHash.ts), porque submitTransaction no
+ * devuelve nada.
+ */
 export async function laceBalanceAndSubmit(
   lace: ConnectedAPI,
   txHex: string,
-): Promise<void> {
+): Promise<string> {
   const { tx: balancedHex } = await withWalletUnavailableRetry(() => lace.balanceUnsealedTransaction(txHex));
   await withWalletUnavailableRetry(() => lace.submitTransaction(balancedHex));
+  return balancedHex;
 }
 
 /** No resuelve hasta que el indexer ya sirve estado para esa dirección (mismo motivo que el resto de *ViaLace). */
@@ -247,23 +254,44 @@ export async function getSponsorAvailable(): Promise<boolean> {
 }
 
 /**
- * Las rutas que construyen una transacción con `sponsor: true` la devuelven
- * ya pagada y enviada (`sponsored`), o, si el patrocinio no está disponible,
- * la devuelven sin pagar (`tx`) para que la pague la wallet conectada.
+ * Con una wallet conectada, paga y firma ella: quien la conecta quiere firmar
+ * cada paso. Sin wallet, las rutas que construyen una transacción con
+ * `sponsor: true` la devuelven ya pagada y enviada (`sponsored`); si el
+ * patrocinio no está disponible, sin pagar (`tx`), y entonces no se puede.
  * Devuelve true si la pagó el patrocinio. `onSigning` avisa justo antes de
- * pedir la firma a la wallet.
+ * pedir la firma a la wallet; `onSubmitted` recibe la transacción sellada
+ * que envió la wallet.
  */
 async function payIfNotSponsored(
   lace: ConnectedAPI | null,
   built: { sponsored?: boolean; tx?: string },
   lang: Lang,
   onSigning?: () => void,
+  onSubmitted?: (balancedHex: string) => void,
 ): Promise<boolean> {
   if (built.sponsored) return true;
   if (!lace || !built.tx) throw new Error(T[lang].sponsorUnavailable);
   onSigning?.();
-  await laceBalanceAndSubmit(lace, built.tx);
+  // La llamada va aparte: dentro de `onSubmitted?.(...)` no se evaluaría
+  // (ni se pediría la firma) cuando quien llama no pasa `onSubmitted`.
+  const balancedHex = await laceBalanceAndSubmit(lace, built.tx);
+  onSubmitted?.(balancedHex);
   return false;
+}
+
+/**
+ * Hash de la transacción sellada que envió la wallet. Carga ledger-v8
+ * (WebAssembly) solo aquí, bajo demanda. Si algo falla, null: solo se
+ * pierde el enlace al explorador, no el sellado.
+ */
+async function hashOfSubmitted(balancedHex: string | null): Promise<string | null> {
+  if (!balancedHex) return null;
+  try {
+    const { txHashFromHex } = await import('./txHash.ts');
+    return txHashFromHex(balancedHex);
+  } catch {
+    return null;
+  }
 }
 
 /** Línea del rollup que la tienda manda a sellar (subcategoría por nombre del enum, importe en céntimos). */
@@ -274,27 +302,35 @@ export type AttestLine = { subcategory: string; qty: number; amount: number };
  * rollup por subcategoría (ya recortado a las 8 de mayor importe) y devuelve
  * el recibo sellado (quien llama lo convierte en QR) y si lo pagó el
  * patrocinio. Paga el patrocinio o, si no está disponible, la wallet conectada.
+ * `txHash` es el hash de la transacción de sellado, para enlazarla en el
+ * explorador: con patrocinio lo da el backend (preguntando al indexer por
+ * el identificador que devuelve el bot); con la wallet se calcula aquí de
+ * la transacción sellada que envió. null si no se pudo saber.
  */
 export async function attestReceipt(
   lace: ConnectedAPI | null,
   lines: AttestLine[],
   lang: Lang,
   onWaiting?: () => void,
-): Promise<{ receipt: ReceiptJSON; sponsored: boolean }> {
+): Promise<{ receipt: ReceiptJSON; sponsored: boolean; txHash: string | null }> {
   const r = await fetch(`${API_BASE}/attest-receipt`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ lines, sponsor: true }),
+    body: JSON.stringify({ lines, sponsor: lace === null }),
   });
   if (!r.ok) {
     const { error } = await r.json().catch(() => ({ error: r.statusText }));
     throw new Error(error ?? 'Failed to build attest-receipt tx');
   }
   const built = await r.json();
-  const sponsored = await payIfNotSponsored(lace, built, lang);
+  let submittedHex: string | null = null;
+  const sponsored = await payIfNotSponsored(lace, built, lang, undefined, (hex) => { submittedHex = hex; });
   onWaiting?.();
   await pollUntil(async () => (await getReceiptStatus(built.commitmentHex)).sealed, lang);
-  return { receipt: built.receipt as ReceiptJSON, sponsored };
+  const txHash = sponsored
+    ? (typeof built.txHash === 'string' ? built.txHash : null)
+    : await hashOfSubmitted(submittedHex);
+  return { receipt: built.receipt as ReceiptJSON, sponsored, txHash };
 }
 
 /**
@@ -303,8 +339,8 @@ export async function attestReceipt(
  * confirmación on-chain: resuelve en cuanto la red acepta el envío, sin
  * fallar. Es el último paso del flujo (no hay una acción siguiente cuyo
  * assert dependa de este envío), así que la espera solo añadía tiempo sin
- * evitar ningún error real. Paga el patrocinio o, si no está disponible,
- * la wallet conectada. Devuelve true si lo pagó el patrocinio.
+ * evitar ningún error real. Paga la wallet conectada o, sin wallet, el
+ * patrocinio. Devuelve true si lo pagó el patrocinio.
  *
  * Con `localProof`, la transacción se construye y se prueba en este
  * navegador contra el proof server del usuario (ver localProver.ts) y el
@@ -325,7 +361,7 @@ export async function submitSignal(
     if (!contractAddress) throw new Error('Contract not deployed yet');
     const { proveSignalLocally } = await import('./localProver.ts');
     const tx = await proveSignalLocally(receipt, contractAddress);
-    if (sponsored) {
+    if (sponsored && !lace) {
       const r = await fetch(`${API_BASE}/sponsor-signal`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -345,7 +381,7 @@ export async function submitSignal(
   const r = await fetch(`${API_BASE}/build-tx/signal`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ receipt, sponsor: true }),
+    body: JSON.stringify({ receipt, sponsor: lace === null }),
   });
   if (!r.ok) {
     const { error } = await r.json().catch(() => ({ error: r.statusText }));

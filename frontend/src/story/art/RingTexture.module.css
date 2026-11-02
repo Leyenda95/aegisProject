@@ -1,0 +1,25 @@
+/* Ver RingTexture.tsx: las láminas centradas en un punto (el que fija
+   quien la usa). Cada una suma un velo claro sobre las de detrás y proyecta
+   su sombra, con un filo de luz arriba: relieve, no líneas. */
+.root {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  filter: drop-shadow(0 14px 22px rgba(6, 12, 22, 0.5)) drop-shadow(0 2px 4px rgba(6, 12, 22, 0.3));
+}
+
+.layer path {
+  fill: rgba(255, 255, 255, 0.07);
+  stroke: rgba(255, 255, 255, 0.16);
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1px;
+}

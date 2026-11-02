@@ -3,6 +3,7 @@ import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
 import type { PublishStep } from '../routes/demoFlow.ts';
 import styles from './PublishProgress.module.css';
+import VerifiedMark from './VerifiedMark.tsx';
 
 type Props = {
   lang: Lang;
@@ -57,12 +58,7 @@ export default function PublishProgress({ lang, step, local, signed, sponsored, 
   return (
     <div className={styles.progress}>
       <div className={styles.head}>
-        {published && (
-          <svg className={styles.check} width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">
-            <circle cx="28" cy="28" r="25" />
-            <path d="M17 29l7.5 7.5L39 21" />
-          </svg>
-        )}
+        {published && <VerifiedMark draw className={styles.check} />}
         <h2 className={styles.title}>{published ? t.publishDoneTitle : t.publishing}</h2>
         {published && sponsored && <p className={styles.sub}>{t.feePaidByAegis}</p>}
       </div>
@@ -72,7 +68,7 @@ export default function PublishProgress({ lang, step, local, signed, sponsored, 
           const state = i < done ? 'done' : i === done ? 'active' : 'pending';
           return (
             <li key={s.id} className={cx(styles.step, styles[state])}>
-              <span className={styles.marker} aria-hidden="true">{state === 'done' ? '✓' : ''}</span>
+              <span className={styles.marker} aria-hidden="true">{state === 'done' && <VerifiedMark draw />}</span>
               {s.label}
             </li>
           );

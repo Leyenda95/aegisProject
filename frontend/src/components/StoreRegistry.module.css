@@ -1,0 +1,118 @@
+/* Comprobación del registro de tiendas, junto al título de la caja. */
+
+.root { display: inline-flex; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: var(--text-sm);
+  line-height: 1.3;
+}
+
+.action {
+  border: 1px solid var(--accent-line);
+  background: var(--accent-wash);
+  color: var(--accent-strong);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.action:hover:not(:disabled) { border-color: var(--accent); }
+.action:disabled { cursor: default; opacity: 0.8; }
+
+/* Comprobada: solo la marca de verificado (el ojo con el visto) y el texto
+   en dos líneas, sobre un velo muy tenue del acento que se desvanece hacia la
+   derecha, sin borde marcado ni sombra. Entra en orden: el velo, el ojo se
+   dibuja, y el texto aparece cuando el aro ya está casi cerrado. */
+.verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  padding: 6px 16px 6px 10px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, var(--accent-wash), transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent);
+  animation: fade 0.3s ease-out both;
+}
+
+/* El ojo es más ancho que alto (24 x 14 en su rejilla): a 34px su altura
+   visible coincide con la de las dos líneas de texto. */
+.seal {
+  position: relative;
+  display: grid;
+  place-items: center;
+  color: var(--accent-strong);
+  font-size: 34px;
+  --verified-stroke: 1.6;
+}
+
+/* Al cerrarse el visto, una onda con la forma del ojo sale una vez y se
+   apaga. En reposo no se ve. */
+.seal::after {
+  content: '';
+  position: absolute;
+  inset: 21% 4%;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  animation: ripple 0.9s ease-out 0.8s both;
+}
+
+.verifiedText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.verifiedTitle {
+  font-size: var(--text-sm);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: 0.005em;
+  color: var(--ink-bright);
+  animation: rise 0.35s ease-out 0.4s both;
+}
+
+.verifiedMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: var(--ink-dim);
+  animation: rise 0.35s ease-out 0.55s both;
+}
+
+/* El símbolo de Midnight, del tamaño de las mayúsculas y en el azul tinta. */
+.midnight {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--accent-strong);
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateX(-4px); }
+}
+
+@keyframes ripple {
+  from { opacity: 0.45; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.35); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .verified,
+  .verifiedTitle,
+  .verifiedMeta,
+  .seal::after { animation: none; }
+}

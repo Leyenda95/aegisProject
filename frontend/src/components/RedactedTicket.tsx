@@ -9,6 +9,7 @@ import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
 import { useDialog } from '../hooks/useDialog.ts';
 import PublishProgress from './PublishProgress.tsx';
+import { useTourFocus } from '../story/tourFocus.ts';
 import styles from './ReceiptTicket.module.css';
 
 // Campos ya presentes en el ticket: al marcarlos, se resalta la fila que ya
@@ -71,6 +72,7 @@ export default function RedactedTicket({
   progress = null, localProof = false, explain = false, onViewMarket = () => {},
 }: Props) {
   const t = T[lang];
+  const tourFocus = useTourFocus('sheet');
   // Esc hace lo mismo que "Descartar", que no se puede pulsar mientras otra
   // transacción espera confirmación. Publicando, Esc cierra (sigue por detrás).
   const stageRef = useRef<HTMLDivElement>(null);
@@ -158,7 +160,7 @@ export default function RedactedTicket({
   // dentro de él la ventana quedaría por debajo de la cabecera.
   return createPortal(
     <div className={styles.overlay} onClick={onCancel}>
-      <div ref={stageRef} role="dialog" aria-modal="true" aria-label={t.publishSignal} tabIndex={-1} className={styles.stage} onClick={e => e.stopPropagation()}>
+      <div ref={stageRef} role="dialog" aria-modal="true" aria-label={t.publishSignal} tabIndex={-1} className={styles.stage} data-tour={tourFocus} onClick={e => e.stopPropagation()}>
       <div className={styles.panel}>
         {progress ? (
           <PublishProgress

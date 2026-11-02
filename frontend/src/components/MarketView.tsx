@@ -12,6 +12,7 @@ import { useChain } from '../app/ChainProvider.tsx';
 import { useHistory } from '../hooks/useHistory.ts';
 import { useNow } from '../hooks/useNow.ts';
 import TrendChart from './TrendChart.tsx';
+import { useTourFocus } from '../story/tourFocus.ts';
 import Delta from './Delta.tsx';
 import styles from './MarketView.module.css';
 
@@ -108,6 +109,7 @@ function LiveFeed({ lang }: { lang: Lang }) {
  */
 export default function MarketView({ lang }: { lang: Lang }) {
   const t = T[lang];
+  const tourFocus = useTourFocus('market');
   const { contractAddress } = useChain();
   const [range, setRange] = useState<TimeRange>('7d');
   const history = useHistory(range);
@@ -132,7 +134,7 @@ export default function MarketView({ lang }: { lang: Lang }) {
   const maxCount = Math.max(1, ...categories.map(c => c.count));
 
   return (
-    <div className={styles.market}>
+    <div className={styles.market} data-tour={tourFocus}>
       <p className={styles.intro}>{t.marketIntro}</p>
 
       <div className={styles.grid}>

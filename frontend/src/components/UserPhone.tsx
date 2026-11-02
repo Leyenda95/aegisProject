@@ -9,6 +9,7 @@ import type { VaultEntry } from '../vault.ts';
 import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
 import styles from './UserPhone.module.css';
+import VerifiedMark from './VerifiedMark.tsx';
 
 type Tab = 'tickets' | 'spending' | 'privacy';
 const TABS: Tab[] = ['tickets', 'spending', 'privacy'];
@@ -90,6 +91,8 @@ export default function UserPhone({
   const screenRef = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState<Tab>('tickets');
   const blocked = needsLace || needsDeploy;
+  // Al pasar el ratón por un botón bloqueado, por qué lo está.
+  const blockedReason = needsLace ? t.publishNeedsWallet : needsDeploy ? t.userNeedsDeploy : undefined;
 
   useEffect(() => {
     if (!scrollTopSignal) return;
@@ -138,7 +141,12 @@ export default function UserPhone({
       </span>
       <span className={styles.purchaseRight}>
         <div className={styles.purchaseAmount}>{formatEUR(p.cents, lang)}</div>
-        {p.signaled && <span className={styles.signalChip}>✓ {t.phoneSignalChip}</span>}
+        {p.signaled && (
+          <span className={styles.signalTag}>
+            <VerifiedMark />
+            {t.phoneSignalChip}
+          </span>
+        )}
       </span>
     </div>
   );
@@ -177,9 +185,11 @@ export default function UserPhone({
                 <div className={styles.ticketMeta}>{t.phoneItems(card.items)} · {card.cats.join(', ')}</div>
                 <div className={styles.ticketFoot}>
                   <span className={styles.ticketTotal}>{formatEUR(card.cents, lang)}</span>
-                  <button className={styles.ticketBtn} onClick={() => onOpenTicket(next)} disabled={blocked || busy}>
-                    {t.publishSignal} <span className={styles.ticketArrow}>→</span>
-                  </button>
+                  <span title={blockedReason}>
+                    <button className={styles.ticketBtn} onClick={() => onOpenTicket(next)} disabled={blocked || busy} title={blockedReason}>
+                      {t.publishSignal} <span className={styles.ticketArrow}>→</span>
+                    </button>
+                  </span>
                 </div>
               </div>
             ) : (
@@ -254,7 +264,7 @@ export default function UserPhone({
 
       <div className={styles.dock}>
         {tab === 'tickets' && (
-          <button className={styles.scanBtn} onClick={onScan} disabled={blocked || busy}>
+          <button className={styles.scanBtn} onClick={onScan} disabled={blocked || busy} title={blockedReason}>
             <span className={styles.scanIcon} />
             {t.scanButton}
           </button>

@@ -1,0 +1,66 @@
+/* Estilo común de las ilustraciones (ver kit.tsx). Colores de --art-*. */
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: var(--font-body);
+}
+
+.tileFrom { stop-color: var(--art-tile-from); }
+.tileTo { stop-color: var(--art-tile-to); }
+
+.tile { filter: drop-shadow(0 6px 10px var(--art-glow)); }
+.onTile { color: var(--art-on-tile); }
+
+.node {
+  fill: var(--art-node);
+  stroke: var(--art-node-line);
+  filter: drop-shadow(0 4px 8px var(--art-glow));
+}
+
+.bar { fill: var(--art-node-line); }
+.barStrong { fill: var(--art-tile-to); }
+
+.badge { fill: var(--art-badge); }
+
+.badgeText {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--art-on-badge);
+}
+
+.arrow, .arrowDashed {
+  fill: none;
+  stroke: var(--art-line);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.arrowDashed { stroke-dasharray: 4 5; }
+
+.arrowHead {
+  fill: none;
+  stroke: var(--art-line);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  fill: var(--art-ink-soft);
+}
+
+.chipText {
+  font-size: 11px;
+  font-weight: 500;
+  fill: var(--art-ink);
+}
+
+.dot { fill: var(--art-tile-to); }
+
+.mark { fill: var(--art-ink); }

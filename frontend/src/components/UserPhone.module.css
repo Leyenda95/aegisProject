@@ -521,12 +521,22 @@
   color: var(--ink);
 }
 
-.signalChip {
-  display: inline-block;
+/* Publicada: bajo el importe, la marca de verificado y el texto en el azul
+   tinta del acento. */
+.signalTag {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
   margin-top: 3px;
-  font-size: var(--text-3xs);
-  font-weight: 700;
-  color: var(--success);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--accent-strong);
+  --verified-stroke: 2.25;
+}
+
+.signalTag svg {
+  font-size: 15px;
 }
 
 .footnote {

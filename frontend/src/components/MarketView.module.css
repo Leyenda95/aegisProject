@@ -6,6 +6,16 @@
   gap: 18px;
 }
 
+/* En el tour, el marco de lo resaltado no se pega al contenido: aire por
+   dentro (con el margen compensado, para que nada se mueva) y más
+   separación por fuera. */
+.market[data-tour="selected"] {
+  padding: 20px;
+  margin: -20px;
+  outline-offset: 0;
+  border-radius: 24px;
+}
+
 .intro {
   font-size: var(--text-sm);
   line-height: 1.6;

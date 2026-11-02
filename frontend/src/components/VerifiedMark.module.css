@@ -1,0 +1,36 @@
+/* Marca de verificado (VerifiedMark.tsx): aro del logo con un visto. */
+.mark {
+  display: block;
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  overflow: visible;
+  stroke-width: var(--verified-stroke, 1.75);
+}
+
+/* Dibujado: el aro se cierra y luego entra el visto. El estado de reposo es
+   la marca entera, así que sin animación (movimiento reducido) se ve igual. */
+.draw .ring,
+.draw .tick {
+  stroke-dasharray: 1;
+}
+
+.draw .ring {
+  animation: draw 0.6s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+.draw .tick {
+  animation: draw 0.3s ease-out 0.5s both;
+}
+
+@keyframes draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draw .ring,
+  .draw .tick {
+    animation: none;
+  }
+}

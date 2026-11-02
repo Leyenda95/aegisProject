@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { RECEIPT, INSIGHTS, open, mockWallets, enter, settle, shot } from './mocks.ts';
+import { RECEIPT, INSIGHTS, open, mockWallets, enter, skipIntro, settle, shot } from './mocks.ts';
 
 // Recorre la demo y captura cada pantalla, en tema claro y oscuro (ver
 // playwright.config.ts). El backend va simulado con datos fijos y el reloj
@@ -29,9 +29,10 @@ for (const theme of ['light', 'dark'] as const) {
       await page.mouse.move(0, 0);
       await expect.soft(page).toHaveScreenshot(`${theme}-como-funciona.png`, { threshold: 0.2 });
 
-      // El botón del final también entra en la demo, y la página vuelve a desplazarse.
+      // El botón del final abre la intro (encima de la demo); al saltarla se
+      // llega a la demo y la página vuelve a desplazarse.
       await page.getByRole('button', { name: 'Explorar' }).last().click();
-      await expect(page).toHaveURL(/\/demo$/);
+      await skipIntro(page);
       await expect(page.getByText('Punto de venta (demo)')).toBeVisible();
       await expect(page.locator('html')).not.toHaveClass(/landing-open/);
     });

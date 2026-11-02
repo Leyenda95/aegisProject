@@ -52,7 +52,6 @@ export default function ReceiptTicket({ lang, lines, totalCents, receipt, qr }: 
         <div className={styles.seal}>
           <div className={styles.sealHead}>◆ {t.receiptSealed} ◆</div>
           <div className={styles.note}>{t.receiptProof}: {ticketNo}...</div>
-          <div className={styles.note}>{t.receiptNote}</div>
         </div>
 
         <div className={styles.barcode}>

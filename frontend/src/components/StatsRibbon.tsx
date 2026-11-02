@@ -5,6 +5,7 @@ import { useChain } from '../app/ChainProvider.tsx';
 import { useCountBumps } from '../hooks/useCountBumps.ts';
 import { useHistory } from '../hooks/useHistory.ts';
 import Sparkline from './Sparkline.tsx';
+import { useTourFocus } from '../story/tourFocus.ts';
 import styles from './StatsRibbon.module.css';
 
 const BUMP_MS = 2600;
@@ -46,9 +47,10 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
   // (BUMP_MS), para que se desvanezca entero en vez de desaparecer de golpe.
   const bumped = useCountBumps(counts, BUMP_MS);
   const totalBump = Object.values(bumped).reduce((sum, d) => sum + d, 0);
+  const tourFocus = useTourFocus('ribbon');
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} data-tour={tourFocus}>
     <div className={cx(styles.ribbon, !state && styles.loading)}>
       <div className={styles.totalGroup}>
         <span className={styles.total}>

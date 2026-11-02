@@ -207,6 +207,38 @@ async function latestActionHeight(indexer: string, contractAddress: string): Pro
   return height;
 }
 
+const TX_BY_IDENTIFIER = `
+  query ($identifier: HexEncoded!) {
+    transactions(offset: { identifier: $identifier }) { hash }
+  }`;
+
+/**
+ * Hash de una transacción a partir de uno de sus identificadores. Al enviar,
+ * la wallet devuelve un identificador (33 bytes, estable aunque la
+ * transacción se combine con otras), pero los exploradores buscan por el
+ * hash (32 bytes). El indexer puede ir unos segundos por detrás de la
+ * confirmación, así que se reintenta un poco; si no aparece, null.
+ */
+export async function txHashByIdentifier(indexer: string, identifier: string, tries = 5): Promise<string | null> {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await fetch(indexer, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: TX_BY_IDENTIFIER, variables: { identifier } }),
+        signal: AbortSignal.timeout(10_000),
+      });
+      const body = await res.json() as { data?: { transactions?: { hash: string }[] } };
+      const hash = body.data?.transactions?.[0]?.hash;
+      if (hash) return hash;
+    } catch {
+      // Fallo puntual del indexer: se vuelve a intentar.
+    }
+    if (i < tries - 1) await new Promise((r) => setTimeout(r, 2000));
+  }
+  return null;
+}
+
 /**
  * Empieza a seguir el historial del contrato. La promesa se resuelve cuando
  * ya ha llegado todo el historial anterior. La suscripción no avisa de

@@ -1,0 +1,8 @@
+/* Marco de las ilustraciones: degradado suave y esquinas grandes. */
+
+.frame {
+  padding: 20px 24px;
+  border-radius: 20px;
+  background: var(--art-bg);
+  border: 1px solid var(--art-node-line);
+}

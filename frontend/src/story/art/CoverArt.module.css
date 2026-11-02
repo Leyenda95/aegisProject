@@ -1,0 +1,33 @@
+/* Ondas de la portada de la intro (ver CoverArt.tsx). Cada una crece desde
+   el tamaño del logo mientras se desvanece; las cuatro, desfasadas un cuarto
+   de ciclo. Crece el ancho, no la escala: así la línea sigue fina. Con
+   movimiento reducido no se ven. */
+
+.waves {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.wave {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 84px;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  fill: none;
+  stroke: var(--l-ring);
+  opacity: 0;
+  animation: wave 8s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+  animation-delay: calc(var(--i) * 2s);
+}
+
+.wave path { vector-effect: non-scaling-stroke; stroke-width: 1.2px; }
+
+@keyframes wave {
+  0% { width: 84px; opacity: 0; }
+  12% { opacity: 0.35; }
+  100% { width: 900px; opacity: 0; }
+}

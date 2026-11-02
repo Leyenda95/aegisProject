@@ -1,4 +1,7 @@
-import { expect, type Page } from '@playwright/test';
+import { createHash } from 'node:crypto';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { expect, type Page, type Route } from '@playwright/test';
 import { CONTRACT_ADDRESS } from '../src/chainConfig.ts';
 
 // Backend simulado con datos fijos y reloj congelado, para las capturas
@@ -145,8 +148,51 @@ export async function mockBackend(page: Page, { fresh = false } = {}) {
   });
 }
 
+// Geist viene de Google Fonts (index.html) y Google sirve dos variantes del
+// archivo, con el texto unos píxeles más ancho o más estrecho (una de cada
+// ~30 cargas, a rachas): frases que caben justas en una línea saltan a dos y
+// toda la pantalla se mueve. Para que las capturas no dependan de eso, las
+// peticiones a Google Fonts se sirven desde una copia local (e2e/screens/.fonts,
+// que no va a git, como las capturas), que se baja la primera vez, y si Google
+// responde con la variante rara, se vuelve a pedir.
+const FONTS_DIR = fileURLToPath(new URL('./screens/.fonts/', import.meta.url));
+const ODD_FONT_VARIANT = '/l/font?';
+
+async function cachedFont(route: Route): Promise<{ body: Buffer; type: string } | null> {
+  const url = route.request().url();
+  const file = FONTS_DIR + createHash('sha1').update(url).digest('hex');
+  const isCss = url.includes('/css');
+  const type = isCss ? 'text/css; charset=utf-8' : 'font/woff2';
+  try {
+    return { body: await readFile(file), type };
+  } catch { /* aún no está en la copia */ }
+  for (let attempt = 0; attempt < 10; attempt++) {
+    // Con route.fetch lo pide el navegador (su User-Agent): Google sirve woff2 según él.
+    const res = await route.fetch().catch(() => null);
+    if (!res?.ok()) return null;
+    const body = await res.body();
+    if (isCss && body.includes(ODD_FONT_VARIANT) && attempt < 9) continue;
+    await mkdir(FONTS_DIR, { recursive: true });
+    // Se escribe aparte y se renombra: varias pruebas a la vez no leen un archivo a medias.
+    const tmp = `${file}.${process.pid}.${Date.now()}`;
+    await writeFile(tmp, body);
+    await rename(tmp, file);
+    return { body, type };
+  }
+  return null;
+}
+
+async function pinFonts(page: Page) {
+  await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, async route => {
+    const font = await cachedFont(route);
+    if (!font) return route.abort();
+    return route.fulfill({ body: font.body, contentType: font.type, headers: { 'Access-Control-Allow-Origin': '*' } });
+  });
+}
+
 export async function open(page: Page, theme: 'light' | 'dark', { fresh = false, path = '/' } = {}) {
   await page.clock.setFixedTime(NOW);
+  await pinFonts(page);
   await page.addInitScript(t => {
     localStorage.setItem('aegis-theme', t);
     localStorage.setItem('aegis-lang', 'es');
@@ -168,11 +214,23 @@ export async function mockWallets(page: Page) {
   });
 }
 
-/** Pasa la portada y espera a que la cinta tenga los contadores. */
+/** Con la intro abierta (primera diapositiva), la salta y deja la demo por libre. */
+export async function skipIntro(page: Page) {
+  await expect(page).toHaveURL(/\/intro\/1$/);
+  await expect(page.getByText('1 de 10')).toBeVisible();
+  await page.getByRole('link', { name: 'Saltar intro' }).click();
+  await expect(page).toHaveURL(/\/demo$/);
+}
+
+/**
+ * Pasa la portada y la intro (que se abre encima de la demo) y espera a que
+ * la cinta tenga los contadores.
+ */
 export async function enter(page: Page) {
   // El primero: el otro está al final de "Cómo funciona".
   const explore = page.getByRole('button', { name: 'Explorar' });
   await explore.first().click();
+  await skipIntro(page);
   await expect(explore).toHaveCount(0);
   await expect(page.getByText(STATE.totalSignals, { exact: true }).first()).toBeVisible();
 }
@@ -181,11 +239,13 @@ export async function enter(page: Page) {
  * Deja la página y todo lo que tenga scroll propio (la cinta, p. ej.) en su
  * posición inicial (si no, la cabecera y la cesta, que son fijas, salen a la
  * altura a la que se hubiera desplazado la página, y la cinta movida) y
- * espera a fuentes e imágenes, también las de carga diferida.
+ * espera a fuentes e imágenes, también las de carga diferida. Con
+ * `keepScroll`, la página se queda donde está (el tour guiado desplaza la
+ * demo hasta lo que explica, y esa posición es lo que se quiere ver).
  */
-export async function settle(page: Page) {
-  await page.evaluate(async () => {
-    window.scrollTo(0, 0);
+export async function settle(page: Page, { keepScroll = false } = {}) {
+  await page.evaluate(async keep => {
+    if (!keep) window.scrollTo(0, 0);
     for (const el of document.querySelectorAll('*')) {
       if (el.scrollLeft) el.scrollLeft = 0;
       if (el.scrollTop) el.scrollTop = 0;
@@ -195,12 +255,16 @@ export async function settle(page: Page) {
       ? null
       : new Promise(resolve => { img.onload = img.onerror = resolve; })));
     await document.fonts.ready;
-  });
+  }, keepScroll);
 }
 
 // expect.soft: si una foto no coincide, el recorrido sigue y se comparan
 // también las siguientes, así un cambio enseña todo lo que toca de una vez.
-export async function shot(page: Page, name: string, { fullPage = true, threshold }: { fullPage?: boolean; threshold?: number } = {}) {
-  await settle(page);
+export async function shot(
+  page: Page,
+  name: string,
+  { fullPage = true, threshold, keepScroll = false }: { fullPage?: boolean; threshold?: number; keepScroll?: boolean } = {},
+) {
+  await settle(page, { keepScroll });
   await expect.soft(page).toHaveScreenshot(`${name}.png`, { fullPage, threshold });
 }

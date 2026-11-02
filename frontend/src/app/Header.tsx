@@ -6,6 +6,7 @@ import { usePreferences } from './PreferencesProvider.tsx';
 import { useWallet } from './WalletProvider.tsx';
 import { useChain } from './ChainProvider.tsx';
 import AegisMark from '../components/AegisMark.tsx';
+import { useRouteTourFocus } from '../story/tourFocus.ts';
 import styles from './Header.module.css';
 
 export default function Header() {
@@ -13,6 +14,9 @@ export default function Header() {
   const { wallet, address, choices, connecting, slow, error, connect } = useWallet();
   const { sponsored, contractAddress, storeRegistered, state } = useChain();
   const { pathname } = useLocation();
+  // En el paso de la wallet del tour, el botón de conectar es lo resaltado.
+  // En los demás no se apaga: la cabecera sigue a mano durante todo el tour.
+  const walletFocus = useRouteTourFocus('wallet') === 'selected' ? 'selected' : undefined;
   // Algo del alta de la demo sin hacer (en la práctica, solo en local con un
   // contrato propio): con la wallet conectada, enlace a /setup.
   const setupPending = !contractAddress || !storeRegistered || Number(state?.isSeeded ?? 0) === 0;
@@ -62,7 +66,7 @@ export default function Header() {
           </div>
         </div>
 
-        <div className={styles.controlsWallet}>
+        <div className={styles.controlsWallet} data-tour={walletFocus}>
         {!wallet && choices.length > 1 ? (
           <div className={styles.walletChoices}>
             {choices.map(w => (

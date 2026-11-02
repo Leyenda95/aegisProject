@@ -18,6 +18,18 @@
   color: var(--ink);
 }
 
+/* Título de la caja y, a su lado, la comprobación del registro de tiendas. */
+.posHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.posHead .cardTitle { margin-bottom: 0; }
+
 /* Avisos de "despliega el contrato" / "conecta una wallet" en lugar de la caja. */
 .notice {
   font-size: var(--text-sm);
@@ -225,6 +237,21 @@
   font-size: var(--text-sm);
   text-align: center;
   color: var(--ink-soft);
+}
+
+/* Enlace a la transacción de sellado en el explorador: discreto, bajo el ticket. */
+.txLink {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--gray-850);
+}
+
+.txLink:hover,
+.txLink:focus-visible {
+  color: var(--accent-strong);
+  text-decoration-color: currentColor;
 }
 
 /* El siguiente paso, en el móvil (tableta y móvil): del mismo bronce que la

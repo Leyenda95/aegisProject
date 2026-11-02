@@ -36,3 +36,10 @@ Thumbs.db
 # Metadatos NTFS de Windows al descargar archivos (no son ficheros reales)
 *:Zone.Identifier
 .env.local
+
+# Cobertura de los tests (npm run coverage) y métricas de crapper, dryer y mutator
+coverage/
+.metrics/
+
+# Caché de compilación incremental de TypeScript
+*.tsbuildinfo

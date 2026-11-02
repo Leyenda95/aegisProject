@@ -1,13 +1,14 @@
-﻿import { useEffect, useState, type CSSProperties } from 'react';
+﻿import { useState, type CSSProperties } from 'react';
 import NumberFlow from '@number-flow/react';
 import { CATEGORY_LABELS, SUBCATEGORY_LABELS, type Category, type Lang } from '../api.ts';
 import { cx } from '../cx.ts';
 import { usePreferences } from '../app/PreferencesProvider.tsx';
 import { useChain } from '../app/ChainProvider.tsx';
 import AegisMark from './AegisMark.tsx';
+import { useLockPageScroll } from '../pageScroll.ts';
 import styles from './LandingScreen.module.css';
 
-// Lo que tarda la portada en fundirse (.exiting) antes de dejar ver la demo.
+// Lo que tarda la portada en fundirse (.exiting) y dejar ver lo de debajo.
 const EXIT_MS = 650;
 const LANGS: Lang[] = ['es', 'en'];
 
@@ -100,27 +101,25 @@ function FlowCardArt({ lang }: { lang: Lang }) {
  * Aegis en una frase y la entrada a la demo, con la app animada debajo. Luego
  * tres cifras y cómo funciona en tres pasos con la misma compra.
  */
-export default function LandingScreen({ onEnter }: { onEnter: () => void }) {
+export default function LandingScreen({ onEnter, onExited }: { onEnter: () => void; onExited: () => void }) {
   const { t, lang, chooseLang } = usePreferences();
   const { state, live } = useChain();
   const [exiting, setExiting] = useState(false);
   const total = state ? Number(state.totalSignals ?? 0) : null;
   const [line1, line2] = splitHeadline(t.landingHeadline);
 
-  // Mientras se ve, la que se desplaza es la portada y no la página de
-  // debajo (ver .landing-open en index.css). Al empezar a fundirse, la página
-  // recupera su barra, así no da el salto cuando ya se ve.
-  useEffect(() => {
-    if (exiting) return;
-    const root = document.documentElement;
-    root.classList.add('landing-open');
-    return () => root.classList.remove('landing-open');
-  }, [exiting]);
+  // Mientras está montada, la que se desplaza es la portada y no la página
+  // de debajo. Sigue así durante el fundido: debajo ya está la intro, que
+  // también bloquea, y la barra no llega a asomar entre las dos.
+  useLockPageScroll();
 
+  // Se entra al pulsar, para que lo siguiente (la intro) ya esté debajo
+  // mientras la portada se funde; `onExited` avisa cuando ya no se ve.
   function enter() {
     if (exiting) return;
     setExiting(true);
-    setTimeout(onEnter, EXIT_MS);
+    onEnter();
+    setTimeout(onExited, EXIT_MS);
   }
 
   return (

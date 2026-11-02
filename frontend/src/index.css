@@ -135,6 +135,39 @@
   --shadow-accent: 0 10px 30px rgba(0, 0, 0, 0.45);
 }
 
+/* Ilustraciones del recorrido (story/art): baldosas con degradado Pizarra,
+   nodos claros y flechas. Las de la intro y el resumen van sobre la portada
+   ([data-landing]), clara siempre; las del panel del tour siguen el tema. */
+:root, [data-landing] {
+  --art-bg: linear-gradient(160deg, #EEF2F7 0%, #DAE3ED 100%);
+  --art-tile-from: #8299B5;
+  --art-tile-to: #3F5672;
+  --art-on-tile: #FFFFFF;
+  --art-line: rgba(63, 86, 114, 0.55);
+  --art-ink: #182531;
+  --art-ink-soft: #4A5868;
+  --art-node: #FFFFFF;
+  --art-node-line: rgba(24, 37, 49, 0.1);
+  --art-badge: #182531;
+  --art-on-badge: #FFFFFF;
+  --art-glow: rgba(63, 86, 114, 0.28);
+}
+
+:root[data-theme="dark"] {
+  --art-bg: linear-gradient(160deg, #141C25 0%, #1C2735 100%);
+  --art-tile-from: #A9BBD0;
+  --art-tile-to: #5B7290;
+  --art-on-tile: #0B1018;
+  --art-line: rgba(145, 166, 192, 0.55);
+  --art-ink: #E6ECF2;
+  --art-ink-soft: #A0ACB9;
+  --art-node: #1B2530;
+  --art-node-line: rgba(255, 255, 255, 0.08);
+  --art-badge: #E6ECF2;
+  --art-on-badge: #0B1018;
+  --art-glow: rgba(0, 0, 0, 0.45);
+}
+
 /* Portada (LandingScreen): clara con cualquier tema, así que sus colores van
    aparte de los del tema. Niebla fría con manchas gris azuladas y una cálida;
    tinta del logo; el acento Pizarra en las señales y la segunda línea. */
@@ -203,6 +236,34 @@ html { overflow-y: scroll; }
 /* Con la portada encima (LandingScreen), la que se desplaza es ella: la página
    de debajo ni se mueve ni enseña su barra junto a la de la portada. */
 html.landing-open { overflow: hidden; }
+
+/* Tour guiado (story/TourPanel): la página deja sitio al panel, a la derecha
+   en escritorio y abajo en tableta y móvil. Las capas que cubren la pantalla
+   (la ventana de publicar) usan los mismos huecos para no quedar debajo. */
+html.tour-open { --tour-inset-right: 384px; --tour-inset-bottom: 0px; }
+html.tour-open body { padding-right: var(--tour-inset-right); padding-bottom: var(--tour-inset-bottom); }
+
+@media (max-width: 1023px) {
+  html.tour-open { --tour-inset-right: 0px; --tour-inset-bottom: 240px; }
+}
+
+/* Zonas de la demo en el tour (data-tour, ver story/tourFocus.ts): lo que se
+   explica, resaltado; lo demás, apagado y sin responder al ratón. */
+[data-tour] { transition: opacity 0.4s ease, filter 0.4s ease, outline-color 0.4s ease; }
+
+[data-tour="muted"] {
+  opacity: 0.35;
+  filter: saturate(0.4) blur(1.5px);
+  pointer-events: none;
+}
+
+[data-tour="selected"] {
+  /* Al ponerlo a la vista, que no quede bajo la cabecera ni bajo el panel. */
+  scroll-margin: 96px 0 calc(var(--tour-inset-bottom, 0px) + 16px);
+  outline: 2px solid var(--accent-mark);
+  outline-offset: 6px;
+  border-radius: 14px;
+}
 
 body {
   font-family: var(--font-body);

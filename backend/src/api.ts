@@ -9,6 +9,7 @@ import {
 import { generateInsights, matchCampaign, type Campaign } from './agent.js';
 import {
   COUNTER_FIELDS, latestCounters, liveSnapshot, onLiveEvent, parseRange, readHistory, readPeriodStates, trackContractHistory,
+  txHashByIdentifier,
 } from './history.js';
 import { sponsorAvailable, sponsorConfigured, sponsorTx, takeSponsorQuota } from './sponsor.js';
 import type { AegisProviders } from './providers.js';
@@ -205,7 +206,11 @@ async function handleRequest(
       const { tx, commitmentHex } = await buildAttestReceiptTx(ctx.providers, ctx.contractAddress as any, receipt);
       if (sponsor) {
         const txId = await sponsorTx(tx);
-        return json(res, 200, { sponsored: true, txId, receipt: receiptToJSON(receipt), commitmentHex });
+        // txId es un identificador de la transacción; para enlazarla en el
+        // explorador hace falta su hash, que se pide al indexer (el
+        // frontend nunca habla con él: en preprod el token va en la URL).
+        const txHash = await txHashByIdentifier(ctx.config.indexer, txId);
+        return json(res, 200, { sponsored: true, txId, txHash, receipt: receiptToJSON(receipt), commitmentHex });
       }
       return json(res, 200, { tx, receipt: receiptToJSON(receipt), commitmentHex });
     }

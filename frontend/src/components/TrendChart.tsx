@@ -223,25 +223,28 @@ export default function TrendChart({ current, previous, range, lang, stale = fal
         )}
       </div>
 
-      <table className={styles.srOnly}>
-        <caption>{t.marketTableCaption}</caption>
-        <thead>
-          <tr>
-            <th scope="col">{t.marketTableDate}</th>
-            <th scope="col">{t.marketCurrentName[range]}</th>
-            {previous && <th scope="col">{t.marketPreviousName[range]}</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {[...xTicks.map(time => nearestIndex(current, time)), last].map((i, row) => (
-            <tr key={row}>
-              <th scope="row">{when(i)}</th>
-              <td>{number.format(current[i][1])}</td>
-              {previous && <td>{number.format(previous[i][1])}</td>}
+      {/* Una tabla no encoge a 1 px como el resto: la recorta su caja. */}
+      <div className={styles.srOnly}>
+        <table>
+          <caption>{t.marketTableCaption}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{t.marketTableDate}</th>
+              <th scope="col">{t.marketCurrentName[range]}</th>
+              {previous && <th scope="col">{t.marketPreviousName[range]}</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {[...xTicks.map(time => nearestIndex(current, time)), last].map((i, row) => (
+              <tr key={row}>
+                <th scope="row">{when(i)}</th>
+                <td>{number.format(current[i][1])}</td>
+                {previous && <td>{number.format(previous[i][1])}</td>}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </figure>
   );
 }

@@ -24,9 +24,18 @@
 }
 
 /* Avisos del envío en curso, dentro de la pantalla del móvil. */
+/* Publicada: la marca de verificado y el texto, en el azul tinta del acento. */
 .sent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   font-weight: 600;
-  color: var(--success);
+  color: var(--accent-strong);
+}
+
+.sentMark {
+  font-size: 20px;
+  --verified-stroke: 2;
 }
 
 .pending {

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useEffectEvent, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { SUBCATEGORY_INDEX, type AegisState, type Lang } from '../api.ts';
 import { submitSignal, explainTxError, type ReceiptJSON } from '../lace.ts';
@@ -16,8 +16,10 @@ import { useWallet } from '../app/WalletProvider.tsx';
 import { useChain } from '../app/ChainProvider.tsx';
 import { useTx } from '../app/TxProvider.tsx';
 import { useReportFlow } from '../routes/demoFlow.ts';
+import { useTourStep } from '../story/tourFocus.ts';
 import { loadLocalProofPreference, saveLocalProofPreference, useLocalProofServer } from '../localProofServer.ts';
 import styles from './UserView.module.css';
+import VerifiedMark from './VerifiedMark.tsx';
 
 // Las tarjetas de "¿Qué acaba de pasar?" salen solo la primera vez.
 const EXPLAINED_KEY = 'aegis-explained';
@@ -156,6 +158,16 @@ export default function UserView({ lang, variant = 'demo', goToContributeSignal 
     }
   }
 
+  // En el tour guiado, al pasar a un paso que no trata de la ventana de
+  // publicar, se cierra (la publicación sigue igual, ver `publication`).
+  const tourStep = useTourStep();
+  const leaveSheet = useEffectEvent(() => {
+    if (open) closeSheet();
+  });
+  useEffect(() => {
+    if (tourStep && !tourStep.focus.includes('sheet')) leaveSheet();
+  }, [tourStep]);
+
   const proofPicker = (
     <ProofLocationPicker
       lang={lang}
@@ -171,7 +183,7 @@ export default function UserView({ lang, variant = 'demo', goToContributeSignal 
   const step = !open ? publication?.step : undefined;
   const messages = scanError ? <p className={styles.error}>{scanError}</p>
     : step === 'proving' || step === 'signing' ? <p className={styles.pending}>{t.signalConfirming}</p>
-    : step === 'sent' || step === 'aggregated' ? <p className={styles.sent}>{t.userSentTitle} ✓{publication?.sponsored && ` · ${t.feePaidByAegis}`}</p>
+    : step === 'sent' || step === 'aggregated' ? <p className={styles.sent}><VerifiedMark draw className={styles.sentMark} /><span>{t.userSentTitle}{publication?.sponsored && ` · ${t.feePaidByAegis}`}</span></p>
     : step === 'failed' ? <p className={styles.error}>{publication?.error}</p>
     : null;
 

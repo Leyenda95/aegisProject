@@ -35,36 +35,19 @@
   color: var(--danger);
 }
 
-/* Marca de hecho: el círculo y luego la ✓ se dibujan solos. */
-.check circle,
-.check path {
-  fill: none;
-  stroke: var(--success);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+/* Marca de hecho: el aro del logo se dibuja, se cierra y entra el visto
+   (VerifiedMark). */
+.check {
+  font-size: 64px;
+  color: var(--accent-strong);
+  --verified-stroke: 1.4;
 }
 
-.check circle {
-  stroke-dasharray: 158;
-  stroke-dashoffset: 158;
-  animation: draw 0.5s ease-out forwards;
-}
-
-.check path {
-  stroke-dasharray: 34;
-  stroke-dashoffset: 34;
-  animation: draw 0.35s ease-out 0.4s forwards;
-}
-
-@keyframes draw {
-  to { stroke-dashoffset: 0; }
-}
-
+/* Los pasos, unidos por un hilo vertical que se rellena según avanzan. */
 .steps {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   margin: 0;
   padding: 14px;
   list-style: none;
@@ -74,6 +57,7 @@
 }
 
 .step {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -81,15 +65,35 @@
   color: var(--ink-faint);
 }
 
+/* Tramo del hilo hasta el paso siguiente, de borde a borde de las marcas (el
+   aro mide unos 12 de alto dentro de su caja de 21). */
+.step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: calc(50% + 7.5px);
+  bottom: -15px;
+  border-left: 1.5px solid var(--line);
+}
+
+.done:not(:last-child)::after {
+  border-left-color: var(--accent);
+}
+
 .marker {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  border: 2px solid var(--line);
+  width: 21px;
+  height: 21px;
+}
+
+/* Pendiente: un punto hueco pequeño. */
+.pending .marker::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--line);
   border-radius: 50%;
 }
 
@@ -98,9 +102,9 @@
 }
 
 .done .marker {
-  color: var(--surface);
-  background: var(--success);
-  border-color: var(--success);
+  font-size: 21px;
+  color: var(--accent-strong);
+  --verified-stroke: 2;
 }
 
 .active {
@@ -109,9 +113,13 @@
 }
 
 /* El paso en marcha: el borde gira, como el spinner del resto de la web. */
-.active .marker {
-  border-color: var(--accent-wash);
+.active .marker::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--accent-wash);
   border-top-color: var(--accent);
+  border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
@@ -176,13 +184,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .check circle,
-  .check path {
-    animation: none;
-    stroke-dashoffset: 0;
-  }
-
-  .active .marker {
+  .active .marker::before {
     animation: none;
     border-color: var(--accent);
   }

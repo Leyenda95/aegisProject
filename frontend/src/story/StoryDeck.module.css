@@ -1,0 +1,214 @@
+/* Presentación del recorrido (intro y resumen). Mismos colores que la
+   portada ([data-landing] en index.css): es su continuación. Marco con
+   cabecera y pie fijos; en medio, la diapositiva, que aparece fundiéndose
+   sin desenfoque y sin cambiar de tamaño; dentro,
+   el texto y las listas entran con Slide.module.css. */
+
+.root {
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  padding: 12px;
+  background: var(--l-bg);
+  color: var(--l-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.progress {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--l-track);
+}
+
+.progress::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  transform: scaleX(var(--p));
+  background: var(--l-accent);
+  transition: transform 0.5s var(--ease);
+}
+
+.frame {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--l-line);
+  border-radius: 16px;
+  background: var(--l-card);
+  overflow: hidden;
+}
+
+/* ---------- Cabecera ---------- */
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--l-line);
+  background: #FFFFFF;
+}
+
+.topGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+}
+
+.pill {
+  padding: 5px 12px;
+  border: 1px solid var(--l-line);
+  border-radius: 999px;
+  background: #FFFFFF;
+  font-size: 12px;
+  color: var(--l-ink-soft);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.pill:hover { color: var(--l-ink); border-color: var(--l-accent-line); }
+
+.langs {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--l-line);
+  border-radius: 999px;
+  background: #FFFFFF;
+}
+
+.lang {
+  padding: 3px 9px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--l-ink-faint);
+  cursor: pointer;
+}
+
+.lang[aria-pressed="true"] { background: var(--l-accent-wash); color: var(--l-ink); }
+
+/* ---------- Diapositiva ---------- */
+
+.stage {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+}
+
+.slide {
+  margin: auto;
+  width: 100%;
+  max-width: 1040px;
+  padding: 32px 40px;
+  animation: deckIn 0.5s ease-out 0.08s both;
+}
+
+/* ---------- Pie ---------- */
+
+.bottom {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.counter {
+  justify-self: start;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: #FFFFFF;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--l-ink-soft);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--l-ink-faint);
+}
+
+.nav {
+  justify-self: end;
+  display: flex;
+  gap: 8px;
+}
+
+.navBtn {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid var(--l-line);
+  border-radius: 50%;
+  background: #FFFFFF;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--l-ink);
+  cursor: pointer;
+  transition: transform 0.2s var(--ease), opacity 0.2s;
+}
+
+.navNext {
+  border-color: transparent;
+  background: var(--l-cta-bg);
+  color: var(--l-cta-ink);
+  box-shadow: var(--l-cta-glow);
+}
+
+.chevron { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+.navBtn:hover:not(:disabled) { transform: translateY(-1px); }
+.navBtn:disabled { opacity: 0.35; cursor: default; }
+
+/* Fondo gris azulado y piezas blancas encima, y un azul oscuro y limpio en
+   los dibujos y botones. [data-landing] sube la especificidad por encima de
+   los colores de la portada. */
+.root[data-landing] {
+  --l-card: #EEF2F7;
+  --l-line: rgba(24, 37, 49, 0.09);
+  --l-accent: #2E4766;
+  --l-accent-ink: #253D5B;
+  --l-accent-line: rgba(46, 71, 102, 0.35);
+  --l-cta-bg: #14243A;
+  --art-bg: linear-gradient(160deg, #FFFFFF 0%, #E3EAF3 100%);
+  --art-tile-from: #7089AC;
+  --art-tile-to: #314A69;
+  --art-line: rgba(49, 74, 105, 0.55);
+  --art-glow: rgba(49, 74, 105, 0.28);
+}
+
+@keyframes deckIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 680px) {
+  .wideOnly { display: none; }
+  .top { gap: 6px; }
+  .topGroup { gap: 6px; min-width: 0; }
+  .pill { padding: 5px 10px; }
+  .root { padding: 0; }
+  .frame { border-radius: 0; border: 0; }
+  .top { padding: 8px 10px; }
+  .slide { padding: 32px 18px; }
+  .hint { display: none; }
+  .bottom { grid-template-columns: 1fr 1fr; }
+}
