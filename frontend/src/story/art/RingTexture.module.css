@@ -14,12 +14,12 @@
   top: 0;
   transform: translate(-50%, -50%);
   overflow: visible;
-  filter: drop-shadow(0 14px 22px rgba(6, 12, 22, 0.5)) drop-shadow(0 2px 4px rgba(6, 12, 22, 0.3));
+  filter: drop-shadow(0 14px 22px var(--ring-shadow-a)) drop-shadow(0 2px 4px var(--ring-shadow-b));
 }
 
 .layer path {
-  fill: rgba(255, 255, 255, 0.07);
-  stroke: rgba(255, 255, 255, 0.16);
+  fill: var(--ring-fill);
+  stroke: var(--ring-stroke);
   vector-effect: non-scaling-stroke;
   stroke-width: 1px;
 }

@@ -364,10 +364,10 @@
   isolation: isolate;
   overflow: hidden;
   background:
-    radial-gradient(70% 60% at 0% 0%, rgba(255, 255, 255, 0.12), transparent 70%),
-    linear-gradient(160deg, #31476A 0%, #1F3049 100%);
+    radial-gradient(70% 60% at 0% 0%, var(--slide-dark-sheen), transparent 70%),
+    linear-gradient(160deg, var(--slide-dark-from) 0%, var(--slide-dark-to) 100%);
   border-color: transparent;
-  box-shadow: 0 14px 32px rgba(46, 71, 102, 0.22);
+  box-shadow: 0 14px 32px var(--slide-dark-shadow);
 }
 
 /* Textura de lo privado: el aro de Aegis en contornos concéntricos desde
@@ -382,11 +382,11 @@
   border-radius: 14px;
   background: linear-gradient(160deg, var(--art-tile-from), var(--art-tile-to));
   font-size: 24px;
-  color: #FFFFFF;
+  color: var(--deck-white);
   box-shadow: 0 6px 14px var(--art-glow);
 }
 
-.sideDark .sideBadge { background: rgba(255, 255, 255, 0.92); color: #1F3049; box-shadow: none; }
+.sideDark .sideBadge { background: var(--slide-badge-bg); color: var(--slide-dark-to); box-shadow: none; }
 
 .sideTitle {
   margin-top: 18px;
@@ -395,7 +395,7 @@
   color: var(--l-ink);
 }
 
-.sideDark .sideTitle { color: #FFFFFF; }
+.sideDark .sideTitle { color: var(--deck-white); }
 
 .sideList {
   margin-top: 14px;
@@ -407,7 +407,7 @@
   color: var(--l-ink-soft);
 }
 
-.sideDark .sideList { color: #E4EBF3; }
+.sideDark .sideList { color: var(--slide-list-on-dark); }
 
 /* ---------- Entrada escalonada ---------- */
 
@@ -423,7 +423,7 @@
 
 /* Las píldoras (diapositiva 8), con una sombra muy sutil: se despegan del
    fondo gris. El marco de los dibujos no lleva. */
-.chip { box-shadow: 0 3px 10px rgba(24, 37, 49, 0.02), 0 1px 2px rgba(24, 37, 49, 0.015); }
+.chip { box-shadow: 0 3px 10px var(--slide-chip-shadow-a), 0 1px 2px var(--slide-chip-shadow-b); }
 
 /* Sin dibujo (público y privado, piezas, misión...), el título y los
    nombres de grupo ocupan su lugar: aparecen primero, cuando aparecería el

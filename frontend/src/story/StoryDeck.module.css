@@ -54,7 +54,7 @@
   gap: 12px;
   padding: 10px 16px;
   border-bottom: 1px solid var(--l-line);
-  background: #FFFFFF;
+  background: var(--deck-white);
 }
 
 .topGroup {
@@ -68,7 +68,7 @@
   padding: 5px 12px;
   border: 1px solid var(--l-line);
   border-radius: 999px;
-  background: #FFFFFF;
+  background: var(--deck-white);
   font-size: 12px;
   color: var(--l-ink-soft);
   text-decoration: none;
@@ -83,7 +83,7 @@
   padding: 2px;
   border: 1px solid var(--l-line);
   border-radius: 999px;
-  background: #FFFFFF;
+  background: var(--deck-white);
 }
 
 .lang {
@@ -133,7 +133,7 @@
   justify-self: start;
   padding: 5px 11px;
   border-radius: 999px;
-  background: #FFFFFF;
+  background: var(--deck-white);
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--l-ink-soft);
@@ -158,7 +158,7 @@
   padding: 0;
   border: 1px solid var(--l-line);
   border-radius: 50%;
-  background: #FFFFFF;
+  background: var(--deck-white);
   font-size: 22px;
   line-height: 1;
   color: var(--l-ink);
@@ -182,17 +182,17 @@
    los dibujos y botones. [data-landing] sube la especificidad por encima de
    los colores de la portada. */
 .root[data-landing] {
-  --l-card: #EEF2F7;
-  --l-line: rgba(24, 37, 49, 0.09);
-  --l-accent: #2E4766;
-  --l-accent-ink: #253D5B;
-  --l-accent-line: rgba(46, 71, 102, 0.35);
-  --l-cta-bg: #14243A;
-  --art-bg: linear-gradient(160deg, #FFFFFF 0%, #E3EAF3 100%);
-  --art-tile-from: #7089AC;
-  --art-tile-to: #314A69;
-  --art-line: rgba(49, 74, 105, 0.55);
-  --art-glow: rgba(49, 74, 105, 0.28);
+  --l-card: var(--deck-card);
+  --l-line: var(--deck-line);
+  --l-accent: var(--deck-accent);
+  --l-accent-ink: var(--deck-accent-ink);
+  --l-accent-line: var(--deck-accent-line);
+  --l-cta-bg: var(--deck-cta-bg);
+  --art-bg: linear-gradient(160deg, var(--deck-white) 0%, var(--deck-art-to) 100%);
+  --art-tile-from: var(--deck-tile-from);
+  --art-tile-to: var(--deck-tile-to);
+  --art-line: var(--deck-art-line);
+  --art-glow: var(--deck-art-glow);
 }
 
 @keyframes deckIn {

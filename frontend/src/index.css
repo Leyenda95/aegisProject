@@ -168,6 +168,37 @@
   --art-glow: rgba(0, 0, 0, 0.45);
 }
 
+/* Colores fijos de la demo guiada (story/): iguales en claro y en oscuro,
+   porque el mazo, el panel del tour y las texturas llevan su propia paleta. */
+:root {
+  --deck-white: #FFFFFF;
+  --deck-card: #EEF2F7;
+  --deck-line: rgba(24, 37, 49, 0.09);
+  --deck-accent: #2E4766;
+  --deck-accent-ink: #253D5B;
+  --deck-accent-line: rgba(46, 71, 102, 0.35);
+  --deck-cta-bg: #14243A;
+  --deck-art-to: #E3EAF3;
+  --deck-tile-from: #7089AC;
+  --deck-tile-to: #314A69;
+  --deck-art-line: rgba(49, 74, 105, 0.55);
+  --deck-art-glow: rgba(49, 74, 105, 0.28);
+  /* Diapositivas: panel lateral oscuro, su insignia, lista y sombra de las píldoras */
+  --slide-dark-from: #31476A;
+  --slide-dark-to: #1F3049;
+  --slide-dark-sheen: rgba(255, 255, 255, 0.12);
+  --slide-dark-shadow: rgba(46, 71, 102, 0.22);
+  --slide-badge-bg: rgba(255, 255, 255, 0.92);
+  --slide-list-on-dark: #E4EBF3;
+  --slide-chip-shadow-a: rgba(24, 37, 49, 0.02);
+  --slide-chip-shadow-b: rgba(24, 37, 49, 0.015);
+  /* Textura de aros: sombras y relleno/trazo translúcidos */
+  --ring-shadow-a: rgba(6, 12, 22, 0.5);
+  --ring-shadow-b: rgba(6, 12, 22, 0.3);
+  --ring-fill: rgba(255, 255, 255, 0.07);
+  --ring-stroke: rgba(255, 255, 255, 0.16);
+}
+
 /* Portada (LandingScreen): clara con cualquier tema, así que sus colores van
    aparte de los del tema. Niebla fría con manchas gris azuladas y una cálida;
    tinta del logo; el acento Pizarra en las señales y la segunda línea. */

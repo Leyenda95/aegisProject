@@ -217,10 +217,10 @@
 
 /* En claro: un azul más oscuro y limpio en el botón y los dibujos. */
 :root:not([data-theme="dark"]) .panel {
-  --accent-fill: #2E4766;
-  --on-accent: #FFFFFF;
-  --accent-mark: #2E4766;
-  --art-tile-from: #7089AC;
-  --art-tile-to: #314A69;
-  --art-line: rgba(49, 74, 105, 0.55);
+  --accent-fill: var(--deck-accent);
+  --on-accent: var(--deck-white);
+  --accent-mark: var(--deck-accent);
+  --art-tile-from: var(--deck-tile-from);
+  --art-tile-to: var(--deck-tile-to);
+  --art-line: var(--deck-art-line);
 }
