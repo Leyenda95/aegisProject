@@ -170,7 +170,7 @@ export default function StoreView({ lang, onGoToUser }: Props) {
         ) : !lace && !sponsored ? (
           <p className={styles.notice}>{t.posConnectFirst}</p>
         ) : posQr && posReceipt ? (
-          <div className={styles.sold} data-tour={receiptFocus}>
+          <div className={cx(styles.sold, 'tour-loose')} data-tour={receiptFocus}>
             <p className={styles.scanHint}>{t.posScanHint}{posSponsored && ` · ${t.feePaidByAegis}`}</p>
             <div ref={ticketRef}>
               <ReceiptTicket
@@ -204,7 +204,7 @@ export default function StoreView({ lang, onGoToUser }: Props) {
           </div>
         ) : (
           <div className={styles.pos}>
-            <div className={styles.catalog} data-tour={catalogFocus}>
+            <div className={cx(styles.catalog, 'tour-loose')} data-tour={catalogFocus}>
               <p className={styles.catalogHint}>{t.posCatalogHint}</p>
 
               <div className={styles.categories}>

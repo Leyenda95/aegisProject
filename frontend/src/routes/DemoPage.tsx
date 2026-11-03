@@ -184,8 +184,10 @@ function DemoTabs({ market, tab, onTab }: { market: boolean; tab: Tab; onTab: (t
 function UserColumn({ flow, goToContributeSignal }: { flow: DemoFlow; goToContributeSignal: number }) {
   const { lang } = usePreferences();
   const inTour = useTourStep() !== null;
+  // Apagada, se apaga la columna entera; resaltado, solo el móvil (lo marca UserPhone), sin el título.
+  const focus = useTourFocus('phone');
   return (
-    <div className={styles.userCol} data-tour={useTourFocus('phone')}>
+    <div className={styles.userCol} data-tour={focus === 'muted' ? focus : undefined}>
       {!inTour && ticketWaiting(flow) && <PhoneNudge key={flow.sealedNonce} lang={lang} />}
       <UserView lang={lang} goToContributeSignal={goToContributeSignal} />
     </div>

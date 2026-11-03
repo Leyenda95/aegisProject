@@ -8,6 +8,7 @@ import type { ReceiptJSON } from '../lace.ts';
 import type { VaultEntry } from '../vault.ts';
 import { T } from '../i18n.ts';
 import { cx } from '../cx.ts';
+import { useTourFocus } from '../story/tourFocus.ts';
 import styles from './UserPhone.module.css';
 import VerifiedMark from './VerifiedMark.tsx';
 
@@ -91,6 +92,8 @@ export default function UserPhone({
   const screenRef = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState<Tab>('tickets');
   const blocked = needsLace || needsDeploy;
+  // En el tour se resalta el propio móvil; apagar, lo apaga la columna (DemoPage).
+  const tourFocus = useTourFocus('phone') === 'selected' ? 'selected' : undefined;
   // Al pasar el ratón por un botón bloqueado, por qué lo está.
   const blockedReason = needsLace ? t.publishNeedsWallet : needsDeploy ? t.userNeedsDeploy : undefined;
 
@@ -152,7 +155,7 @@ export default function UserPhone({
   );
 
   return (
-    <div className={cx(styles.phone, bare && styles.bare)}>
+    <div className={cx(styles.phone, bare && styles.bare)} data-tour={tourFocus}>
       <div className={styles.island} />
       <div className={styles.screen} ref={screenRef}>
         <div className={styles.statusBar}>

@@ -225,10 +225,10 @@
   .scrollHint { display: flex; }
 }
 
-/* En el tour, la cinta ocupa todo el ancho: el marco de lo resaltado va por
+/* En el tour, la cinta ocupa todo el ancho: el borde de lo resaltado va justo por
    dentro (por fuera se saldría de la pantalla por los lados), redondeado
    como el de las demás zonas. */
 .root[data-tour="selected"] {
-  outline-offset: -6px;
+  outline-offset: -1px;
   border-radius: 18px;
 }

@@ -186,6 +186,23 @@
   text-decoration: none;
 }
 
+/* En el tour, lo resaltado es el propio botón: su borde se marca pegado a él
+   (con su radio) y de ahí sale el pulso, sin un marco aparte alrededor. */
+.controlsWallet[data-tour="selected"] { outline: none; animation: none; }
+
+.controlsWallet[data-tour="selected"] :is(.btn, .pill) {
+  outline: 1px solid var(--accent-mark);
+  outline-offset: 0;
+  animation: walletPulse 2s both;
+}
+
+/* Una onda que sale del borde, se abre y se apaga. */
+@keyframes walletPulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-mark) 40%, transparent); }
+  70% { box-shadow: 0 0 2px 8px transparent; }
+  100% { box-shadow: 0 0 10px 0 transparent; }
+}
+
 .walletChoices {
   display: flex;
   gap: 6px;

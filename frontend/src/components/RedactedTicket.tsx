@@ -160,7 +160,7 @@ export default function RedactedTicket({
   // dentro de él la ventana quedaría por debajo de la cabecera.
   return createPortal(
     <div className={styles.overlay} onClick={onCancel}>
-      <div ref={stageRef} role="dialog" aria-modal="true" aria-label={t.publishSignal} tabIndex={-1} className={styles.stage} data-tour={tourFocus} onClick={e => e.stopPropagation()}>
+      <div ref={stageRef} role="dialog" aria-modal="true" aria-label={t.publishSignal} tabIndex={-1} className={cx(styles.stage, 'tour-loose')} data-tour={tourFocus} onClick={e => e.stopPropagation()}>
       <div className={styles.panel}>
         {progress ? (
           <PublishProgress

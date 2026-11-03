@@ -167,7 +167,7 @@ export const storyEs: StoryCopy = {
     registry: {
       title: 'Un registro de confianza',
       body: 'Si cualquiera pudiera sellar recibos, cualquiera podría inventarse compras y falsear el mercado. Por eso las tiendas se dan de alta, y su **clave pública** entra en un **árbol de Merkle**, una lista compacta guardada en el contrato.\n\nAsí, cada pequeño comercio sabe que las cifras que consulta salen de compras de verdad.',
-      todo: 'Pulsa «Comprobar el registro de tiendas»',
+      todo: 'Pulsa «Comprobar el registro de la tienda»',
     },
     addToCart: {
       title: 'Añade algo a la cesta',

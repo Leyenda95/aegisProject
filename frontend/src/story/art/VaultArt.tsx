@@ -2,9 +2,9 @@ import { Bar, Canvas, Node } from './kit.tsx';
 import { Phone } from './parts.tsx';
 
 const TICKETS = [
-  { x: 18, y: 32 },
-  { x: 12, y: 104 },
-  { x: 12, y: 170 },
+  { x: 15, y: 32 },
+  { x: 15, y: 104 },
+  { x: 15, y: 170 },
 ];
 
 /**

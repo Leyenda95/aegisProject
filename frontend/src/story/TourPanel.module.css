@@ -206,8 +206,9 @@
   .wideOnly { display: none; }
 
   .fold {
-    display: block;
-    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
     padding: 4px 10px;
     border: 1px solid var(--line);
     border-radius: 999px;
@@ -219,14 +220,14 @@
   }
 
   .body { padding: 12px 14px; }
-  /* Plegada: el título y la primera línea del texto, cortada con "...", para invitar a desplegar. */
+  /* En móvil la ilustración se quita, para ver más la demo. */
   .art { display: none; }
+  /* Plegada: el título y la primera línea del texto, cortada con "...", para invitar a desplegar. */
   .text { display: block; margin-top: 4px; }
   .text p:not(:first-child) { display: none; }
-  .text p:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .open .art { display: block; max-width: 280px; margin-inline: auto; }
+  .text p:first-child { max-width: 72%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .open .text { display: grid; margin-top: 10px; }
-  .open .text p { display: block; white-space: normal; }
+  .open .text p { display: block; max-width: none; white-space: normal; }
   /* El "Te toca" solo se ve desplegada. */
   .todo { display: none; }
   .open .todo { display: grid; }

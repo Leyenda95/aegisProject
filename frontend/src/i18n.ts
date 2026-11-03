@@ -419,7 +419,7 @@ const es: typeof en = {
   landingItem2: '1× Botas de cuero',
 
   posTitle: 'Punto de venta (demo)',
-  registryCheck: 'Comprobar el registro de tiendas',
+  registryCheck: 'Comprobar el registro de la tienda',
   registryChecking: 'Comprobando en Midnight…',
   registryOk: 'Tienda registrada',
   registryVerified: 'Verificado en Midnight',

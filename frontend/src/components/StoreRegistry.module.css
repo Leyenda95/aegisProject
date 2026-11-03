@@ -24,6 +24,23 @@
 .action:hover:not(:disabled) { border-color: var(--accent); }
 .action:disabled { cursor: default; opacity: 0.8; }
 
+/* En el tour, mientras toca pulsarlo, no se dibuja un marco aparte alrededor:
+   el resaltado es el propio borde del botón, que pulsa. */
+.root[data-tour="selected"]:has(.action) { outline: none; animation: none; }
+
+.root[data-tour="selected"] .action {
+  border-color: var(--accent-mark);
+  animation: tourPulse 2s both;
+  transition: border-color 0.4s ease;
+}
+
+/* Una onda que sale del borde, se abre y se apaga, y deja un leve resplandor. */
+@keyframes tourPulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-mark) 40%, transparent); }
+  70% { box-shadow: 0 0 2px 8px transparent; }
+  100% { box-shadow: 0 0 10px 0 transparent; }
+}
+
 /* Comprobada: solo la marca de verificado (el ojo con el visto) y el texto
    en dos líneas, sobre un velo muy tenue del acento que se desvanece hacia la
    derecha, sin borde marcado ni sombra. Entra en orden: el velo, el ojo se

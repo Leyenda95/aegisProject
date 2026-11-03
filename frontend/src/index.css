@@ -288,12 +288,35 @@ html.tour-open body { padding-right: var(--tour-inset-right); padding-bottom: va
   pointer-events: none;
 }
 
+/* Sin margen entre la zona y su resaltado: el borde marcado va pegado a la
+   zona (con su propio radio; las que no tienen, 12px) y de él sale el pulso. */
+:where([data-tour="selected"]) { border-radius: 12px; }
+
 [data-tour="selected"] {
   /* Al ponerlo a la vista, que no quede bajo la cabecera ni bajo el panel. */
   scroll-margin: 96px 0 calc(var(--tour-inset-bottom, 0px) + 16px);
-  outline: 2px solid var(--accent-mark);
+  /* Como el botón de comprobar el registro: su propio borde de 1px, en el color de acento (si no tiene borde, se pinta sobre su contorno). */
+  outline: 1px solid var(--accent-mark);
+  outline-offset: -1px;
+  /* Un pulso al entrar en el paso. Sin "forwards": al acabar, la zona recupera su propia sombra. */
+  animation: tourPulse 2s backwards;
+}
+
+/* Una onda que sale del borde, se abre y se apaga. Con --tour-ring, sale desde el marco separado (ver .tour-loose);
+   con --tour-shadow, la zona conserva su propia sombra durante el pulso; --tour-grow y
+   --tour-strength, cuánto se abre y con qué fuerza empieza. */
+@keyframes tourPulse {
+  0% { box-shadow: 0 0 0 var(--tour-ring, 0px) color-mix(in srgb, var(--accent-mark) var(--tour-strength, 40%), transparent), var(--tour-shadow, 0 0 transparent); }
+  70% { box-shadow: 0 0 2px calc(var(--tour-ring, 0px) + var(--tour-grow, 8px)) transparent, var(--tour-shadow, 0 0 transparent); }
+  100% { box-shadow: 0 0 10px var(--tour-ring, 0px) transparent, var(--tour-shadow, 0 0 transparent); }
+}
+
+/* Zonas sin borde propio (catálogo, recibo, hoja): el marco con aire
+   alrededor, como antes, y la onda sale desde él. */
+.tour-loose[data-tour="selected"] {
   outline-offset: 6px;
   border-radius: 14px;
+  --tour-ring: 7px;
 }
 
 body {

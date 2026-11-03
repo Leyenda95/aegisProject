@@ -696,3 +696,14 @@
 .bare .tabBar {
   padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 }
+
+/* En el tour, el borde resaltado (algo más grueso que en las demás zonas) cae justo sobre la línea que rodea el móvil. */
+.phone[data-tour="selected"] {
+  outline-width: 1.3px;
+  outline-offset: 0;
+  /* Su sombra de siempre, para que no desaparezca mientras dura el pulso. */
+  --tour-shadow: 0 0 0 1px var(--line), var(--shadow-lg);
+  /* Esa sombra tapa parte de la onda: aquí se abre más y empieza más intensa. */
+  --tour-grow: 14px;
+  --tour-strength: 55%;
+}
