@@ -28,7 +28,7 @@ export default function TourPanel({ tour, facts }: { tour: GuidedTour; facts: To
   const [open, setOpen] = useState(false);
 
   return (
-    <aside className={cx(styles.panel, open && styles.open)} aria-label={ui.behindTheScenes}>
+    <aside className={cx(styles.panel, open && styles.open)} aria-label={ui.behindTheScenes} data-tour-panel>
       <header className={styles.top}>
         <span className={styles.eyebrow}>{ui.behindTheScenes}</span>
         <div className={styles.links}>

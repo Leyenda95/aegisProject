@@ -17,6 +17,8 @@ export default function Header() {
   // En el paso de la wallet del tour, el botón de conectar es lo resaltado.
   // En los demás no se apaga: la cabecera sigue a mano durante todo el tour.
   const walletFocus = useRouteTourFocus('wallet') === 'selected' ? 'selected' : undefined;
+  // Y, mientras no hay wallet, un cartel bajo el botón dice qué pulsar.
+  const connectHint = walletFocus && !wallet && !connecting ? t.connectToContinue : null;
   // Algo del alta de la demo sin hacer (en la práctica, solo en local con un
   // contrato propio): con la wallet conectada, enlace a /setup.
   // Solo cuando ya se sabe: mientras llegan el registro y los contadores, no
@@ -98,6 +100,7 @@ export default function Header() {
             <span className={styles.pill}>Wallet · {address ? `…${address.slice(-6)}` : 'connected'}</span>
           </div>
         )}
+        {connectHint && <span className={styles.tourHint} role="status">{connectHint}</span>}
         </div>
 
         {/* Debajo de idioma/tema, no de wallet: si el error apareciera junto

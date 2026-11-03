@@ -128,14 +128,17 @@
 
 .overlay {
   position: fixed;
-  /* En el tour, deja a la vista su panel (ver html.tour-open en index.css). */
-  inset: 0 var(--tour-inset-right, 0px) var(--tour-inset-bottom, 0px) 0;
+  /* En el tour, deja a la vista su panel (ver html.tour-open en index.css): a
+     la derecha, al lado; abajo, el velo sigue por detrás de la hoja del tour
+     (que no mide siempre lo mismo, y si no asomaría la demo entre los dos) y
+     solo el contenido le deja sitio. */
+  inset: 0 var(--tour-inset-right, 0px) 0 0;
   z-index: 1000;
   background: var(--scrim);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 16px 32px;
+  padding: 24px 16px calc(var(--tour-inset-bottom, 0px) + 32px);
   overflow-y: auto;
 }
 

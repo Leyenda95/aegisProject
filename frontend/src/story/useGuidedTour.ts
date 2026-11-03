@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { advanceDelay, advancesOn, parseTourPath, revealOptions, TOURS, type Span, type TourFacts, type TourId, type TourStep } from './tour.ts';
+import { advanceDelay, advancesOn, parseTourPath, revealScroll, TOURS, type Span, type TourFacts, type TourId, type TourStep } from './tour.ts';
 
 export type GuidedTour = { tour: TourId; index: number; total: number; step: TourStep; go: (n: number) => void };
 
@@ -22,8 +22,9 @@ export function useGuidedTour(facts: TourFacts): GuidedTour | null {
   const navigate = useNavigate();
   const tourId = route?.tour;
   const total = tourId ? TOURS[tourId].length : 0;
-  const tour = route && route.index !== null
-    ? { tour: route.tour, index: route.index, total, step: TOURS[route.tour][route.index - 1] }
+  const steps: readonly TourStep[] | undefined = tourId && TOURS[tourId];
+  const tour = route && route.index !== null && steps
+    ? { tour: route.tour, index: route.index, total, step: steps[route.index - 1] }
     : null;
 
   const go = useCallback((n: number) => {
@@ -32,7 +33,7 @@ export function useGuidedTour(facts: TourFacts): GuidedTour | null {
 
   useAutoAdvance(tour, facts, go);
   useTourPage(tour !== null);
-  useRevealFocus(tour ? `${tour.tour}/${tour.step.id}` : undefined);
+  useRevealFocus(tour ? `${tour.tour}/${tour.step.id}` : undefined, tour?.step.top === true);
 
   return tour && { ...tour, go };
 }
@@ -69,31 +70,44 @@ function useTourPage(on: boolean) {
 
 /**
  * La parte de la ventana que se ve de verdad: sin la cabecera (fija) ni,
- * en tableta y móvil, la hoja del tour abajo.
+ * en tableta y móvil, la hoja del tour abajo (lo que mide de verdad, que
+ * cambia con el texto del paso).
  */
 function visibleSpan(): Span {
   const header = document.querySelector('header')?.getBoundingClientRect().bottom ?? 0;
-  const sheet = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tour-inset-bottom')) || 0;
-  return { top: Math.max(0, header), bottom: window.innerHeight - sheet };
+  const sheetBelow = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tour-inset-bottom')) > 0;
+  const panel = sheetBelow ? document.querySelector('[data-tour-panel]')?.getBoundingClientRect().top : undefined;
+  return { top: Math.max(0, header), bottom: panel ?? window.innerHeight };
+}
+
+/** Aire entre lo resaltado y la cabecera o el panel; más en las zonas con el marco separado (.tour-loose). */
+function revealMargin(el: Element): number {
+  return el.classList.contains('tour-loose') ? 28 : 16;
 }
 
 /** Cuánto tiempo, tras ponerlo a la vista, se sigue encuadrando lo resaltado si cambia de tamaño. */
 const SETTLE_MS = 1500;
 
 /**
- * Al cambiar de paso, lo resaltado se pone a la vista. Si aún no está (al
- * entrar directo a un paso, la caja aparece cuando llega el estado del
- * contrato), se espera a que aparezca. Si justo después cambia de tamaño
- * (las herramientas de la tienda se despliegan al resaltarlas), se vuelve a
- * encuadrar.
+ * Al cambiar de paso, lo resaltado se pone a la vista (o, si el paso lo
+ * pide, la página vuelve arriba del todo). Si aún no está (al entrar directo
+ * a un paso, la caja aparece cuando llega el estado del contrato), se espera
+ * a que aparezca. Si justo después cambia de tamaño (las herramientas de la
+ * tienda se despliegan al resaltarlas), se vuelve a encuadrar. La ventana de
+ * publicar no mueve la página: va fija encima y ya empieza arriba.
  */
-function useRevealFocus(stepKey: string | undefined) {
+function useRevealFocus(stepKey: string | undefined, toTop: boolean) {
   useEffect(() => {
     if (!stepKey) return;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const behavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    if (toTop) {
+      const frame = requestAnimationFrame(() => window.scrollTo({ top: 0, behavior }));
+      return () => cancelAnimationFrame(frame);
+    }
     const fit = (el: Element) => {
-      const options = revealOptions(el.getBoundingClientRect(), visibleSpan(), reduce);
-      if (options) el.scrollIntoView(options);
+      if (el.closest('[aria-modal="true"]')) return;
+      const delta = revealScroll(el.getBoundingClientRect(), visibleSpan(), revealMargin(el));
+      if (delta !== null) window.scrollTo({ top: window.scrollY + delta, behavior });
     };
     const resize = new ResizeObserver(entries => fit(entries[0].target));
     let stopResize = 0;
@@ -117,5 +131,5 @@ function useRevealFocus(stepKey: string | undefined) {
       resize.disconnect();
       window.clearTimeout(stopResize);
     };
-  }, [stepKey]);
+  }, [stepKey, toTop]);
 }

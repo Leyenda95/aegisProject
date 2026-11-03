@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advanceDelay, advancesOn, blocksNext, focusState, isDone, parseStep, parseTourPath, revealOptions, TOURS, type TourFacts, type TourStep } from './tour.ts';
+import { advanceDelay, advancesOn, blocksNext, focusState, isDone, parseStep, parseTourPath, revealScroll, TOURS, type TourFacts, type TourStep } from './tour.ts';
 
 const TOUR: readonly TourStep[] = TOURS.tour;
 
@@ -161,38 +161,32 @@ describe('tour de la ruta', () => {
 });
 
 describe('poner a la vista lo resaltado', () => {
-  it('lo que ya se ve entero no se mueve', () => {
-    expect(revealOptions({ top: 200, bottom: 500 }, { top: 80, bottom: 800 }, false)).toBeNull();
+  const visible = { top: 80, bottom: 800 };
+
+  it('lo que ya se ve entero, con su margen, no se mueve', () => {
+    expect(revealScroll({ top: 200, bottom: 500 }, visible, 16)).toBeNull();
   });
 
-  it('lo que no cabe y ya empieza arriba no se mueve', () => {
-    expect(revealOptions({ top: 150, bottom: 1500 }, { top: 80, bottom: 800 }, false)).toBeNull();
+  it('lo que cabe pero asoma solo en parte se centra', () => {
+    // Hueco con margen: de 96 a 784, centro en 440; la zona, centrada en 750.
+    expect(revealScroll({ top: 600, bottom: 900 }, visible, 16)).toBe(310);
+    // Pegada bajo la cabecera, sin su margen: baja (la página sube).
+    expect(revealScroll({ top: 85, bottom: 300 }, visible, 16)).toBe(192.5 - 440);
   });
 
-  it('lo que no cabe y empieza abajo sí sube', () => {
-    expect(revealOptions({ top: 600, bottom: 1900 }, { top: 80, bottom: 800 }, false)?.block).toBe('start');
+  it('lo que no cabe se enseña desde su principio, con su margen bajo la cabecera', () => {
+    expect(revealScroll({ top: 600, bottom: 1900 }, visible, 16)).toBe(504);
+    expect(revealScroll({ top: 30, bottom: 1500 }, visible, 16)).toBe(-66);
   });
 
-  it('lo que asoma solo en parte sí se pone a la vista', () => {
-    expect(revealOptions({ top: 600, bottom: 900 }, { top: 80, bottom: 800 }, false)).not.toBeNull();
-    expect(revealOptions({ top: 40, bottom: 300 }, { top: 80, bottom: 800 }, false)).not.toBeNull();
+  it('lo que no cabe y ya empieza justo bajo la cabecera no se mueve', () => {
+    expect(revealScroll({ top: 97, bottom: 1500 }, visible, 16)).toBeNull();
   });
 
-  it('centra lo que cabe en pantalla', () => {
-    expect(revealOptions({ top: 900, bottom: 1200 }, { top: 0, bottom: 800 }, false)).toEqual({ block: 'center', behavior: 'smooth' });
-  });
-
-  it('lo que no cabe se enseña desde su principio', () => {
-    expect(revealOptions({ top: 900, bottom: 1600 }, { top: 0, bottom: 800 }, false)?.block).toBe('start');
-  });
-
-  it('lo que ocupa justo el 80 % de la pantalla ya no se centra', () => {
-    expect(revealOptions({ top: 900, bottom: 1540 }, { top: 0, bottom: 800 }, false)?.block).toBe('start');
-    expect(revealOptions({ top: 900, bottom: 1539 }, { top: 0, bottom: 800 }, false)?.block).toBe('center');
-  });
-
-  it('con movimiento reducido salta sin animación', () => {
-    expect(revealOptions({ top: 900, bottom: 1200 }, { top: 0, bottom: 800 }, true)?.behavior).toBe('auto');
+  it('el margen cuenta para saber si cabe', () => {
+    expect(revealScroll({ top: 100, bottom: 784 }, visible, 16)).toBeNull();
+    // 690 px no caben en los 688 que deja el margen: se alinea arriba.
+    expect(revealScroll({ top: 100, bottom: 790 }, visible, 16)).toBe(4);
   });
 });
 
@@ -215,5 +209,9 @@ describe('el recorrido del tour', () => {
   it('tras enviar la señal, enseña el mercado', () => {
     const publish = TOUR.findIndex(s => s.waitFor === 'sent');
     expect(TOUR[publish + 1].view).toBe('market');
+  });
+
+  it('vuelve arriba del todo en la wallet, el mercado y el final', () => {
+    expect(TOUR.filter(s => s.top).map(s => s.id)).toEqual(['wallet', 'market', 'explore']);
   });
 });

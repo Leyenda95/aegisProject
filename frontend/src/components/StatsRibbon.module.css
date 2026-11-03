@@ -3,6 +3,39 @@
   position: relative;
 }
 
+/* En el tour, la cinta va justo bajo la cabecera fija. Resaltada, su marco no
+   tiene línea arriba: esa la pone la divisoria de la cabecera, que se tiñe
+   del acento (ver Header.module.css), así no se ven dos rayas pegadas. Abajo,
+   el marco sustituye al borde propio de la cinta. Mientras dura el pulso se
+   pone por encima de la cabecera, para que la onda salga también hacia
+   arriba; después vuelve debajo (si no, al bajar taparía la cabecera). */
+.root[data-tour="selected"] {
+  outline: none;
+  border-radius: 0;
+  animation: ribbonPulse 2s backwards, ribbonLift 2s;
+}
+
+.root[data-tour="selected"]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--accent-mark);
+  border-top: 0;
+  pointer-events: none;
+}
+
+.root[data-tour="selected"] .ribbon { border-bottom-color: transparent; }
+
+@keyframes ribbonPulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-mark) 40%, transparent); }
+  70% { box-shadow: 0 0 2px 8px transparent; }
+  100% { box-shadow: 0 0 10px 0 transparent; }
+}
+
+@keyframes ribbonLift {
+  from, to { z-index: 11; }
+}
+
 .ribbon {
   display: flex;
   align-items: center;

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router';
 import type { Lang } from '../api.ts';
 import { usePreferences } from '../app/PreferencesProvider.tsx';
@@ -40,6 +40,9 @@ function DeckView({ deck, index }: { deck: DeckId; index: number }) {
   }, [deck, total, navigate]);
 
   const move = useCallback((step: 1 | -1) => go(index + step), [go, index]);
+  // Cada diapositiva empieza arriba, aunque en la anterior se bajara para seguir leyendo.
+  const stage = useRef<HTMLElement>(null);
+  useEffect(() => { stage.current?.scrollTo({ top: 0 }); }, [index]);
   useLockPageScroll();
   useArrowKeys(move);
 
@@ -49,7 +52,7 @@ function DeckView({ deck, index }: { deck: DeckId; index: number }) {
       <div className={styles.frame}>
         <DeckTop deck={deck} index={index} />
 
-        <main className={styles.stage}>
+        <main ref={stage} className={styles.stage}>
           <div key={slide.id} className={styles.slide}>
             <Slide layout={slide.layout} copy={slide.copy} />
           </div>

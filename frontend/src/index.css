@@ -293,8 +293,6 @@ html.tour-open body { padding-right: var(--tour-inset-right); padding-bottom: va
 :where([data-tour="selected"]) { border-radius: 12px; }
 
 [data-tour="selected"] {
-  /* Al ponerlo a la vista, que no quede bajo la cabecera ni bajo el panel. */
-  scroll-margin: 96px 0 calc(var(--tour-inset-bottom, 0px) + 16px);
   /* Como el botón de comprobar el registro: su propio borde de 1px, en el color de acento (si no tiene borde, se pinta sobre su contorno). */
   outline: 1px solid var(--accent-mark);
   outline-offset: -1px;
@@ -302,21 +300,40 @@ html.tour-open body { padding-right: var(--tour-inset-right); padding-bottom: va
   animation: tourPulse 2s backwards;
 }
 
-/* Una onda que sale del borde, se abre y se apaga. Con --tour-ring, sale desde el marco separado (ver .tour-loose);
-   con --tour-shadow, la zona conserva su propia sombra durante el pulso; --tour-grow y
+/* Una onda que sale del borde, se abre y se apaga. Con --tour-shadow, la zona conserva su propia sombra durante el pulso; --tour-grow y
    --tour-strength, cuánto se abre y con qué fuerza empieza. */
 @keyframes tourPulse {
-  0% { box-shadow: 0 0 0 var(--tour-ring, 0px) color-mix(in srgb, var(--accent-mark) var(--tour-strength, 40%), transparent), var(--tour-shadow, 0 0 transparent); }
-  70% { box-shadow: 0 0 2px calc(var(--tour-ring, 0px) + var(--tour-grow, 8px)) transparent, var(--tour-shadow, 0 0 transparent); }
-  100% { box-shadow: 0 0 10px var(--tour-ring, 0px) transparent, var(--tour-shadow, 0 0 transparent); }
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-mark) var(--tour-strength, 40%), transparent), var(--tour-shadow, 0 0 transparent); }
+  70% { box-shadow: 0 0 2px var(--tour-grow, 8px) transparent, var(--tour-shadow, 0 0 transparent); }
+  100% { box-shadow: 0 0 10px 0 transparent, var(--tour-shadow, 0 0 transparent); }
 }
 
 /* Zonas sin borde propio (catálogo, recibo, hoja): el marco con aire
-   alrededor, como antes, y la onda sale desde él. */
+   alrededor, y la onda sale desde él, solo hacia fuera. La pinta una capa
+   del tamaño del marco: si fuera la sombra de la propia zona, llenaría
+   también el hueco entre la zona y el marco. */
 .tour-loose[data-tour="selected"] {
+  position: relative;
   outline-offset: 6px;
   border-radius: 14px;
-  --tour-ring: 7px;
+  animation: none;
+}
+
+.tour-loose[data-tour="selected"]::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 21px;
+  pointer-events: none;
+  animation: tourPulse 2s backwards;
+}
+
+/* En móvil la hoja de publicar ocupa todo el ancho: su marco quedaría pegado a
+   los bordes de la pantalla, como un móvil fantasma alrededor. Ahí ya es lo
+   único que se ve, así que va sin marco ni onda. */
+@media (max-width: 679px) {
+  .tour-loose[data-tour="selected"][role="dialog"] { outline: none; }
+  .tour-loose[data-tour="selected"][role="dialog"]::after { content: none; }
 }
 
 body {

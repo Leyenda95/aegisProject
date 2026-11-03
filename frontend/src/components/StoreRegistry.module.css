@@ -24,9 +24,10 @@
 .action:hover:not(:disabled) { border-color: var(--accent); }
 .action:disabled { cursor: default; opacity: 0.8; }
 
-/* En el tour, mientras toca pulsarlo, no se dibuja un marco aparte alrededor:
-   el resaltado es el propio borde del botón, que pulsa. */
-.root[data-tour="selected"]:has(.action) { outline: none; animation: none; }
+/* En el tour no se dibuja un marco aparte alrededor: mientras toca pulsarlo,
+   el resaltado es el propio borde del botón, que pulsa; ya comprobada, basta
+   con la onda del ojo (ver .seal::after). */
+.root[data-tour="selected"] { outline: none; animation: none; }
 
 .root[data-tour="selected"] .action {
   border-color: var(--accent-mark);
@@ -73,11 +74,12 @@
   content: '';
   position: absolute;
   inset: 21% 4%;
-  border: 1px solid currentColor;
+  border: 1.5px solid currentColor;
   border-radius: 50%;
   opacity: 0;
   pointer-events: none;
-  animation: ripple 0.9s ease-out 0.8s both;
+  /* Sin "backwards": mientras espera a que se cierre el visto, no se ve. */
+  animation: ripple 0.9s ease-out 0.8s forwards;
 }
 
 .verifiedText {
@@ -116,7 +118,7 @@
 }
 
 @keyframes ripple {
-  from { opacity: 0.45; transform: scale(1); }
+  from { opacity: 0.6; transform: scale(1); }
   to { opacity: 0; transform: scale(1.35); }
 }
 

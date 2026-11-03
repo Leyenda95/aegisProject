@@ -50,7 +50,7 @@ export default function StatsRibbon({ state, lang, breakdownOpen, onToggleBreakd
   const tourFocus = useTourFocus('ribbon');
 
   return (
-    <div className={styles.root} data-tour={tourFocus}>
+    <div className={styles.root} data-tour={tourFocus} data-ribbon>
     <div className={cx(styles.ribbon, !state && styles.loading)}>
       <div className={styles.totalGroup}>
         <span className={styles.total}>

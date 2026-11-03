@@ -13,6 +13,7 @@ const en = {
   lightMode: 'Switch to light mode',
   darkMode: 'Switch to dark mode',
   connectLace: 'Connect Wallet',
+  connectToContinue: 'Click "connect" or press next',
   connecting: 'Connecting...',
   noWalletFound: 'No Midnight wallet found (Lace or 1AM).',
   walletConnectionLost: 'The wallet connection was lost. Connect it again.',
@@ -49,7 +50,7 @@ const en = {
   signalsBreakdown: 'Full breakdown',
 
   // Mercado (MarketView)
-  marketIntro: 'Everything here is public on Midnight: of each purchase, only its subcategory and quantity.',
+  marketIntro: 'Everything here is public on Midnight.',
   marketActivity: 'Activity',
   marketPeriod: 'Period',
   marketPeriodLabel: { '7d': 'signals in the last week', '30d': 'signals in the last month', '90d': 'signals in the last 3 months', '365d': 'signals in the last year' },
@@ -80,7 +81,7 @@ const en = {
   insightsRanges: { '7d': '1W', '30d': '1M', '90d': '3M', '365d': '1Y' },
   insightsRangeNames: { '7d': 'last week', '30d': 'last month', '90d': 'last 3 months', '365d': 'last year' },
   insightsRecommendations: 'RECOMMENDATIONS',
-  insightsSuggestions: ['Urban fashion for young people', 'Neighbourhood supermarket', 'Electronics shop', 'Specialty coffee shop'],
+  insightsSuggestions: ['Urban fashion for young people', 'Electronics shop', 'Specialty coffee shop'],
   insightsCopy: 'Copy report',
   insightsCopied: 'Copied',
 
@@ -139,7 +140,7 @@ const en = {
   posSealing: 'Sealing...',
   posNewSale: 'New sale',
   posViewTx: 'View the transaction in the explorer',
-  posScanHint: 'Receipt sealed. The customer scans this code with their phone camera.',
+  posScanHint: 'Receipt sealed',
   sponsorOn: 'DUST sponsored',
   sponsorOff: 'DUST not sponsored',
   sponsorOnHint: 'Aegis pays the network fees of your transactions. No DUST or wallet needed.',
@@ -154,7 +155,7 @@ const en = {
 
   // UserView
   userTitle: 'User device',
-  userSubtitle: "Publish the signal from a new ticket or scan the store's QR. It's published anonymously: nobody sees who you are or how much you spent.",
+  userSubtitle: "Publish the signal from a new ticket or scan the store's QR.",
   publishNeedsWallet: 'Connect your wallet to publish the signal',
   userNeedsLace: 'Sponsored transactions are unavailable right now. Connect a wallet with DUST in the header to send signals.',
   sponsorUnavailable: 'Sponsored transactions are unavailable right now. Connect a wallet with DUST to pay the fee yourself.',
@@ -321,6 +322,7 @@ const es: typeof en = {
   lightMode: 'Cambiar a modo claro',
   darkMode: 'Cambiar a modo oscuro',
   connectLace: 'Conectar Billetera',
+  connectToContinue: 'Pulsa "conectar" o dale a siguiente',
   connecting: 'Conectando...',
   noWalletFound: 'No se encontró ninguna wallet de Midnight instalada (Lace o 1AM).',
   walletConnectionLost: 'Se ha perdido la conexión con la wallet. Vuelve a conectarla.',
@@ -354,7 +356,7 @@ const es: typeof en = {
   signalsUnitShort: 'señales',
   signalsBreakdown: 'Desglose completo',
 
-  marketIntro: 'Todo lo que ves aquí es público en Midnight: de cada compra, solo la subcategoría y la cantidad.',
+  marketIntro: 'Todo lo que ves aquí es público en Midnight.',
   marketActivity: 'Actividad',
   marketPeriod: 'Periodo',
   marketPeriodLabel: { '7d': 'señales en la última semana', '30d': 'señales en el último mes', '90d': 'señales en los últimos 3 meses', '365d': 'señales en el último año' },
@@ -384,7 +386,7 @@ const es: typeof en = {
   insightsRanges: { '7d': '1S', '30d': '1M', '90d': '3M', '365d': '1A' },
   insightsRangeNames: { '7d': 'última semana', '30d': 'último mes', '90d': 'últimos 3 meses', '365d': 'último año' },
   insightsRecommendations: 'RECOMENDACIONES',
-  insightsSuggestions: ['Moda urbana para jóvenes', 'Supermercado de barrio', 'Tienda de electrónica', 'Cafetería de especialidad'],
+  insightsSuggestions: ['Moda urbana para jóvenes', 'Tienda de electrónica', 'Cafetería de especialidad'],
   insightsCopy: 'Copiar informe',
   insightsCopied: 'Copiado',
 
@@ -440,7 +442,7 @@ const es: typeof en = {
   posSealing: 'Sellando...',
   posNewSale: 'Nueva venta',
   posViewTx: 'Ver la transacción en el explorador',
-  posScanHint: 'Recibo sellado. El cliente escanea este código con la cámara de su móvil.',
+  posScanHint: 'Recibo sellado',
   sponsorOn: 'DUST patrocinado',
   sponsorOff: 'DUST no patrocinado',
   sponsorOnHint: 'Aegis paga las comisiones de red de tus transacciones. No necesitas DUST ni billetera.',
@@ -452,7 +454,7 @@ const es: typeof en = {
   nudgeGo: 'Ir al móvil',
 
   userTitle: 'Dispositivo de usuario',
-  userSubtitle: 'Publica la señal de un ticket nuevo o escanea el QR de la tienda. Se publica de forma anónima: nadie ve quién eres ni cuánto has gastado.',
+  userSubtitle: 'Publica la señal de un ticket nuevo o escanea el QR de la tienda.',
   publishNeedsWallet: 'Conecta tu wallet para publicar la señal',
   userNeedsLace: 'Las transacciones patrocinadas no están disponibles ahora mismo. Conecta una billetera con DUST en el encabezado para enviar señales.',
   sponsorUnavailable: 'Las transacciones patrocinadas no están disponibles ahora mismo. Conecta una billetera con DUST para pagar tú la comisión.',

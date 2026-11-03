@@ -34,6 +34,8 @@ export type TourStep = {
   waitFor?: Milestone;
   /** La acción solo adelanta el paso: «Siguiente» no espera a que se haga. */
   optional?: boolean;
+  /** Al entrar, la página vuelve arriba del todo en vez de encuadrar lo resaltado. */
+  top?: boolean;
   art: ArtId;
 };
 
@@ -44,7 +46,7 @@ export type TourStep = {
  */
 export const TOURS = {
   tour: [
-    { id: 'wallet', view: 'demo', side: 'store', focus: ['wallet'], waitFor: 'wallet', optional: true, art: 'wallet' },
+    { id: 'wallet', view: 'demo', side: 'store', focus: ['wallet'], waitFor: 'wallet', optional: true, top: true, art: 'wallet' },
     { id: 'ribbon', view: 'demo', side: 'store', focus: ['ribbon'], art: 'counters' },
     { id: 'registry', view: 'demo', side: 'store', focus: ['registry'], waitFor: 'storeChecked', art: 'registry' },
     { id: 'addToCart', view: 'demo', side: 'store', focus: ['catalog'], waitFor: 'cart', art: 'cart' },
@@ -53,9 +55,9 @@ export const TOURS = {
     { id: 'ticket', view: 'demo', side: 'user', focus: ['phone'], waitFor: 'sharing', art: 'vault' },
     { id: 'share', view: 'demo', side: 'user', focus: ['sheet'], waitFor: 'proving', art: 'disclosure' },
     { id: 'publish', view: 'demo', side: 'user', focus: ['sheet'], waitFor: 'sent', optional: true, art: 'proof' },
-    { id: 'market', view: 'market', side: 'store', focus: ['market'], art: 'market' },
+    { id: 'market', view: 'market', side: 'store', focus: ['market'], top: true, art: 'market' },
     { id: 'report', view: 'demo', side: 'store', focus: ['tools'], art: 'agent' },
-    { id: 'explore', view: 'demo', side: 'store', focus: [], art: 'explore' },
+    { id: 'explore', view: 'demo', side: 'store', focus: [], top: true, art: 'explore' },
   ],
 } as const satisfies Record<string, readonly TourStep[]>;
 
@@ -114,21 +116,20 @@ export function advanceDelay(step: TourStep): number {
 export type Span = { top: number; bottom: number };
 
 /**
- * Cómo poner a la vista lo resaltado, o null si ya se ve bien (entonces la
- * página no se mueve): entero o, si no cabe, empezando en el tercio de
- * arriba. Si no: centrado si cabe (con margen) y desde su principio si no;
- * sin animación si se pide menos movimiento.
+ * Cuánto bajar la página (en px; negativo, subir) para poner a la vista lo
+ * resaltado, o null si ya se ve bien. Lo que cabe, con su margen alrededor,
+ * se ve entero: si ya se ve no se mueve y si no se centra. Lo que no cabe se
+ * enseña desde su principio, justo bajo la cabecera.
  */
-export function revealOptions(target: Span, visible: Span, reduceMotion: boolean): ScrollIntoViewOptions | null {
-  const room = visible.bottom - visible.top;
-  const fits = target.bottom - target.top < room * 0.8;
-  const topInView = target.top >= visible.top;
-  if (topInView && target.bottom <= visible.bottom) return null;
-  if (!fits && topInView && target.top <= visible.top + room / 3) return null;
-  return {
-    block: fits ? 'center' : 'start',
-    behavior: reduceMotion ? 'auto' : 'smooth',
-  };
+export function revealScroll(target: Span, visible: Span, margin: number): number | null {
+  const top = visible.top + margin;
+  const bottom = visible.bottom - margin;
+  if (target.bottom - target.top <= bottom - top) {
+    if (target.top >= top && target.bottom <= bottom) return null;
+    return (target.top + target.bottom) / 2 - (top + bottom) / 2;
+  }
+  const delta = target.top - top;
+  return Math.abs(delta) < 2 ? null : delta;
 }
 
 export function parseStep(tour: TourId, param: string | undefined): number | null {
