@@ -328,6 +328,8 @@
 /* Mobile (< 680px) */
 @media (max-width: 679px) {
   .card { padding: 16px; }
+  /* En el tour, el aire del marco no puede pasar del margen de la página (16px): si no, se sale por los lados. */
+  .market[data-tour="selected"] { padding: 12px; margin: -12px; border-radius: 20px; }
   .category {
     grid-template-columns: minmax(0, 1fr) auto auto;
     row-gap: 6px;

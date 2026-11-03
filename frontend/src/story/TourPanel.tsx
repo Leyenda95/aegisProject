@@ -26,9 +26,11 @@ export default function TourPanel({ tour, facts }: { tour: GuidedTour; facts: To
   // En un paso con acción, «Siguiente» espera a que se haga (salvo las opcionales).
   const blocked = blocksNext(step, facts);
   const [open, setOpen] = useState(false);
+  // Con la ventana de publicar abierta (pasos de la hoja), la franja de arriba va sólida: sin la demo detrás.
+  const overSheet = step.focus.some(f => f === 'sheet');
 
   return (
-    <aside className={cx(styles.panel, open && styles.open)} aria-label={ui.behindTheScenes} data-tour-panel>
+    <aside className={cx(styles.panel, open && styles.open, last && styles.last, overSheet && styles.overSheet)} aria-label={ui.behindTheScenes} data-tour-panel>
       <header className={styles.top}>
         <span className={styles.eyebrow}>{ui.behindTheScenes}</span>
         <div className={styles.links}>

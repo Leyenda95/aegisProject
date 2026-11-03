@@ -1,4 +1,4 @@
-﻿import { useRef, useState, type ReactNode } from 'react';
+﻿import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { SUBCATEGORY_INDEX, SUBCATEGORY_LABELS, CATEGORY_LABELS, type Lang } from '../api.ts';
 import { SUBCAT_TO_CATEGORY, formatEUR } from '../catalog.ts';
@@ -77,6 +77,12 @@ export default function RedactedTicket({
   // transacción espera confirmación. Publicando, Esc cierra (sigue por detrás).
   const stageRef = useRef<HTMLDivElement>(null);
   useDialog(stageRef, () => { if (progress || !confirmDisabled) onCancel(); });
+  // Abierta, en el móvil la página de detrás no se desplaza (ver html.sheet-open en index.css).
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add('sheet-open');
+    return () => root.classList.remove('sheet-open');
+  }, []);
   const [redacted, setRedacted] = useState(true);
   // Cambia al pulsar "Con censura" para reiniciar la animación (fuerza el
   // remontaje del ticket, con lo que los @keyframes vuelven a correr).

@@ -268,6 +268,15 @@ html { overflow-y: scroll; }
    de debajo ni se mueve ni enseña su barra junto a la de la portada. */
 html.landing-open { overflow: hidden; }
 
+/* Con la ventana de publicar abierta en el móvil (RedactedTicket), solo se
+   desplaza ella: la página de detrás no, se toque donde se toque. Y lo que se
+   apaga al pasar al paso de la ventana se apaga ya, sin fundido: si no, el
+   primer momento se ve la demo entera bajo el velo, mucho más oscura. */
+@media (max-width: 679px) {
+  html.sheet-open, html.sheet-open body { overflow: hidden; overscroll-behavior: none; }
+  html.sheet-open [data-tour="muted"] { transition: none; }
+}
+
 /* Tour guiado (story/TourPanel): la página deja sitio al panel, a la derecha
    en escritorio y abajo en tableta y móvil. Las capas que cubren la pantalla
    (la ventana de publicar) usan los mismos huecos para no quedar debajo. */
@@ -363,7 +372,10 @@ button {
   transition: opacity 0.15s;
 }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
-button:hover:not(:disabled) { opacity: 0.88; }
+/* Solo con ratón: en pantallas táctiles el hover se queda pegado al tocar o al desplazar. */
+@media (hover: hover) {
+  button:hover:not(:disabled) { opacity: 0.88; }
+}
 
 input, select {
   background: var(--surface);

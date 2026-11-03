@@ -222,7 +222,7 @@
     cursor: pointer;
   }
 
-  .body { padding: 12px 14px; }
+  .body { padding: 12px 14px; overscroll-behavior: contain; }
   /* En móvil la ilustración se quita, para ver más la demo. */
   .art { display: none; }
   /* Plegada: el título y la primera línea del texto, cortada con "...", para invitar a desplegar. */
@@ -248,6 +248,10 @@
   /* El inline-flex de arriba no debe volver a enseñar "Volver a la intro". */
   .wideOnly { display: none; }
   .fold svg { width: 15px; height: 15px; }
+  /* En el último paso, "Explorar por libre" se ve también plegada: es la salida del tour. */
+  .last .links { display: flex; margin-left: auto; }
+  /* Sobre la ventana de publicar, la franja no deja ver el velo oscuro de detrás. */
+  .overSheet .top { background: var(--ground); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

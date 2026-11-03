@@ -43,8 +43,12 @@
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.option:hover:not(:disabled) {
-  border-color: var(--accent);
+/* Solo con ratón: en el móvil, el dedo que empieza a desplazar sobre una
+   opción la dejaría marcada. */
+@media (hover: hover) {
+  .option:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
 }
 
 .option:disabled {
