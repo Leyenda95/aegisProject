@@ -87,7 +87,7 @@ export default function Header() {
               {connecting ? t.connecting : t.connectLace}
             </button>
             {slow && (
-              <span className={styles.slowHint}>
+              <span className={styles.slowHint} role="status">
                 {t.laceSlowHint}
               </span>
             )}

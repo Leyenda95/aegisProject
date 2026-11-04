@@ -208,7 +208,8 @@
    que se quiera pulsar. */
 .controlsWallet { position: relative; }
 
-.tourHint {
+.tourHint,
+.slowHint {
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
@@ -226,7 +227,15 @@
   animation: hintIn 0.4s ease-out 0.3s both;
 }
 
-.tourHint::before {
+/* El aviso de que la wallet tarda, igual: flota, y la cabecera no cambia de alto. */
+.slowHint {
+  width: max-content;
+  max-width: min(260px, calc(100vw - 32px));
+  white-space: normal;
+}
+
+.tourHint::before,
+.slowHint::before {
   content: '';
   position: absolute;
   bottom: 100%;
@@ -240,7 +249,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tourHint { animation: none; }
+  .tourHint, .slowHint { animation: none; }
 }
 
 /* Una onda que sale del borde, se abre y se apaga. */
@@ -269,14 +278,6 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
-}
-
-.slowHint {
-  max-width: 200px;
-  font-size: var(--text-2xs);
-  line-height: 1.4;
-  text-align: right;
-  color: var(--ink-faint);
 }
 
 .controlsError {
