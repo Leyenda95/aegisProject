@@ -43,19 +43,19 @@ function useAutoAdvance(tour: { index: number; step: TourStep } | null, facts: T
   const before = useRef(facts);
   const step = tour?.step;
   const index = tour?.index ?? 0;
-  const { stage, wallet, storeChecked } = facts;
+  const { stage, wallet, storeChecked, cartCount, cartGoal } = facts;
   const timer = useRef<number | undefined>(undefined);
   // Si se sale del paso (o de la página) antes de tiempo, no se avanza.
   useEffect(() => () => window.clearTimeout(timer.current), [index]);
   useEffect(() => {
-    const now = { stage, wallet, storeChecked };
+    const now = { stage, wallet, storeChecked, cartCount, cartGoal };
     const prev = before.current;
     before.current = now;
     if (!step || !advancesOn(step, prev, now)) return;
     const delay = advanceDelay(step);
     if (delay === 0) go(index + 1);
     else timer.current = window.setTimeout(() => go(index + 1), delay);
-  }, [stage, wallet, storeChecked, step, index, go]);
+  }, [stage, wallet, storeChecked, cartCount, cartGoal, step, index, go]);
 }
 
 /** Mientras dura el tour, la página deja sitio al panel (ver html.tour-open en index.css). */

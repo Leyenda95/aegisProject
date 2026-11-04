@@ -8,8 +8,8 @@
   stroke-width: var(--verified-stroke, 1.75);
 }
 
-/* Dibujado: el aro se cierra y luego entra el visto. El estado de reposo es
-   la marca entera, así que sin animación (movimiento reducido) se ve igual. */
+/* Dibujado: el aro se cierra y luego entra el visto. Sale también con
+   movimiento reducido: es un trazo pequeño y breve, nada se desplaza. */
 .draw .ring,
 .draw .tick {
   stroke-dasharray: 1;
@@ -26,11 +26,4 @@
 @keyframes draw {
   from { stroke-dashoffset: 1; }
   to { stroke-dashoffset: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .draw .ring,
-  .draw .tick {
-    animation: none;
-  }
 }

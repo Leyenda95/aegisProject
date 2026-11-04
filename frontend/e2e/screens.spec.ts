@@ -33,7 +33,7 @@ for (const theme of ['light', 'dark'] as const) {
       // llega a la demo y la página vuelve a desplazarse.
       await page.getByRole('button', { name: 'Explorar' }).last().click();
       await skipIntro(page);
-      await expect(page.getByText('Punto de venta (demo)')).toBeVisible();
+      await expect(page.getByText('Punto de venta', { exact: true })).toBeVisible();
       await expect(page.locator('html')).not.toHaveClass(/landing-open/);
     });
 

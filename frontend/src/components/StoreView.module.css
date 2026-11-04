@@ -159,12 +159,35 @@
 }
 
 .basket {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 16px;
   background: var(--ground);
   border: 1px solid var(--gray-800);
+  border-radius: 10px;
+}
+
+/* Solo en tableta y móvil (ver el final del archivo): mientras se sella, justo
+   encima de la cesta, que es donde está la vista. Va flotando: si ocupara
+   sitio, empujaría la página al salir y al irse. En escritorio lo dice el
+   aviso de Layout. */
+.sealingNotice {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 1;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: var(--text-xs);
+  color: var(--price);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 10px;
 }
 
@@ -212,6 +235,12 @@
   font-size: var(--text-xs);
   line-height: 1.5;
   color: var(--ink-dim);
+}
+
+.receiptFull {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-bright);
 }
 
 .posError {
@@ -435,6 +464,8 @@
 @container (min-width: 720px) {
   .pos { grid-template-columns: 1fr 320px; }
   .basket { position: sticky; top: 84px; }
+  /* Encima de la cesta quedaría el botón del registro: va debajo, donde no hay nada. */
+  .sealingNotice { top: calc(100% + 6px); bottom: auto; }
 }
 
 /* Catálogo estrecho: las categorías en dos filas y los productos de dos en dos. */
@@ -452,10 +483,17 @@
   .tabsOnly { display: none; }
 }
 
+@media (max-width: 1023px) {
+  .sealingNotice { display: flex; }
+}
+
 /* Mobile (< 680px) */
 @media (max-width: 679px) {
   .card { padding: 14px; }
   .cardTitle { margin-bottom: 12px; }
+  /* En una sola línea: el título y, a su derecha, la comprobación del registro. */
+  .posHead { flex-wrap: nowrap; gap: 8px; }
+  .posHead .cardTitle { flex-shrink: 0; }
   .category { padding: 8px 4px; }
   .basket { padding: 12px; }
   .toolsToggle[aria-expanded="true"] { margin-bottom: 14px; }

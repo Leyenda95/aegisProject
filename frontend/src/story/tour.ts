@@ -18,8 +18,9 @@ const PARENT: Partial<Record<TourTarget, TourTarget>> = { registry: 'pos', catal
  * a una etapa de la compra, tener una wallet conectada o haber comprobado en
  * Midnight que la tienda está registrada. El patrocinio no cuenta como
  * wallet: llega al poco de cargar y haría saltar el primer paso sin leerlo.
+ * La cesta cuenta unidades, y cartGoal es cuántas la dan por llena (ver cartGoal).
  */
-export type TourFacts = { stage: Stage; wallet: boolean; storeChecked: boolean };
+export type TourFacts = { stage: Stage; wallet: boolean; storeChecked: boolean; cartCount: number; cartGoal: number };
 export type Milestone = Stage | 'wallet' | 'storeChecked';
 
 export type TourStep = {
@@ -88,11 +89,33 @@ export function isDone(step: TourStep, facts: TourFacts): boolean {
 }
 
 /**
+ * Cuántos productos llevan del catálogo a cobrar: la primera venta enseña el
+ * camino con uno y, a partir de la segunda, se puede llenar un poco la cesta.
+ */
+export function cartGoal(soldInTour: boolean): number {
+  return soldInTour ? 3 : 1;
+}
+
+/**
+ * Si el paso ya no pide nada más. En la cesta no basta con empezarla: hay que
+ * llegar a su meta (o haber pasado ya a cobrar).
+ */
+export function isComplete(step: TourStep, facts: TourFacts): boolean {
+  if (!isDone(step, facts)) return false;
+  return step.waitFor !== 'cart' || facts.cartCount >= facts.cartGoal || reached(facts.stage, 'sealing');
+}
+
+/**
  * El paso avanza solo cuando la demo pasa a haber hecho lo que pide. Solo
  * con ese cambio: al volver atrás a un paso ya hecho, no rebota.
  */
 export function advancesOn(step: TourStep, before: TourFacts, now: TourFacts): boolean {
-  return isDone(step, now) && !isDone(step, before);
+  return isComplete(step, now) && !isComplete(step, before);
+}
+
+/** El paso (desde 1) donde empieza una venta: a él vuelve «Nueva venta». */
+export function saleStart(tour: TourId): number {
+  return TOURS[tour].findIndex(s => s.id === 'addToCart') + 1;
 }
 
 /** Si «Siguiente» espera a que se haga la acción del paso (las opcionales no). */

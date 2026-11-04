@@ -167,7 +167,7 @@ export const storyEn: StoryCopy = {
     registry: {
       title: 'A registry you can trust',
       body: 'If anyone could seal receipts, anyone could make up purchases and fake the market. That is why stores sign up, and their **public key** goes into a **Merkle tree**, a compact list kept in the contract.\n\nThat way, every small shop knows the figures it reads come from real purchases.',
-      todo: 'Press "Check the store registry"',
+      todo: 'Press "Check registry"',
     },
     addToCart: {
       title: 'Add something to the basket',

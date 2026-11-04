@@ -18,7 +18,7 @@ import StoryDeck from '../story/StoryDeck.tsx';
 import TourPanel from '../story/TourPanel.tsx';
 import type { DeckId } from '../story/deck.ts';
 import { TourStepContext, useTourFocus, useTourStep } from '../story/tourFocus.ts';
-import type { TourFacts } from '../story/tour.ts';
+import { cartGoal, saleStart, type TourFacts } from '../story/tour.ts';
 import { useGuidedTour, useTourRoute, type GuidedTour } from '../story/useGuidedTour.ts';
 import styles from './DemoPage.module.css';
 
@@ -53,8 +53,13 @@ export default function DemoPage({ scene }: { scene: DemoScene }) {
   const [goToContributeSignal, setGoToContributeSignal] = useState(0);
   const [flow, setFlow] = useState<DemoFlow>(INITIAL_FLOW);
   const reportFlow = useCallback((patch: Partial<DemoFlow>) => setFlow(f => ({ ...f, ...patch })), []);
+  // Ya se ha cobrado una venta en el tour: la siguiente deja llenar la cesta (ver cartGoal).
+  const [soldInTour, setSoldInTour] = useState(false);
   const stage = stageOf(flow);
-  const facts: TourFacts = { stage, wallet: wallet !== null, storeChecked: flow.storeChecked };
+  const facts: TourFacts = {
+    stage, wallet: wallet !== null, storeChecked: flow.storeChecked,
+    cartCount: flow.cartCount, cartGoal: cartGoal(soldInTour),
+  };
 
   // En el tour, el paso decide qué se ve: el mercado o la demo y, si la caja
   // y el móvil no caben juntos, cuál de los dos.
@@ -63,11 +68,19 @@ export default function DemoPage({ scene }: { scene: DemoScene }) {
   const side = tour ? tour.step.side : tab;
 
   useEffect(() => {
-    if (flow.sealedNonce) setGoToContributeSignal(n => n + 1);
+    if (!flow.sealedNonce) return;
+    setGoToContributeSignal(n => n + 1);
+    if (tour) setSoldInTour(true);
   }, [flow.sealedNonce]);
 
   // En el último paso del tour ya salen las pestañas y la línea de progreso: desde ahí se sigue por libre.
   const tourDone = tour !== null && tour.index === tour.total;
+
+  // La venta anterior queda atrás y, a mitad del tour, se vuelve a su paso de comprar.
+  function startNewSale() {
+    setFlow(f => ({ ...f, dismissedNonce: f.publishing?.nonce ?? null }));
+    if (tour && !tourDone) tour.go(saleStart(tour.tour));
+  }
 
   function showTab(next: Tab) {
     setTab(next);
@@ -108,6 +121,7 @@ export default function DemoPage({ scene }: { scene: DemoScene }) {
                 <StoreView
                   lang={lang}
                   onGoToUser={() => { setTab('user'); setGoToContributeSignal(n => n + 1); window.scrollTo({ top: 0 }); }}
+                  onNewSale={startNewSale}
                 />
               </div>
               <UserColumn flow={flow} goToContributeSignal={goToContributeSignal} />

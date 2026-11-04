@@ -3,8 +3,8 @@ import { CATEGORIES, SUBCATEGORIES, SUBCATEGORY_INDEX, type Category, type Lang 
 /**
  * Catálogo de productos de la tienda de demo. Es solo del frontend: nada de
  * esto viaja on-chain. Cuando la tienda cobra una cesta, el recibo sellado
- * lleva únicamente {subcategoría dominante, importe total}, el detalle de
- * artículos se queda en el ticket de papel (ver ReceiptTicket).
+ * lleva solo unidades e importe por subcategoría; el detalle de artículos se
+ * queda en el ticket de papel (ver ReceiptTicket).
  *
  * Imágenes: deja las tuyas en `frontend/public/images/products/<id>.webp`
  * (también valen `.png` y `.jpg`). Mientras no exista la local, se usa una
@@ -141,9 +141,9 @@ export function rollupBySubcategory(lines: CartLine[]): RollupLine[] {
   );
 }
 
-/** Las que de verdad se sellan y se señalan: las 8 de mayor importe. El resto queda solo en el ticket de papel. */
-export function sealedLines(rollup: RollupLine[]): RollupLine[] {
-  return rollup.slice(0, MAX_RECEIPT_LINES);
+/** Si cabe un producto de esta subcategoría: una ya presente en la cesta siempre cabe, una nueva solo si queda línea libre. */
+export function fitsReceipt(rollup: RollupLine[], subcategory: string): boolean {
+  return rollup.length < MAX_RECEIPT_LINES || rollup.some(r => r.subcategory === subcategory);
 }
 
 export function formatEUR(cents: number, lang: Lang): string {

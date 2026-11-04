@@ -13,7 +13,7 @@ const slideTitle = (page: Page, name: string) => page.getByRole('heading', { nam
 /** El tour ya está dibujado: el panel, la caja de la tienda y los contadores de la cinta. */
 async function tourReady(page: Page) {
   await expect(panel(page)).toBeVisible();
-  await expect(page.getByText('Punto de venta (demo)')).toBeVisible();
+  await expect(page.getByText('Punto de venta', { exact: true })).toBeVisible();
   await expect(page.getByText(STATE.totalSignals, { exact: true }).first()).toBeVisible();
 }
 

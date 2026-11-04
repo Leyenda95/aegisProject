@@ -7,7 +7,7 @@ import { NETWORK_ID } from '../chainConfig.ts';
 import { explorerTxUrl } from '../explorer.ts';
 import { encodeReceiptForQr, receiptLink } from '../receiptCodec.ts';
 import {
-  PRODUCTS, SUBCAT_TO_CATEGORY, cartLinesFrom, cartTotalCents, rollupBySubcategory, sealedLines, formatEUR,
+  MAX_RECEIPT_LINES, PRODUCTS, SUBCAT_TO_CATEGORY, cartLinesFrom, cartTotalCents, fitsReceipt, rollupBySubcategory, formatEUR,
 } from '../catalog.ts';
 import ProductImage from './ProductImage.tsx';
 import { preloadProductImages } from '../productImages.ts';
@@ -22,7 +22,7 @@ import { useWallet } from '../app/WalletProvider.tsx';
 import { useChain } from '../app/ChainProvider.tsx';
 import { useTx } from '../app/TxProvider.tsx';
 import { useReportFlow } from '../routes/demoFlow.ts';
-import { useTourFocus } from '../story/tourFocus.ts';
+import { useTourFocus, useTourStep } from '../story/tourFocus.ts';
 import styles from './StoreView.module.css';
 
 // Orden de las pestañas de categoría en el POS de la demo (moda primero).
@@ -30,13 +30,17 @@ import styles from './StoreView.module.css';
 // tiene que coincidir con el enum Subcategory del contrato.
 const POS_CATEGORY_ORDER: Category[] = ['fashion', 'electronics', 'food', 'sports', 'home', 'other'];
 
+const SEALING_NOTICE_DELAY_MS = 800;
+
 type Props = {
   lang: Lang;
   /** Cambia a la pestaña Usuario (en tableta y móvil, donde la caja y el móvil van en pestañas). */
   onGoToUser: () => void;
+  /** Se ha pulsado «Nueva venta» (no cuenta cuando el ticket se retira solo al publicarlo). */
+  onNewSale: () => void;
 };
 
-export default function StoreView({ lang, onGoToUser }: Props) {
+export default function StoreView({ lang, onGoToUser, onNewSale }: Props) {
   const t = T[lang];
   const catLabel = CATEGORY_LABELS[lang];
   const subLabel = SUBCATEGORY_LABELS[lang];
@@ -51,6 +55,7 @@ export default function StoreView({ lang, onGoToUser }: Props) {
   const basketFocus = useTourFocus('basket');
   const receiptFocus = useTourFocus('receipt');
   const toolsFocus = useTourFocus('tools');
+  const inTour = useTourStep() !== null;
   useEffect(() => {
     if (toolsFocus === 'selected') setStoreToolsOpen(true);
   }, [toolsFocus]);
@@ -66,6 +71,7 @@ export default function StoreView({ lang, onGoToUser }: Props) {
   // La transacción que selló el último recibo, en el explorador (null si no se conoce su hash o la red no tiene explorador).
   const [posTxUrl, setPosTxUrl] = useState<string | null>(null);
   const ticketRef = useRef<HTMLDivElement>(null);
+  const basketRef = useRef<HTMLDivElement>(null);
   const vault = useVault();
   const reportFlow = useReportFlow();
 
@@ -73,10 +79,26 @@ export default function StoreView({ lang, onGoToUser }: Props) {
   const cartCount = cartLines.reduce((n, l) => n + l.qty, 0);
   const totalCents = cartTotalCents(cartLines);
   const rollup = rollupBySubcategory(cartLines);
-  const sealed = sealedLines(rollup);
-  const overflowCount = rollup.length - sealed.length;
-  const sealedSummary = sealed.map(r => `${subLabel[r.subcategory]} ×${r.qty}`).join(' · ')
-    + (overflowCount > 0 ? ` (+${overflowCount})` : '');
+  const sealedSummary = rollup.map(r => `${subLabel[r.subcategory]} ×${r.qty}`).join(' · ');
+  const receiptFull = rollup.length >= MAX_RECEIPT_LINES;
+
+  // Con el recibo lleno, la vista baja a la cesta para cobrar.
+  useEffect(() => {
+    if (!receiptFull) return;
+    const behavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    basketRef.current?.scrollIntoView({ behavior, block: 'center' });
+  }, [receiptFull]);
+
+  // El botón ya responde al pulsarlo: el aviso sale un poco después, para que no parpadee si tarda poco.
+  const [sealingNotice, setSealingNotice] = useState(false);
+  useEffect(() => {
+    if (!posSelling) return;
+    const timer = window.setTimeout(() => setSealingNotice(true), SEALING_NOTICE_DELAY_MS);
+    return () => {
+      window.clearTimeout(timer);
+      setSealingNotice(false);
+    };
+  }, [posSelling]);
 
   function addToCart(id: string) {
     setCart(c => ({ ...c, [id]: (c[id] ?? 0) + 1 }));
@@ -92,18 +114,18 @@ export default function StoreView({ lang, onGoToUser }: Props) {
   }
 
   async function handleCheckout() {
-    if ((!lace && !sponsored) || cartLines.length === 0 || sealed.length === 0 || confirmingMsg) return;
+    if ((!lace && !sponsored) || cartLines.length === 0 || confirmingMsg) return;
     setPosSelling(true);
     setPosError(null);
     try {
-      // Se sellan las 8 subcategorías de mayor importe (rollup). El desglose
-      // por producto viaja en el QR solo para pintar el ticket original.
+      // Se sella una línea por subcategoría (rollup). El desglose por
+      // producto viaja en el QR solo para pintar el ticket original.
       // No resuelve hasta que attestReceipt está confirmado on-chain (ver
       // pollUntil en lace.ts), así que al volver ya se puede publicar la
       // señal sin el assert de "Receipt not attested by a registered store".
       const { receipt, sponsored: paidBySponsor, txHash } = await attestReceipt(
         lace,
-        sealed.map(r => ({ subcategory: r.subcategory, qty: r.qty, amount: r.amountCents })),
+        rollup.map(r => ({ subcategory: r.subcategory, qty: r.qty, amount: r.amountCents })),
         lang,
         () => setConfirmingMsg(t.confirmSealing),
       );
@@ -188,17 +210,20 @@ export default function StoreView({ lang, onGoToUser }: Props) {
             )}
             {/* En tableta y móvil el móvil va en otra pestaña: el siguiente
                 paso se dice aquí, bajo el recibo, que es donde se queda la
-                vista al cobrar. En escritorio lo dice PhoneNudge, junto al móvil. */}
-            <div className={cx(styles.next, styles.tabsOnly)}>
-              <p className={styles.nextText}>
-                <span className={styles.nextEyebrow}>{t.nudgeEyebrow}</span>
-                {t.nudgeTabs}
-              </p>
-              <button className={styles.nextBtn} onClick={onGoToUser}>
-                {t.nudgeGo} <span aria-hidden="true">→</span>
-              </button>
-            </div>
-            <button className={styles.newSale} onClick={handleResetPos}>
+                vista al cobrar. En escritorio lo dice PhoneNudge, junto al móvil.
+                En el tour no sale: qué se ve lo decide el paso, y se sigue con «Siguiente». */}
+            {!inTour && (
+              <div className={cx(styles.next, styles.tabsOnly)}>
+                <p className={styles.nextText}>
+                  <span className={styles.nextEyebrow}>{t.nudgeEyebrow}</span>
+                  {t.nudgeTabs}
+                </p>
+                <button className={styles.nextBtn} onClick={onGoToUser}>
+                  {t.nudgeGo} <span aria-hidden="true">→</span>
+                </button>
+              </div>
+            )}
+            <button className={styles.newSale} onClick={() => { handleResetPos(); onNewSale(); }}>
               {t.posNewSale}
             </button>
           </div>
@@ -224,7 +249,7 @@ export default function StoreView({ lang, onGoToUser }: Props) {
                       <div className={styles.productName}>{prod.name[lang]}</div>
                       <div className={styles.productPrice}>{formatEUR(prod.priceCents, lang)}</div>
                       {qty === 0 ? (
-                        <button className={styles.addBtn} onClick={() => addToCart(prod.id)}>
+                        <button className={styles.addBtn} onClick={() => addToCart(prod.id)} disabled={!fitsReceipt(rollup, prod.subcategory)}>
                           {t.posAdd}
                         </button>
                       ) : (
@@ -240,7 +265,13 @@ export default function StoreView({ lang, onGoToUser }: Props) {
               </div>
             </div>
 
-            <div className={styles.basket} data-tour={basketFocus}>
+            <div ref={basketRef} className={styles.basket} data-tour={basketFocus} data-sealing={posSelling || undefined}>
+              {sealingNotice && (
+                <div className={styles.sealingNotice} role="status">
+                  <span className="aegis-spinner" />
+                  {confirmingMsg ?? t.posSealing}
+                </div>
+              )}
               <div className={styles.basketTitle}>{t.posBasket} ({cartCount})</div>
               {cartLines.length === 0 ? (
                 <p className={styles.notice}>{t.posEmpty}</p>
@@ -261,6 +292,7 @@ export default function StoreView({ lang, onGoToUser }: Props) {
                   <p className={styles.sealNote}>{t.posSealNote(sealedSummary)}</p>
                 </>
               )}
+              {receiptFull && <p className={styles.receiptFull}>{t.posReceiptFull}</p>}
               {posError && <p className={styles.posError}>{posError}</p>}
               <button
                 className={styles.checkout}
@@ -281,10 +313,7 @@ export default function StoreView({ lang, onGoToUser }: Props) {
           onClick={() => setStoreToolsOpen(o => !o)}
           aria-expanded={storeToolsOpen}
         >
-          {/* SVG en vez del carácter Unicode ⚙: cada plataforma lo renderiza
-              con su propia fuente de emoji/símbolos (3D y a color en iOS,
-              plano en Android, y con ︎ forzando texto plano el glifo de
-              iOS quedaba encima minúsculo). Un SVG se ve igual en todas. */}
+          {/* SVG y no el carácter ⚙: cada plataforma lo dibuja con su propia fuente. */}
           <span className={styles.toolsLabel}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />

@@ -17,3 +17,9 @@
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
+
+/* En tableta y móvil, al cobrar lo dice la caja (ver .sealingNotice en
+   StoreView): aquí arriba quedaría fuera de la vista y empujaría la página. */
+@media (max-width: 1023px) {
+  :global(body:has([data-sealing])) .confirming { display: none; }
+}

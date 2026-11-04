@@ -25,6 +25,16 @@ describe('etapa de la demo', () => {
     expect(stageOf(flow({ cartCount: 1, publishing: { nonce: 'a', step: 'aggregated' } }))).toBe('cart');
   });
 
+  it('al pulsar «Nueva venta» vuelve a empezar, aunque la cesta aún esté vacía', () => {
+    const published = { publishing: { nonce: 'a', step: 'aggregated' as const } };
+    expect(stageOf(flow(published))).toBe('aggregated');
+    expect(stageOf(flow({ ...published, dismissedNonce: 'a' }))).toBe('shop');
+  });
+
+  it('tras «Nueva venta», publicar otro ticket sí cuenta', () => {
+    expect(stageOf(flow({ publishing: { nonce: 'b', step: 'sent' }, dismissedNonce: 'a' }))).toBe('sent');
+  });
+
   it('no mezcla la publicación de otro ticket con el cobrado', () => {
     expect(stageOf(flow({ ...sealed, publishing: { nonce: 'b', step: 'aggregated' } }))).toBe('sealed');
   });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advanceDelay, advancesOn, blocksNext, focusState, isDone, parseStep, parseTourPath, revealScroll, TOURS, type TourFacts, type TourStep } from './tour.ts';
+import { advanceDelay, advancesOn, blocksNext, cartGoal, focusState, isComplete, isDone, parseStep, parseTourPath, revealScroll, saleStart, TOURS, type TourFacts, type TourStep } from './tour.ts';
 
 const TOUR: readonly TourStep[] = TOURS.tour;
 
@@ -42,7 +42,48 @@ describe('resaltado del tour', () => {
   });
 });
 
-const facts = (patch: Partial<TourFacts>): TourFacts => ({ stage: 'shop', wallet: false, storeChecked: false, ...patch });
+const facts = (patch: Partial<TourFacts>): TourFacts => ({ stage: 'shop', wallet: false, storeChecked: false, cartCount: 0, cartGoal: 1, ...patch });
+
+describe('la cesta, venta a venta', () => {
+  const addToCart = step({ waitFor: 'cart' });
+  const cart = (cartCount: number, cartGoal: number) => facts({ stage: cartCount > 0 ? 'cart' : 'shop', cartCount, cartGoal });
+
+  it('la primera venta pide un producto; a partir de la segunda, tres', () => {
+    expect(cartGoal(false)).toBe(1);
+    expect(cartGoal(true)).toBe(3);
+  });
+
+  it('la primera venta avanza con el primer producto', () => {
+    expect(advancesOn(addToCart, cart(0, 1), cart(1, 1))).toBe(true);
+  });
+
+  it('a partir de la segunda, no avanza hasta el tercero', () => {
+    expect(advancesOn(addToCart, cart(0, 3), cart(1, 3))).toBe(false);
+    expect(advancesOn(addToCart, cart(1, 3), cart(2, 3))).toBe(false);
+    expect(advancesOn(addToCart, cart(2, 3), cart(3, 3))).toBe(true);
+  });
+
+  it('con la señal anterior aún en el agregado, también espera al tercero', () => {
+    const published = facts({ stage: 'aggregated', cartCount: 0, cartGoal: 3 });
+    expect(advancesOn(addToCart, published, cart(1, 3))).toBe(false);
+    expect(advancesOn(addToCart, cart(2, 3), cart(3, 3))).toBe(true);
+  });
+
+  it('con algo en la cesta ya se puede seguir con «Siguiente», sin llegar a la meta', () => {
+    expect(blocksNext(addToCart, cart(0, 3))).toBe(true);
+    expect(blocksNext(addToCart, cart(1, 3))).toBe(false);
+  });
+
+  it('no se da por hecha hasta la meta, salvo que ya se haya pasado a cobrar', () => {
+    expect(isComplete(addToCart, cart(2, 3))).toBe(false);
+    expect(isComplete(addToCart, cart(3, 3))).toBe(true);
+    expect(isComplete(addToCart, facts({ stage: 'sealed', cartCount: 1, cartGoal: 3 }))).toBe(true);
+  });
+
+  it('«Nueva venta» vuelve al paso de añadir a la cesta', () => {
+    expect(TOUR[saleStart('tour') - 1].waitFor).toBe('cart');
+  });
+});
 
 describe('avance automático', () => {
   const charge = step({ waitFor: 'sealed' });

@@ -18,9 +18,11 @@ export type DemoFlow = {
   publishing: { nonce: string; step: PublishStep } | null;
   /** Se ha comprobado en Midnight que la tienda está en el registro (ver StoreRegistry). */
   storeChecked: boolean;
+  /** La publicación que dejó atrás «Nueva venta»: ya no cuenta para la etapa. */
+  dismissedNonce: string | null;
 };
 
-export const INITIAL_FLOW: DemoFlow = { cartCount: 0, sealing: false, sealedNonce: null, sheetOpen: false, publishing: null, storeChecked: false };
+export const INITIAL_FLOW: DemoFlow = { cartCount: 0, sealing: false, sealedNonce: null, sheetOpen: false, publishing: null, storeChecked: false, dismissedNonce: null };
 
 /**
  * Las etapas de una compra en la demo, en orden: de la cesta vacía a la
@@ -48,7 +50,7 @@ export function stageOf(flow: DemoFlow): Stage {
 
 function publishedStage(flow: DemoFlow): Stage | undefined {
   const pub = flow.publishing;
-  if (!pub) return undefined;
+  if (!pub || pub.nonce === flow.dismissedNonce) return undefined;
   const newSale = flow.cartCount > 0 && flow.sealedNonce === null;
   const otherTicket = flow.sealedNonce !== null && pub.nonce !== flow.sealedNonce;
   return newSale || otherTicket ? undefined : PUBLISH_STAGE[pub.step];

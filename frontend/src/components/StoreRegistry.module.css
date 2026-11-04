@@ -121,10 +121,3 @@
   from { opacity: 0.6; transform: scale(1); }
   to { opacity: 0; transform: scale(1.35); }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .verified,
-  .verifiedTitle,
-  .verifiedMeta,
-  .seal::after { animation: none; }
-}
