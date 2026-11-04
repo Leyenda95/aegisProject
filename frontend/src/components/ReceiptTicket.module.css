@@ -143,6 +143,10 @@
   overscroll-behavior: contain;
 }
 
+/* En el tour, la ventana se abre un instante antes de que llegue su paso: hasta
+   entonces la demo sigue sin apagar, y el velo encima la dejaría casi negra. */
+.overlayWaiting { background: transparent; }
+
 .stage {
   display: flex;
   align-items: center;
@@ -151,6 +155,8 @@
   width: 100%;
   max-width: 640px;
 }
+
+.overlayWaiting .stage { opacity: 0; }
 
 /* En móvil, "Qué compartir" va debajo del ticket en vez de a su lado. */
 @media (max-width: 679px) {

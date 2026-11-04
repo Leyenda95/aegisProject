@@ -111,12 +111,21 @@ function useRevealFocus(stepKey: string | undefined, toTop: boolean) {
     };
     const resize = new ResizeObserver(entries => fit(entries[0].target));
     let stopResize = 0;
+    // Si la persona mueve la página, el encuadre final ya no le lleva la contraria.
+    let userMoved = false;
+    const onUserMove = () => { userMoved = true; };
+    window.addEventListener('touchstart', onUserMove, { passive: true });
+    window.addEventListener('wheel', onUserMove, { passive: true });
     const reveal = () => {
       const el = document.querySelector('[data-tour="selected"]');
       if (!el) return false;
       fit(el);
       resize.observe(el);
-      stopResize = window.setTimeout(() => resize.disconnect(), SETTLE_MS);
+      // Acabado el desplazamiento, se comprueba dónde ha quedado: en el iPhone se pasa un poco y tapa el borde de lo resaltado.
+      stopResize = window.setTimeout(() => {
+        resize.disconnect();
+        if (!userMoved && el.isConnected) fit(el);
+      }, SETTLE_MS);
       return true;
     };
     const observer = new MutationObserver(() => {
@@ -130,6 +139,8 @@ function useRevealFocus(stepKey: string | undefined, toTop: boolean) {
       observer.disconnect();
       resize.disconnect();
       window.clearTimeout(stopResize);
+      window.removeEventListener('touchstart', onUserMove);
+      window.removeEventListener('wheel', onUserMove);
     };
   }, [stepKey, toTop]);
 }

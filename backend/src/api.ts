@@ -167,9 +167,10 @@ async function handleRequest(
     // ¿Ya está la tienda de demo registrada on-chain? Lo comprueba contra
     // el ledger, sin necesitar wallet, así el frontend no repite el alta
     // en cada recarga (ver diseño de privacidad/backend en la memoria).
-    if (method === 'GET' && url === '/store-registered') {
+    if (method === 'GET' && url?.startsWith('/store-registered')) {
       if (!ctx.contractAddress && !MOCK_CHAIN) return json(res, 200, { registered: false });
-      const registered = await isStoreRegistered(ctx.providers, ctx.contractAddress as any);
+      const fresh = new URL(url, 'http://localhost').searchParams.has('fresh');
+      const registered = await isStoreRegistered(ctx.providers, ctx.contractAddress as any, fresh);
       return json(res, 200, { registered });
     }
 

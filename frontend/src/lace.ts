@@ -192,8 +192,9 @@ export async function getLocalContractAddress(): Promise<string | null | undefin
   return address ?? null;
 }
 
-export async function checkStoreRegistered(): Promise<boolean> {
-  const r = await fetch(`${API_BASE}/store-registered`);
+/** Con `fresh`, el backend lo lee de la cadena aunque ya lo sepa (es más lento y lo bloquea unos segundos). */
+export async function checkStoreRegistered({ fresh = false } = {}): Promise<boolean> {
+  const r = await fetch(`${API_BASE}/store-registered${fresh ? '?fresh=1' : ''}`);
   if (!r.ok) return false;
   const { registered } = await r.json();
   return Boolean(registered);

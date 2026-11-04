@@ -165,7 +165,7 @@ export default function RedactedTicket({
   // Al final de <body>: el móvil de la demo va fijo al bajar (sticky), y
   // dentro de él la ventana quedaría por debajo de la cabecera.
   return createPortal(
-    <div className={styles.overlay} onClick={onCancel}>
+    <div className={cx(styles.overlay, tourFocus === 'muted' && styles.overlayWaiting)} onClick={onCancel}>
       <div ref={stageRef} role="dialog" aria-modal="true" aria-label={t.publishSignal} tabIndex={-1} className={cx(styles.stage, 'tour-loose')} data-tour={tourFocus} onClick={e => e.stopPropagation()}>
       <div className={styles.panel}>
         {progress ? (

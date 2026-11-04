@@ -268,13 +268,14 @@ html { overflow-y: scroll; }
    de debajo ni se mueve ni enseña su barra junto a la de la portada. */
 html.landing-open { overflow: hidden; }
 
-/* Con la ventana de publicar abierta en el móvil (RedactedTicket), solo se
-   desplaza ella: la página de detrás no, se toque donde se toque. Y lo que se
-   apaga al pasar al paso de la ventana se apaga ya, sin fundido: si no, el
-   primer momento se ve la demo entera bajo el velo, mucho más oscura. */
+/* Con la ventana de publicar abierta (RedactedTicket), lo que se apaga al pasar
+   a su paso se apaga ya, sin fundido: si no, el primer momento se ve la demo
+   entera bajo el velo, mucho más oscura. En el móvil, además, solo se desplaza
+   ella: la página de detrás no, se toque donde se toque. */
+html.sheet-open [data-tour="muted"] { transition: none; }
+
 @media (max-width: 679px) {
   html.sheet-open, html.sheet-open body { overflow: hidden; overscroll-behavior: none; }
-  html.sheet-open [data-tour="muted"] { transition: none; }
 }
 
 /* Tour guiado (story/TourPanel): la página deja sitio al panel, a la derecha

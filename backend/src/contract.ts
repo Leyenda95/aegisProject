@@ -235,22 +235,33 @@ export async function buildSeedTx(
   return txToHex(provenTx);
 }
 
+// El contrato en el que ya se ha visto registrada la tienda de demo.
+let contractWithStore: ContractAddress | null = null;
+
 /**
  * ¿Ya está la tienda de demo en el árbol de tiendas registradas? El admin
  * y la tienda son claves que el propio backend gestiona (getAdminKey/
  * getStoreKey), así que puede comprobarlo contra el ledger público sin
  * necesitar ninguna wallet, es la misma comprobación de pertenencia que
  * hace el witness getStorePath (ver witnesses.ts).
+ *
+ * El "sí" se recuerda: el contrato no permite quitar tiendas, y deserializar
+ * su estado bloquea el proceso varios segundos en cada carga de la web. Con
+ * `fresh` se lee igualmente: es lo que pide el botón de comprobar el registro.
  */
 export async function isStoreRegistered(
   providers: AegisProviders,
   contractAddress: ContractAddress,
+  fresh = false,
 ): Promise<boolean> {
   if (MOCK_CHAIN) return mockStoreRegistered;
+  if (!fresh && contractWithStore === contractAddress) return true;
   const state = await providers.publicDataProvider.queryContractState(contractAddress);
   if (!state) return false;
   const storePk = pureCircuits.storePublicKey(getStoreKey());
-  return ledger(state.data).registeredStores.findPathForLeaf(storePk) !== undefined;
+  const registered = ledger(state.data).registeredStores.findPathForLeaf(storePk) !== undefined;
+  if (registered) contractWithStore = contractAddress;
+  return registered;
 }
 
 /**

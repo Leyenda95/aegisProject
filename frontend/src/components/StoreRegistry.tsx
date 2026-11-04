@@ -25,7 +25,7 @@ export default function StoreRegistry({ lang }: { lang: Lang }) {
   async function run() {
     setCheck('checking');
     try {
-      const registered = await checkStoreRegistered();
+      const registered = await checkStoreRegistered({ fresh: true });
       setCheck(registered ? 'registered' : 'missing');
       if (registered) reportFlow({ storeChecked: true });
     } catch {

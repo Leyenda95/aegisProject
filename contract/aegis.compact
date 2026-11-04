@@ -20,9 +20,9 @@ export enum Subcategory {
 //
 // La cesta ya viene "enrollada" (rollup) por subcategoría: una línea por
 // cada subcategoría distinta, con las unidades y el importe sumados. Como
-// un circuito ZK tiene tamaño fijo, hay como mucho 8 líneas; si la compra
-// real toca más subcategorías, la caja se queda con las 8 de mayor importe
-// (el resto va en el ticket de papel pero ni se sella ni se señala).
+// un circuito ZK tiene tamaño fijo, hay como mucho 8 líneas: con el recibo
+// lleno, la caja no deja añadir productos de otras subcategorías (ver
+// fitsReceipt en frontend/src/catalog.ts).
 //
 // nonce aporta la aleatoriedad del compromiso (persistentCommit) y hace
 // que dos recibos con los mismos valores no produzcan el mismo hash.

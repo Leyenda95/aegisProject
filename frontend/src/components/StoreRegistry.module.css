@@ -1,6 +1,8 @@
 /* Comprobación del registro de tiendas, junto al título de la caja. */
 
-.root { display: inline-flex; }
+/* Siempre en su propia capa: si no, al acabar de quitarse el desenfoque del
+   tour, el navegador la redibuja en otra posición de píxel y el ojo da un saltito. */
+.root { display: inline-flex; will-change: opacity, filter; }
 
 .badge {
   display: inline-flex;
