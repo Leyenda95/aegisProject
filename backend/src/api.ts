@@ -284,10 +284,8 @@ async function handleRequest(
       return json(res, 201, { id });
     }
 
-    // Contadores públicos del contrato para el frontend. Antes el navegador
-    // los leía directamente del indexer, pero el de preprod ahora es de
-    // Blockfrost y pide un token que no debe acabar en el navegador (quien
-    // lo copiara gastaría nuestra cuota), así que la lectura pasa por aquí.
+    // Contadores públicos del contrato para el frontend. Pasan por aquí porque
+    // el indexer de preprod pide un token que no debe acabar en el navegador.
     if (method === 'GET' && url === '/state') {
       if (!ctx.contractAddress) return json(res, 400, { error: 'Contract not deployed yet' });
       // Desde la memoria de history.ts (al instante y sin bloquear el

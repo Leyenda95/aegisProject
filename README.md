@@ -17,11 +17,12 @@ Aegis is a privacy-preserving market intelligence system built on Midnight Netwo
 
 **How it works:**
 
-1. A store seals the receipt on-chain, without revealing which store it is.
-2. The customer keeps it on their phone and publishes a ZK signal.
-3. The signal reveals only what the customer chooses to share. Never who they are.
-4. Public counters add up every signal.
-5. An AI agent turns them into market insights for each store.
+1. An administrator registers the store: its public key goes into the store tree.
+2. The store charges and seals the receipt on-chain: it publishes a commitment and proves it belongs to a registered store, without saying which one.
+3. The customer gets the receipt as a QR and keeps it on their phone.
+4. Whenever they want, the customer publishes a signal: a ZK proof that the receipt is sealed and unused, revealing only what they chose to share. Never who they are.
+5. The contract marks the receipt as used and adds the units to the public counters.
+6. An AI agent reads the counters and writes each store's market report.
 
 ## Try it
 
@@ -62,17 +63,15 @@ npm install                # installs contract, backend and frontend workspaces
 cd contract
 npm run compact            # compiles the contract, generates ZK keys -> managed/aegis/
 cd ../backend
-npm run start:preprod      # starts the API against Preprod. No contract deployed yet
+npm run start:preprod      # starts the API against Preprod (run it in its own terminal)
 cd ../frontend
 npm run dev                # starts the frontend, open the printed URL
 ```
 
-1. Install dependencies: `npm install` at the repo root (npm workspaces cover `contract`, `backend`, and `frontend`).
-2. Compile the contract: `cd contract && npm run compact` (generates the ZK keys under `contract/managed/`).
-3. Start the backend against Preprod: `cd backend && npm run start:preprod` (set `ANTHROPIC_API_KEY` in `backend/.env` first if you want insights). No contract is deployed yet at this point, that happens from the browser next.
-4. Start the frontend: `cd frontend && npm run dev`, then open the printed URL.
-5. In the browser, open `/setup` (once your wallet is connected, the header links to it as **Set up demo** while something is missing): **Connect Wallet** (Lace or 1AM, Preprod network) → **Deploy contract** (this deploys a fresh instance and makes your wallet its store admin, and the backend remembers it for next time) → **Register demo store** → **Load demo data** (seeds baseline counters so the store insights have something to talk about).
-6. Try the flow: check out a cart at the till, tap **Publish signal** on the new ticket in the phone (the **User** tab on smaller screens), review what will be shared and publish.
+Set the backend's variables in `backend/.env` before starting it (see the table below). No contract is deployed yet at this point: that happens from the browser.
+
+1. In the browser, open `/setup` (once your wallet is connected, the header links to it as **Set up demo** while something is missing): **Connect Wallet** (Lace or 1AM, Preprod network) → **Deploy contract** (this deploys a fresh instance and makes your wallet its store admin, and the backend remembers it for next time) → **Register demo store** → **Load demo data** (seeds baseline counters so the store insights have something to talk about).
+2. Try the flow: check out a cart at the till, tap **Publish signal** on the new ticket in the phone (the **User** tab on smaller screens), review what will be shared and publish.
 
 **Backend environment variables** (in `backend/.env` or the process environment)
 
@@ -116,15 +115,6 @@ Browser (Vercel) ──► Backend + proof server (Railway) ──► Midnight P
 ```
 
 The browser never talks to Blockfrost: its token stays in the backend, and the frontend reads the public state through `GET /state`. The local proof server is optional. Without it, the backend's proof server proves the signal. Sponsorship is optional too: without `SPONSOR_URL` and `SPONSOR_TOKEN` the backend returns the proven transaction and the connected wallet pays.
-
-### How a purchase travels
-
-1. The administrator registers the store: its public key goes into the store tree.
-2. The store charges and seals the receipt: it publishes a commitment and proves it belongs to a registered store, without saying which one.
-3. The customer gets the receipt as a QR and keeps it on their phone.
-4. Whenever they want, the customer publishes a signal: a ZK proof that the receipt is sealed and unused, revealing only what they chose to share.
-5. The contract marks the receipt as used and adds the units to the public counters.
-6. The agent reads the counters and writes each store's report.
 
 ### Notes on the flow
 

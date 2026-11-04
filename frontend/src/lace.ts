@@ -4,9 +4,9 @@ import { T } from './i18n.ts';
 // Igual que ReceiptJSON en backend/src/contract.ts, el recibo tal y como
 // viaja por la red y se codifica en el QR (bigint/Uint8Array no son JSON).
 //
-// `lines` = el rollup por subcategoría que SÍ se sella y se señala (máx 8,
-// las de mayor importe). `subcategory` es el índice del enum Subcategory,
-// `amount` va en céntimos como string.
+// `lines` = el rollup por subcategoría que SÍ se sella y se señala (máx 8).
+// `subcategory` es el índice del enum Subcategory, `amount` va en céntimos
+// como string.
 //
 // `items` es un extra SOLO del QR/dispositivo: el desglose por producto para
 // pintar el ticket original y la animación de censura. El backend lo ignora.
@@ -49,16 +49,10 @@ export function isWalletDisconnected(e: any): boolean {
 export const walletEvents = new EventTarget();
 
 /**
- * La extensión corre su propio service worker (Manifest V3) y, si lleva un
- * rato inactivo, la primera llamada lo despierta pero el mensaje se pierde
- * antes de recibir respuesta: la promesa rechaza aunque la wallet esté bien.
- * El texto/código exacto del error varía por wallet (Lace lo llama
- * InternalError/"Wallet is unavailable", otras pueden dar solo "request
- * failed"), así que no filtramos por ese texto: reintentamos cualquier fallo
- * que no sea un rechazo deliberado del usuario. Un segundo intento casi
- * siempre funciona porque el worker ya está despierto, pero esa ventana es
- * corta (se vuelve a dormir en pocos segundos), así que el reintento es
- * automático e inmediato en vez de esperar a que el usuario pulse otra vez.
+ * El service worker de la extensión se duerme a los pocos segundos: la primera
+ * llamada lo despierta, pero se pierde y la promesa rechaza aunque la wallet
+ * esté bien. Se reintenta al momento cualquier fallo que no sea un rechazo del
+ * usuario, porque el texto del error varía según la wallet.
  */
 async function withWalletUnavailableRetry<T>(fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -234,9 +228,7 @@ async function pollUntil(check: () => Promise<boolean>, lang: Lang, { intervalMs
 
 /**
  * Alta única de la tienda de demo en el árbol de tiendas registradas.
- * La wallet operadora del backend resultó poco fiable (sync de horas,
- * cortes de red que la dejaban colgada, ver operatorWallet.ts), así que
- * esto vuelve a pasar por Lace: el backend prueba, Lace balancea/firma/envía.
+ * El backend prueba; la wallet conectada balancea, firma y envía.
  *
  * No resuelve hasta que `store-registered` confirma el alta (ver pollUntil),
  * para que quien llama no pueda lanzar la siguiente transacción contra un
@@ -318,7 +310,7 @@ export type AttestLine = { subcategory: string; qty: number; amount: number };
 
 /**
  * La tienda vende y sella el compromiso del recibo on-chain. Recibe el
- * rollup por subcategoría (ya recortado a las 8 de mayor importe) y devuelve
+ * rollup por subcategoría (máx 8, ver fitsReceipt en catalog.ts) y devuelve
  * el recibo sellado (quien llama lo convierte en QR) y si lo pagó el
  * patrocinio. Paga el patrocinio o, si no está disponible, la wallet conectada.
  * `txHash` es el hash de la transacción de sellado, para enlazarla en el
@@ -355,11 +347,9 @@ export async function attestReceipt(
 /**
  * El usuario envía como señal un recibo ya sellado por una tienda (escaneado
  * de un QR). A diferencia de las otras acciones, esta no espera a la
- * confirmación on-chain: resuelve en cuanto la red acepta el envío, sin
- * fallar. Es el último paso del flujo (no hay una acción siguiente cuyo
- * assert dependa de este envío), así que la espera solo añadía tiempo sin
- * evitar ningún error real. Paga la wallet conectada o, sin wallet, el
- * patrocinio. Devuelve true si lo pagó el patrocinio.
+ * confirmación on-chain: resuelve en cuanto la red acepta el envío, porque
+ * ninguna acción posterior depende de él. Paga la wallet conectada o, sin
+ * wallet, el patrocinio. Devuelve true si lo pagó el patrocinio.
  *
  * Con `localProof`, la transacción se construye y se prueba en este
  * navegador contra el proof server del usuario (ver localProver.ts) y el

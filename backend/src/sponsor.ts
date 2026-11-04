@@ -9,7 +9,7 @@
 // tiene un límite de transacciones patrocinadas por hora.
 //
 // Variables de entorno (si falta alguna, el patrocinio está desactivado y
-// todo funciona como antes, pagando con la wallet conectada):
+// paga la wallet conectada):
 //   SPONSOR_URL    p. ej. http://aegis-signal-bot.railway.internal:8080
 //   SPONSOR_TOKEN  el mismo secreto que en el bot
 import type http from 'node:http';

@@ -78,9 +78,7 @@ const SUBSCRIPTION = `
  * Lee los contadores de un estado del contrato y libera enseguida la
  * memoria del estado. ContractState vive en WebAssembly, fuera del heap de
  * JavaScript: el recolector de basura no ve lo que ocupa y casi nunca lo
- * libera por su cuenta. Sin el free(), cada transacción del historial
- * dejaba su estado completo en memoria y con unas mil transacciones el
- * proceso pasaba de 1 GB (Railway lo mataba por falta de memoria).
+ * libera por su cuenta. Sin el free(), unas mil transacciones superan 1 GB.
  */
 function readCounters(stateHex: string): AegisState {
   const contractState = ContractState.deserialize(Buffer.from(stateHex, 'hex'));
@@ -244,11 +242,10 @@ export async function txHashByIdentifier(indexer: string, identifier: string, tr
  * ya ha llegado todo el historial anterior. La suscripción no avisa de
  * cuándo termina de ponerse al día, así que al empezar se pregunta al
  * indexer cuál es la última transacción del contrato y se espera a recibir
- * hasta ella. (Antes se daba por hecho tras un rato sin recibir nada, pero
- * Blockfrost a veces tarda más que ese rato entre envíos y el historial se
- * daba por completo a medias.) Se puede llamar varias veces, solo se
- * suscribe una por contrato: si cambia la dirección (se desplegó uno
- * nuevo), se descarta el historial anterior y se empieza de cero.
+ * hasta ella (un rato sin recibir nada no basta: Blockfrost puede tardar más
+ * entre envíos). Se puede llamar varias veces, solo se suscribe una por
+ * contrato: si cambia la dirección (se desplegó uno nuevo), se descarta el
+ * historial anterior y se empieza de cero.
  */
 export function trackContractHistory(
   indexer: Pick<NetworkConfig, 'indexer' | 'indexerWS'>,

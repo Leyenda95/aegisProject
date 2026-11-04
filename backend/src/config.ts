@@ -16,12 +16,10 @@ export const LOCAL_CONFIG: NetworkConfig = {
 };
 
 /**
- * Desde el 09-10-2026 el indexer y el RPC de preprod los sirve Blockfrost
- * (Midnight apagó los suyos). Misma API, solo cambian las URLs y hace falta
- * un token (project_id) que va en la propia URL: los clientes del SDK solo
- * aceptan URLs. El token es privado, por eso se lee de una variable de
- * entorno y el frontend nunca habla con Blockfrost directamente (pasa por
- * GET /state del backend).
+ * El indexer y el RPC de preprod los sirve Blockfrost. El token (project_id)
+ * va en la propia URL, porque los clientes del SDK solo aceptan URLs. Es
+ * privado: se lee de una variable de entorno y el frontend nunca habla con
+ * Blockfrost directamente (pasa por GET /state del backend).
  */
 function preprodConfig(): NetworkConfig {
   const projectId = process.env['BLOCKFROST_PROJECT_ID'];

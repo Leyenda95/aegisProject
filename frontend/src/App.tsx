@@ -13,7 +13,7 @@ import type { DemoScene } from './routes/DemoPage.tsx';
 import ArtGallery from './story/art/ArtGallery.tsx';
 
 // Si el backend no responde, se espera a la siguiente consulta periódica en
-// vez de reintentar en el acto (lo mismo que se hacía antes a mano).
+// vez de reintentar en el acto.
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
 const LANDING: DemoScene = { kind: 'landing' };

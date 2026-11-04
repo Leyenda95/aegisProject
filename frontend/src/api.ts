@@ -81,11 +81,8 @@ export const SUBCATEGORY_ICONS: Record<string, string> = {
   other: '📦',
 };
 
-// Dirección del backend. Cada persona que prueba el proyecto levanta el
-// backend en su propia máquina, así que "localhost" apunta correctamente al
-// suyo propio, sin importar si el frontend se sirve desde Vercel o en local.
-// Cuando el backend pase a vivir en un servidor real, basta con fijar
-// VITE_API_URL en el build de Vercel.
+// Dirección del backend: VITE_API_URL en el build de Vercel y, en local, la
+// máquina de cada uno.
 export const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
 /** Error de una petición al backend, con su código HTTP. */

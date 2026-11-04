@@ -3,9 +3,8 @@
  * actuando (admin al dar de alta una tienda, o la propia tienda al sellar
  * un recibo) y el recibo que se está intentando enviar como señal.
  *
- * Nada de esto sale nunca del proceso que lo mantiene en memoria, ver
- * el diseño de privacidad en la memoria del proyecto: el recibo completo
- * (importe, timestamp) nunca debe persistirse ni registrarse en logs.
+ * Nada de esto sale nunca del proceso que lo mantiene en memoria: el recibo
+ * completo (importe, timestamp) nunca debe persistirse ni registrarse en logs.
  */
 import type { Receipt, Witnesses } from './managed/aegis/contract/index.js';
 

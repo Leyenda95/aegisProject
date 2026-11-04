@@ -1,8 +1,7 @@
 // Directo del backend (GET /events, Server-Sent Events): el estado del
-// contrato en cuanto cambia, sin preguntar por /state cada 10 s. Si el
-// backend no lo tiene (una versión anterior) o la conexión se pierde y no
-// vuelve, se avisa con onLive(false) y quien lo usa sigue preguntando como
-// antes (ver ChainProvider).
+// contrato en cuanto cambia, sin preguntar por /state cada 10 s. Si la
+// conexión falla y no vuelve, se avisa con onLive(false) y quien lo usa sigue
+// preguntando (ver ChainProvider).
 import { API_BASE, type AegisState, type Change, type Counts } from './api.ts';
 
 /** Al conectarse: el estado y las últimas transacciones que cambiaron algo, de la más nueva a la más vieja. */

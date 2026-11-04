@@ -255,12 +255,9 @@ export async function isStoreRegistered(
 
 /**
  * El admin da de alta la tienda de demo en el árbol Merkle de tiendas
- * registradas. La autorización del circuito ya la resuelve el secreto de
- * admin (server-side), el backend prueba, pero es Lace (conectada en el
- * navegador) quien balancea, firma y envía. La wallet operadora resultó
- * poco fiable (ver operatorWallet.ts) así que se deja de usar por ahora;
- * esto vuelve a depender solo de que el usuario tenga DUST en su Lace,
- * igual que ya funciona para signal/deploy/seed.
+ * registradas. La autorización del circuito la resuelve el secreto de admin
+ * (server-side) y el backend prueba; la wallet conectada en el navegador
+ * balancea, firma y envía, igual que en signal/deploy/seed.
  */
 export async function buildRegisterStoreTx(
   providers: AegisProviders,
