@@ -4,7 +4,7 @@ import styles from './VerifiedMark.module.css';
 // El contorno del ojo del logo (public/images/aegis_mark.svg) como una sola
 // línea sobre la rejilla de 24 de los iconos del recorrido, empezando y
 // acabando arriba en el centro, para que al dibujarse se cierre ahí.
-const RING_LINE = 'M12 5.1C13.4 5.1 14.6 5.5 15.8 6.3L21.7 10.8C22.6 11.5 22.6 12.5 21.7 13.2L15.8 17.7C14.6 18.5 13.4 18.9 12 18.9C10.6 18.9 9.4 18.5 8.2 17.7L2.3 13.2C1.4 12.5 1.4 11.5 2.3 10.8L8.2 6.3C9.4 5.5 10.6 5.1 12 5.1Z';
+const RING_LINE = 'M12 5.2C12.93 5.2 13.88 5.49 14.84 6.13L21.66 10.67C22.19 11.03 22.4 11.49 22.4 12C22.4 12.51 22.19 12.97 21.66 13.33L14.84 17.87C13.88 18.51 12.93 18.8 12 18.8C11.07 18.8 10.12 18.51 9.16 17.87L2.34 13.33C1.81 12.97 1.6 12.51 1.6 12C1.6 11.49 1.81 11.03 2.34 10.67L9.16 6.13C10.12 5.49 11.07 5.2 12 5.2Z';
 // El visto, donde el logo tiene la pupila.
 const TICK = 'M8.4 12.2L10.9 14.6L15.6 9.9';
 

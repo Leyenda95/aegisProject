@@ -1,13 +1,14 @@
 // Genera los iconos de la app a partir de public/images/aegis_mark.svg.
 //
-// La marca es más ancha que alta (640,1 x 454 ud.), así que se escala por el
+// La marca es más ancha que alta (1280 x 908 ud.), así que se escala por el
 // ancho, se centra y se conserva la proporción. Se renderiza con Chromium de
 // Playwright, sin dependencias nuevas.
 //
 //   cd frontend && npm run icons
 //
 // Sobrescribe en public/: favicon.svg, favicon.png, apple-touch-icon.png,
-// icons/icon-192.png, icons/icon-512.png e icons/icon-maskable-512.png.
+// icons/icon-192.png, icons/icon-512.png, icons/icon-maskable-512.png y
+// og-image.png.
 
 import { readFile, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
@@ -20,8 +21,8 @@ const INK = '#182531';
 const PAPER = '#E8EAF6';
 
 // Cuadro tight de la marca (viewBox original) y su proporción.
-const VB = { x: 448, y: 271.7, w: 640.1, h: 454 };
-const PAD = 24; // margen del favicon.svg para que no se recorte
+const VB = { x: 0, y: 0, w: 1280, h: 908 };
+const PAD = 48; // margen del favicon.svg para que no se recorte
 
 const source = await readFile(join(PUBLIC, 'images', 'aegis_mark.svg'), 'utf8');
 const paths = [...source.matchAll(/<path [^>]*\/>/g)].map(m => m[0]);
@@ -64,6 +65,25 @@ try {
     await page.close();
     console.log(file.padEnd(30) + size + 'x' + size);
   }
+
+  // Imagen al compartir el enlace: la marca con el nombre dentro del ojo,
+  // bajo el arco, sobre fondo oscuro. La fuente (Geist) se baja de Google.
+  const OG = { width: 1200, height: 630 };
+  const page = await browser.newPage({ viewport: OG, deviceScaleFactor: 1 });
+  await page.setContent(
+    `<!doctype html><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@500&display=swap">` +
+      `<style>html,body{margin:0;width:${OG.width}px;height:${OG.height}px;overflow:hidden;` +
+      `background:radial-gradient(circle at center,#0E1723,#0A0A0A 70%);display:grid;place-items:center}` +
+      `.lockup{position:relative}svg{display:block}` +
+      `.name{position:absolute;left:0;right:0;top:58.5%;text-align:center;color:#fff;font:500 68px/1 Geist,sans-serif;` +
+      `letter-spacing:.14em;text-indent:.14em;transform:translateY(-50%)}</style>` +
+      `<div class="lockup">${markSvg('#456D92', 680)}<div class="name">AEGIS</div></div>`,
+    { waitUntil: 'networkidle' },
+  );
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: join(PUBLIC, 'og-image.png') });
+  await page.close();
+  console.log('og-image.png'.padEnd(30) + OG.width + 'x' + OG.height);
 } finally {
   await browser.close();
 }
