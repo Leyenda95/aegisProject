@@ -7,10 +7,11 @@ import {
   createUnprovenDeployTx,
   createUnprovenCallTx,
 } from '@midnight-ntwrk/midnight-js-contracts';
-import { sampleSigningKey } from '@midnight-ntwrk/compact-runtime';
+import { ContractState } from '@midnight-ntwrk/compact-runtime';
 import type { ContractAddress } from '@midnight-ntwrk/compact-runtime';
-import { CompiledContract } from '@midnight-ntwrk/compact-js';
-import { ContractCall, Transaction } from '@midnight-ntwrk/ledger-v8';
+import type { SerializedContractState } from '@midnight-ntwrk/midnight-js-types';
+import * as ledger8Runtime from '../../contract/runtime.js';
+import { ContractCall, Transaction } from '@midnightntwrk/ledger-v9';
 import { Contract, ledger, pureCircuits, Subcategory, type Receipt } from '../../contract/managed/aegis/contract/index.js';
 import { witnesses, type AegisPrivateState } from '../../contract/witnesses.js';
 import type { AegisProviders } from './providers.js';
@@ -33,10 +34,28 @@ let mockStoreRegistered = false;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const zkConfigPath = path.resolve(__dirname, '../../contract/managed/aegis');
 
-export const CompiledAegisContract = CompiledContract.make('aegis', Contract).pipe(
-  CompiledContract.withWitnesses(witnesses),
-  CompiledContract.withCompiledFileAssets(zkConfigPath),
-);
+// El contrato desplegado está compilado con compactc 0.31 (runtime 0.16, ledger
+// 8). midnight-js 5 lo recibe como instancia, no envuelto en CompiledContract
+// (eso solo vale para contratos ledger 9). Los artefactos los sirve el
+// zkConfigProvider (ver providers.ts).
+export const CompiledAegisContract = new Contract(witnesses);
+
+/**
+ * Decodifica el estado de un contrato ledger 8 leído del indexer. Antes del
+ * fork llega como v8 y lo lee el runtime 0.16 del propio contrato; tras el
+ * fork llega como v9, se decodifica con el runtime 0.21 y se pasa como dato
+ * plano al 0.16, único que acepta `ledger()`.
+ */
+export function decodeAegisState(contractState: SerializedContractState) {
+  const stateValue = contractState.deserialize({
+    v8: { deserialize: (bytes: Uint8Array) => ledger8Runtime.ContractState.deserialize(bytes).data.state },
+    v9: {
+      deserialize: (bytes: Uint8Array) =>
+        ledger8Runtime.StateValue.decode(ContractState.deserialize(bytes).data.state.encode()),
+    },
+  });
+  return ledger(stateValue as any);
+}
 
 // Único identificador bajo el que este backend guarda el estado privado del
 // contrato en su privateStateProvider en memoria (ver providers.ts). Como el
@@ -166,32 +185,25 @@ export async function readState(
 ): Promise<AegisState> {
   const state = await providers.publicDataProvider.queryContractState(contractAddress);
   if (!state) throw new Error('Contract state not found');
-  return ledger(state.data) as AegisState;
+  return decodeAegisState(state.contractState) as unknown as AegisState;
 }
 
 function txToHex(tx: any): string {
   return Buffer.from((tx as any).serialize()).toString('hex');
 }
 
-/** Construye y prueba la transacción de despliegue, sin firmarla. Lace la firma y la envía. */
+/**
+ * Un contrato ledger 8 ya no se puede desplegar: Preprod corre ledger 9 y
+ * midnight-js 5 lo rechaza (EraMismatchError, ledger8-deploy-on-ledger9-network).
+ * Desplegar uno nuevo exige recompilar con compactc 0.36 (contrato ledger 9).
+ */
 export async function buildDeployTx(
-  providers: AegisProviders,
+  _providers: AegisProviders,
 ): Promise<{ tx: string; contractAddress: ContractAddress }> {
-  const adminKey = getAdminKey();
-  const initialPrivateState: AegisPrivateState = { secretKey: adminKey, receipt: null };
-
-  const unprovenData = await (createUnprovenDeployTx as any)(providers, {
-    compiledContract: CompiledAegisContract,
-    signingKey: sampleSigningKey(),
-    initialPrivateState,
-  });
-
-  const provenTx = await providers.proofProvider.proveTx(unprovenData.private.unprovenTx);
-
-  return {
-    tx: txToHex(provenTx),
-    contractAddress: unprovenData.public.contractAddress,
-  };
+  throw new Error(
+    'Desplegar un contrato nuevo requiere recompilarlo con compactc 0.36.0 (ledger 9). ' +
+    'El contrato actual (compactc 0.31) solo admite llamadas.',
+  );
 }
 
 export type SeedData = {
@@ -259,7 +271,7 @@ export async function isStoreRegistered(
   const state = await providers.publicDataProvider.queryContractState(contractAddress);
   if (!state) return false;
   const storePk = pureCircuits.storePublicKey(getStoreKey());
-  const registered = ledger(state.data).registeredStores.findPathForLeaf(storePk) !== undefined;
+  const registered = decodeAegisState(state.contractState).registeredStores.findPathForLeaf(storePk) !== undefined;
   if (registered) contractWithStore = contractAddress;
   return registered;
 }
@@ -282,7 +294,7 @@ export async function buildRegisterStoreTx(
   const storeKey = getStoreKey();
   const storePk = pureCircuits.storePublicKey(storeKey);
 
-  await providers.privateStateProvider.set(PRIVATE_STATE_ID, { secretKey: adminKey, receipt: null } as AegisPrivateState);
+  await providers.privateStateProvider.forContract(contractAddress).set(PRIVATE_STATE_ID, { secretKey: adminKey, receipt: null } as AegisPrivateState);
 
   const unprovenData = await (createUnprovenCallTx as any)(providers, {
     compiledContract: CompiledAegisContract,
@@ -313,7 +325,7 @@ export async function buildAttestReceiptTx(
   }
   const storeKey = getStoreKey();
 
-  await providers.privateStateProvider.set(PRIVATE_STATE_ID, { secretKey: storeKey, receipt: null } as AegisPrivateState);
+  await providers.privateStateProvider.forContract(contractAddress).set(PRIVATE_STATE_ID, { secretKey: storeKey, receipt: null } as AegisPrivateState);
 
   const unprovenData = await (createUnprovenCallTx as any)(providers, {
     compiledContract: CompiledAegisContract,
@@ -335,7 +347,7 @@ export async function buildSignalTx(
   const commitment = pureCircuits.receiptCommitment(receipt);
   const commitmentHex = Buffer.from(commitment).toString('hex');
 
-  await providers.privateStateProvider.set(PRIVATE_STATE_ID, { secretKey: new Uint8Array(32), receipt } as AegisPrivateState);
+  await providers.privateStateProvider.forContract(contractAddress).set(PRIVATE_STATE_ID, { secretKey: new Uint8Array(32), receipt } as AegisPrivateState);
 
   const unprovenData = await (createUnprovenCallTx as any)(providers, {
     compiledContract: CompiledAegisContract,
@@ -359,14 +371,20 @@ export async function buildSignalTx(
 export async function getContractStatesHex(
   providers: AegisProviders,
   contractAddress: ContractAddress,
-): Promise<{ zswapState: string; contractState: string; ledgerParameters: string } | null> {
+): Promise<{
+  zswapState: string; contractState: string; ledgerParameters: string;
+  zswapEra: string; contractEra: string; ledgerParametersEra: string;
+} | null> {
   const states = await providers.publicDataProvider.queryZSwapAndContractState(contractAddress);
   if (!states) return null;
-  const [zswapState, contractState, ledgerParameters] = states;
+  const hex = (s: { serialize(): Uint8Array }) => Buffer.from(s.serialize()).toString('hex');
   return {
-    zswapState: Buffer.from(zswapState.serialize()).toString('hex'),
-    contractState: Buffer.from(contractState.serialize()).toString('hex'),
-    ledgerParameters: Buffer.from(ledgerParameters.serialize()).toString('hex'),
+    zswapState: hex(states.zswapChainState),
+    contractState: hex(states.contractState),
+    ledgerParameters: hex(states.ledgerParameters),
+    zswapEra: states.zswapChainState.era,
+    contractEra: states.contractState.era,
+    ledgerParametersEra: states.ledgerParameters.era,
   };
 }
 
@@ -415,6 +433,6 @@ export async function getReceiptStatus(
   const commitment = new Uint8Array(Buffer.from(commitmentHex, 'hex'));
   const state = await providers.publicDataProvider.queryContractState(contractAddress);
   if (!state) return { sealed: false, used: false };
-  const l = ledger(state.data);
+  const l = decodeAegisState(state.contractState);
   return { sealed: l.sealedReceipts.member(commitment), used: l.usedReceipts.member(commitment) };
 }

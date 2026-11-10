@@ -42,15 +42,15 @@ function zkArtifacts(): Plugin {
 export default defineConfig({
   // wasm(): localProver.ts importa el contrato compilado
   // (contract/managed/aegis/contract/index.js), que arrastra
-  // @midnight-ntwrk/compact-runtime -> @midnight-ntwrk/ledger-v8, que es
-  // WebAssembly de verdad. Sin este plugin Vite no sabe cargar el .wasm
+  // @midnight-ntwrk/compact-runtime 0.16 + midnight-js 5 -> @midnightntwrk/ledger-v9,
+  // que es WebAssembly de verdad. Sin este plugin Vite no sabe cargar el .wasm
   // (ver patrón oficial en los ejemplos de Midnight: leaderboard, bboard).
   plugins: [react(), wasm(), zkArtifacts()],
-  // Evita instanciar compact-runtime dos veces si algún día hay más de un
-  // punto de entrada al mismo paquete (el WASM ata la identidad de clase a
-  // la instancia que la creó, dos copias romperían los `instanceof`).
+  // Evita instanciar el ledger-v9 dos veces (el WASM ata la identidad de clase
+  // a la instancia que la creó). compact-runtime NO se deduplica: el contrato
+  // (compactc 0.31) usa el 0.16.0 y midnight-js el 0.21.0, a propósito.
   resolve: {
-    dedupe: ['@midnight-ntwrk/compact-runtime', '@midnight-ntwrk/ledger-v8'],
+    dedupe: ['@midnightntwrk/ledger-v9'],
   },
   // El wasm generado usa `await` de nivel superior para instanciarse.
   // esnext lo soporta de forma nativa, así no hace falta transpilarlo (y

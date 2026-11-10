@@ -13,7 +13,7 @@
  *
  * Uso: MIDNIGHT_NETWORK=preprod npm run setup-operator-wallet
  */
-import * as ledger from '@midnight-ntwrk/ledger-v8';
+import * as ledger from '@midnightntwrk/ledger-v9';
 import { getConfig } from '../src/config.js';
 import { getOperatorWallet } from '../src/operatorWallet.js';
 
@@ -61,7 +61,7 @@ async function waitForDustSyncWithProgress(wallet: Awaited<ReturnType<typeof get
   const sub = wallet.dust.state.subscribe((s) => {
     const now = Date.now();
     if (now - lastLogTime < LOG_EVERY_MS) return;
-    const p = s.state.progress as { appliedIndex: bigint; highestRelevantWalletIndex: bigint };
+    const p = s.progress as { appliedIndex: bigint; highestRelevantWalletIndex: bigint };
     const elapsedS = (now - lastLogTime) / 1000;
     const rate = elapsedS > 0 ? Number(p.appliedIndex - lastIndex) / elapsedS : 0;
     const remaining = Number(p.highestRelevantWalletIndex - p.appliedIndex);
@@ -116,7 +116,7 @@ async function main() {
   const recipe = await wallet.registerNightUtxosForDustGeneration(
     nightUtxos,
     nightVerifyingKey,
-    (payload) => unshieldedKeystore.signData(payload),
+    unshieldedKeystore.signDataAsync,
   );
   const finalizedTx = await wallet.finalizeRecipe(recipe);
   const txId = await wallet.submitTransaction(finalizedTx);

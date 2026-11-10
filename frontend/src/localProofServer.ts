@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 export const LOCAL_PROOF_SERVER = 'http://127.0.0.1:6300';
 
 // Mismo comando que la documentación de Midnight ("Proving transactions locally").
-export const LOCAL_PROOF_SERVER_COMMAND = 'docker run -p 6300:6300 midnightntwrk/proof-server:8.1.3';
+export const LOCAL_PROOF_SERVER_COMMAND = 'docker run -p 6300:6300 midnightntwrk/proof-server:9.0.0';
 
 export type ProofServerStatus = 'checking' | 'up' | 'down';
 

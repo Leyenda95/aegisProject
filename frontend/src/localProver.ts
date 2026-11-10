@@ -5,20 +5,18 @@
 // la transacción ya probada, que solo revela lo mismo que la señal on-chain.
 //
 // Este módulo carga ~11MB de WebAssembly en cuanto se importa (arrastra
-// @midnight-ntwrk/compact-runtime -> @midnight-ntwrk/ledger-v8 a través del
+// @midnightntwrk/ledger-v9 a través de midnight-js y del runtime del
 // contrato compilado). Por eso solo se carga con un import() dinámico (ver
 // lace.ts), y solo cuando el usuario elige probar en su equipo.
 import { createUnprovenCallTxFromInitialStates } from '@midnight-ntwrk/midnight-js-contracts';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
-import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
-import { CompiledContract } from '@midnight-ntwrk/compact-js';
-// ContractState sale de compact-runtime y no de ledger-v8: el runtime del
-// contrato solo acepta su propia clase (igual que hace el SDK al leerlo del indexer).
-import { ContractState } from '@midnight-ntwrk/compact-runtime';
 import {
-  LedgerParameters, ZswapChainState, sampleCoinPublicKey, sampleEncryptionPublicKey,
-} from '@midnight-ntwrk/ledger-v8';
+  SerializedContractState, SerializedLedgerParameters, SerializedZswapChainState,
+} from '@midnight-ntwrk/midnight-js-types';
+
+type LedgerEra = 'v8' | 'v9';
+import { sampleCoinPublicKey, sampleEncryptionPublicKey } from '@midnightntwrk/ledger-v9';
 // eslint-disable-next-line -- artefacto generado por `compact compile`, no hay tipos de paquete propios.
 import { Contract, type Receipt } from '../../contract/managed/aegis/contract/index.js';
 import { witnesses, type AegisPrivateState } from '../../contract/witnesses.ts';
@@ -27,20 +25,20 @@ import { NETWORK_ID } from './chainConfig.ts';
 import { LOCAL_PROOF_SERVER } from './localProofServer.ts';
 import type { ReceiptJSON } from './lace.ts';
 
-setNetworkId(NETWORK_ID);
-
 // Mismo tamaño fijo que MAX_RECEIPT_LINES en backend/src/contract.ts: el
 // circuito siempre recibe 8 líneas, las que sobran van a cero.
 const MAX_RECEIPT_LINES = 8;
 
-const CompiledAegisContract = CompiledContract.make('aegis', Contract).pipe(
-  CompiledContract.withWitnesses(witnesses),
-  // En el navegador los artefactos ZK llegan por FetchZkConfigProvider, esta
-  // ruta solo la guarda compact-js, no la lee.
-  CompiledContract.withCompiledFileAssets('/zk'),
-);
+// El contrato desplegado es ledger 8 (compactc 0.31): midnight-js 5 lo recibe
+// como instancia, no envuelto en CompiledContract. Los artefactos ZK llegan
+// por FetchZkConfigProvider.
+const aegisContract = new Contract(witnesses);
 
-const zkConfigProvider = new FetchZkConfigProvider<'submitPurchase'>(`${window.location.origin}/zk`, fetch.bind(window));
+// compactc 0.31 no genera compiler/contract-manifest.json, solo contract-info.json.
+const zkConfigProvider = new FetchZkConfigProvider<'submitPurchase'>(`${window.location.origin}/zk`, {
+  fetchFunc: fetch.bind(window),
+  verify: 'require-if-present',
+});
 const proofProvider = httpClientProofProvider(LOCAL_PROOF_SERVER, zkConfigProvider);
 
 const fromHex = (h: string) => Uint8Array.from(h.match(/.{2}/g) ?? [], (b) => parseInt(b, 16));
@@ -65,11 +63,15 @@ function receiptFromJSON(j: ReceiptJSON): Receipt {
 async function fetchContractStates() {
   const r = await fetch(`${API_BASE}/contract-states`);
   if (!r.ok) throw new Error(`Contract state request failed (${r.status})`);
-  const s = await r.json() as { zswapState: string; contractState: string; ledgerParameters: string };
+  const s = await r.json() as {
+    zswapState: string; contractState: string; ledgerParameters: string;
+    zswapEra: LedgerEra; contractEra: LedgerEra; ledgerParametersEra: LedgerEra;
+  };
+  // midnight-js 5 no decodifica el estado: viaja como bytes con su era.
   return {
-    zswapChainState: ZswapChainState.deserialize(fromHex(s.zswapState)),
-    contractState: ContractState.deserialize(fromHex(s.contractState)),
-    ledgerParameters: LedgerParameters.deserialize(fromHex(s.ledgerParameters)),
+    zswapChainState: SerializedZswapChainState.fromBytes(s.zswapEra, fromHex(s.zswapState)),
+    contractState: SerializedContractState.fromBytes(s.contractEra, fromHex(s.contractState)),
+    ledgerParameters: SerializedLedgerParameters.fromBytes(s.ledgerParametersEra, fromHex(s.ledgerParameters)),
   };
 }
 
@@ -79,9 +81,12 @@ export async function proveSignalLocally(receipt: ReceiptJSON, contractAddress: 
   const initialPrivateState: AegisPrivateState = { secretKey: new Uint8Array(32), receipt: receiptFromJSON(receipt) };
 
   const unproven = await (createUnprovenCallTxFromInitialStates as any)(zkConfigProvider, {
-    compiledContract: CompiledAegisContract,
+    compiledContract: aegisContract,
     contractAddress,
     circuitId: 'submitPurchase',
+    // Era de la cabeza de la red: Preprod ya corre ledger 9.
+    head: 'v9',
+    config: { networkId: NETWORK_ID, ttlSeconds: 3600 },
     // El backend usa las mismas claves de ejemplo (ver providers.ts): la
     // señal no crea ni recibe monedas, así que no hay a quién cifrarlas.
     coinPublicKey: sampleCoinPublicKey(),

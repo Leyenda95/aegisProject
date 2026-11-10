@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { txHashFromHex } from './txHash.ts';
-// Transacción real de preview tal como la sirve el indexer (raw) junto con
+// Transacción real de preview (ledger 9) tal como la sirve el indexer (raw) junto con
 // el hash que da el propio indexer y que acepta el explorador.
 import fixture from './txHash.fixture.json';
 

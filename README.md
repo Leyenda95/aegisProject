@@ -88,7 +88,7 @@ Set the backend's variables in `backend/.env` before starting it (see the table 
 By default the backend generates the signal's proof, which means the receipt travels to it. When publishing, you can choose **Local** instead of **Aegis Proof Server**: the browser then builds the `submitPurchase` transaction itself and proves it with a proof server running on your machine, so the receipt never leaves your device. Start one with:
 
 ```bash
-docker run -p 6300:6300 midnightntwrk/proof-server:8.1.3
+docker run -p 6300:6300 midnightntwrk/proof-server:9.0.0
 ```
 
 The page picks it up on its own as soon as it answers on `127.0.0.1:6300`. If the browser asks whether the page may access your local network, allow it: that is how it reaches the proof server.
@@ -130,7 +130,7 @@ The browser never talks to Blockfrost: its token stays in the backend, and the f
 |---|---|
 | Smart contract | [Compact](https://docs.midnight.network/compact) (compiler `0.31.1`, language `>= 0.20`, runtime `0.16.0`) |
 | Contract tests | Vitest, in-memory circuit simulator |
-| Backend | Node.js + TypeScript (`tsx`), native `http` server, `@midnight-ntwrk/midnight-js-contracts`, `@midnight-ntwrk/ledger-v8` |
+| Backend | Node.js + TypeScript (`tsx`), native `http` server, `@midnight-ntwrk/midnight-js-contracts`, `@midnightntwrk/ledger-v9` |
 | Market intelligence | AI agent |
 | Frontend | React 19 + Vite 8 + TypeScript, React Router, TanStack Query, CSS Modules |
 | Screenshot tests | Playwright (`npm run screens` in `frontend/`) |

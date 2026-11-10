@@ -9,9 +9,8 @@
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import WebSocket from 'ws';
-import * as ledger from '@midnight-ntwrk/ledger-v8';
 import {
-  HDWallet, Roles, generateRandomSeed,
+  WalletSeeds, generateRandomSeed,
   createKeystore, PublicKey as UnshieldedPublicKey, type UnshieldedKeystore,
   WalletFacade, WalletEntrySchema, type DefaultConfiguration,
   ShieldedWallet, UnshieldedWallet, DustWallet,
@@ -21,7 +20,7 @@ import {
   // Closure" nada más conectar. La barrera correcta, sin guion tras
   // "midnight" (ver matriz de compatibilidad), es esta.
 } from '@midnightntwrk/wallet-sdk';
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
+import type { UnboundTx } from '@midnight-ntwrk/midnight-js-types';
 import type { NetworkConfig } from './config.js';
 
 if (!(globalThis as any).WebSocket) (globalThis as any).WebSocket = WebSocket as any;
@@ -114,8 +113,6 @@ function logSyncProgress(wallet: WalletFacade): void {
 type OperatorWallet = {
   wallet: WalletFacade;
   unshieldedKeystore: UnshieldedKeystore;
-  shieldedSecretKeys: ledger.ZswapSecretKeys;
-  dustSecretKey: ledger.DustSecretKey;
   address: string;
 };
 
@@ -141,19 +138,10 @@ function buildConfiguration(config: NetworkConfig): DefaultConfiguration {
 
 async function buildOperatorWallet(config: NetworkConfig): Promise<OperatorWallet> {
   const seed = loadOrCreateSeed();
-  const hd = HDWallet.fromSeed(seed);
-  if (hd.type !== 'seedOk') throw new Error('Semilla de la wallet operadora inválida');
-
-  const derived = hd.hdWallet
-    .selectAccount(0)
-    .selectRoles([Roles.Zswap, Roles.NightExternal, Roles.Dust] as const)
-    .deriveKeysAt(0);
-  if (derived.type !== 'keysDerived') throw new Error('No se pudieron derivar las claves de la wallet operadora');
-  hd.hdWallet.clear();
-
-  const shieldedSecretKeys = ledger.ZswapSecretKeys.fromSeed(derived.keys[Roles.Zswap]);
-  const dustSecretKey = ledger.DustSecretKey.fromSeed(derived.keys[Roles.Dust]);
-  const unshieldedKeystore = createKeystore(derived.keys[Roles.NightExternal], config.networkId as any);
+  // WalletSeeds deriva las tres semillas (shielded, unshielded, dust) de la
+  // semilla maestra; cuenta 0, índice 0, igual que antes con HDWallet.
+  const seeds = WalletSeeds.fromMasterSeed(seed);
+  const unshieldedKeystore = createKeystore({ kind: 'schnorr', secret: seeds.unshielded }, config.networkId as any);
   const address = UnshieldedPublicKey.fromKeyStore(unshieldedKeystore).address;
 
   const configuration = buildConfiguration(config);
@@ -167,15 +155,15 @@ async function buildOperatorWallet(config: NetworkConfig): Promise<OperatorWalle
 
   const wallet = await WalletFacade.init({
     configuration,
-    shielded: (cfg) => ShieldedWallet(cfg).startWithSecretKeys(shieldedSecretKeys),
+    shielded: (cfg) => ShieldedWallet(cfg).startWithSeed(seeds.shielded),
     unshielded: (cfg) => UnshieldedWallet(cfg).startWithPublicKey(UnshieldedPublicKey.fromKeyStore(unshieldedKeystore)),
-    dust: (cfg) => DustWallet(cfg).startWithSecretKey(dustSecretKey, ledger.LedgerParameters.initialParameters().dust),
+    dust: (cfg) => DustWallet(cfg).startWithSeed(seeds.dust),
   });
-  await wallet.start(shieldedSecretKeys, dustSecretKey);
+  await wallet.start(seeds);
   startStatePersistence(wallet);
   logSyncProgress(wallet);
 
-  return { wallet, unshieldedKeystore, shieldedSecretKeys, dustSecretKey, address };
+  return { wallet, unshieldedKeystore, address };
 }
 
 export function getOperatorWallet(config: NetworkConfig): Promise<OperatorWallet> {
@@ -186,15 +174,8 @@ export function getOperatorWallet(config: NetworkConfig): Promise<OperatorWallet
 /** Dirección para fondear desde el faucet, no hace falta esperar al sync de la wallet. */
 export function getOperatorAddressSync(config: NetworkConfig): string {
   const seed = loadOrCreateSeed();
-  const hd = HDWallet.fromSeed(seed);
-  if (hd.type !== 'seedOk') throw new Error('Semilla de la wallet operadora inválida');
-  const derived = hd.hdWallet
-    .selectAccount(0)
-    .selectRoles([Roles.NightExternal] as const)
-    .deriveKeysAt(0);
-  if (derived.type !== 'keysDerived') throw new Error('No se pudieron derivar las claves de la wallet operadora');
-  hd.hdWallet.clear();
-  const unshieldedKeystore = createKeystore(derived.keys[Roles.NightExternal], config.networkId as any);
+  const seeds = WalletSeeds.fromMasterSeed(seed);
+  const unshieldedKeystore = createKeystore({ kind: 'schnorr', secret: seeds.unshielded }, config.networkId as any);
   return UnshieldedPublicKey.fromKeyStore(unshieldedKeystore).address;
 }
 
@@ -204,16 +185,19 @@ export function getOperatorAddressSync(config: NetworkConfig): string {
  */
 export async function submitViaOperatorWallet(
   config: NetworkConfig,
-  provenTx: UnboundTransaction,
+  provenTx: UnboundTx,
 ): Promise<string> {
-  const { wallet, unshieldedKeystore, shieldedSecretKeys, dustSecretKey } = await getOperatorWallet(config);
+  const { wallet, unshieldedKeystore } = await getOperatorWallet(config);
+
+  // midnight-js y el wallet SDK tienen cada uno su propio tipo de handle, se
+  // pasan por los bytes de la transacción.
+  const handle = wallet.adoptTransaction(provenTx.serialize(), 'Unbound');
 
   const recipe = await wallet.balanceUnboundTransaction(
-    provenTx,
-    { shieldedSecretKeys, dustSecretKey },
+    handle,
     { ttl: new Date(Date.now() + 30 * 60 * 1000), tokenKindsToBalance: ['dust'] },
   );
-  const signed = await wallet.signRecipe(recipe, (data) => unshieldedKeystore.signData(data));
+  const signed = await wallet.signRecipe(recipe, unshieldedKeystore.signDataAsync);
   const finalized = await wallet.finalizeRecipe(signed);
   return wallet.submitTransaction(finalized);
 }

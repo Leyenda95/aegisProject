@@ -43,7 +43,7 @@ services:
         condition: service_healthy
 
   proof-server:
-    image: midnightntwrk/proof-server:8.1.0
+    image: midnightntwrk/proof-server:9.0.0
     container_name: aegis-devnet-proof-server
     command: ['midnight-proof-server -v']
     ports:

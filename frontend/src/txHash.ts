@@ -4,10 +4,10 @@
 // el explorador (32 bytes, 64 hex); no confundir con identifiers(), que son
 // de 33 bytes y el explorador no los encuentra.
 //
-// Importa ledger-v8 (WebAssembly): este módulo se carga con import()
+// Importa ledger-v9 (WebAssembly): este módulo se carga con import()
 // dinámico desde lace.ts, como localProver.ts, para no meterlo en el
 // paquete inicial.
-import { Transaction } from '@midnight-ntwrk/ledger-v8';
+import { Transaction } from '@midnightntwrk/ledger-v9';
 
 /** Hash hex de la transacción serializada, o null si no es una transacción sellada válida. */
 export function txHashFromHex(hex: string): string | null {

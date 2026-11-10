@@ -12,7 +12,9 @@ COPY package.json package-lock.json ./
 COPY contract/package.json contract/
 COPY backend/package.json backend/
 COPY frontend/package.json frontend/
-RUN npm ci --workspace=@aegis/backend
+# El workspace del contrato aporta su propio compact-runtime 0.16.0 (el contrato
+# desplegado es ledger 8); el backend usa el 0.21.0.
+RUN npm ci --workspace=@aegis/backend --workspace=@aegis/contract
 
 COPY contract/ contract/
 COPY backend/ backend/

@@ -24,6 +24,8 @@ import { readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { createClient } from 'graphql-ws';
 import WebSocket from 'ws';
 import { ContractState, type ContractAddress } from '@midnight-ntwrk/compact-runtime';
+import { ledgerVersionOfContractState } from '@midnight-ntwrk/midnight-js-utils';
+import * as ledger8Runtime from '../../contract/runtime.js';
 import { ledger } from '../../contract/managed/aegis/contract/index.js';
 import type { AegisState } from './contract.js';
 import type { NetworkConfig } from './config.js';
@@ -81,18 +83,32 @@ const SUBSCRIPTION = `
  * libera por su cuenta. Sin el free(), unas mil transacciones superan 1 GB.
  */
 function readCounters(stateHex: string): AegisState {
-  const contractState = ContractState.deserialize(Buffer.from(stateHex, 'hex'));
-  const chargedState = contractState.data;
+  const bytes = new Uint8Array(Buffer.from(stateHex, 'hex'));
+  // Cada transacción trae el estado en el formato de la ledger que la grabó:
+  // v8 (antes del fork) o v9. El contrato es ledger 8, así que su ledger() solo
+  // acepta objetos del runtime 0.16 (ver decodeAegisState en contract.ts).
+  const era = ledgerVersionOfContractState(bytes);
+  const toFree: unknown[] = [];
   try {
-    const l = ledger(chargedState) as unknown as Record<string, bigint>;
+    let stateValue;
+    if (era === 'v8') {
+      const old = ledger8Runtime.ContractState.deserialize(bytes);
+      toFree.push(old);
+      stateValue = old.data.state;
+    } else {
+      const current = ContractState.deserialize(bytes);
+      toFree.push(current);
+      stateValue = ledger8Runtime.StateValue.decode(current.data.state.encode());
+    }
+    toFree.push(stateValue);
+    const l = ledger(stateValue as any) as unknown as Record<string, bigint>;
     const counters: Record<string, bigint> = {};
     for (const field of COUNTER_FIELDS) counters[field] = l[field]!;
     return counters as AegisState;
   } finally {
     // free() existe en tiempo de ejecución (lo genera wasm-bindgen), pero no
     // aparece en los tipos del paquete.
-    (chargedState as unknown as { free?: () => void }).free?.();
-    (contractState as unknown as { free?: () => void }).free?.();
+    for (const o of toFree) (o as { free?: () => void }).free?.();
   }
 }
 

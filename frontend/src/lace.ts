@@ -292,7 +292,7 @@ async function payIfNotSponsored(
 }
 
 /**
- * Hash de la transacción sellada que envió la wallet. Carga ledger-v8
+ * Hash de la transacción sellada que envió la wallet. Carga ledger-v9
  * (WebAssembly) solo aquí, bajo demanda. Si algo falla, null: solo se
  * pierde el enlace al explorador, no el sellado.
  */

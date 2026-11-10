@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import pino from 'pino';
-import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 
 import { getConfig } from './config.js';
 import { buildProviders } from './providers.js';
@@ -15,7 +14,6 @@ const logger = pino({ level: 'info', transport: { target: 'pino-pretty' } });
 
 async function main() {
   const config = getConfig();
-  setNetworkId(config.networkId);
 
   const providers = buildProviders(zkConfigPath, config);
 
